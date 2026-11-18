@@ -1,0 +1,452 @@
+"""ifseen command line.
+
+ifseen "a person is at the door" --camera 0 --then "say someone is here"
+ifseen watch rules.yaml
+ifseen test rules.yaml --image photo.jpg
+ifseen recipes | ifseen init doorbell | ifseen doctor
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import re
+import sys
+from pathlib import Path
+from typing import Any
+
+from rich.console import Console
+from rich.markup import escape
+from rich.table import Table
+
+from .actions import ActionRunner
+from .config import ConfigError, WatchConfig, load_config, load_config_file
+from .constants import VERSION
+from .engine import Engine
+from .providers import ProviderConfigError, ProviderError, Question, build_provider
+from .recipes import recipe_data, recipe_names, recipe_summary, recipe_text
+from .sources import SourceError, build_source
+from .ui import Dashboard, JsonLines, PlainLog
+
+SUBCOMMANDS = {"watch", "test", "recipes", "init", "doctor"}
+err = Console(stderr=True, highlight=False)
+
+
+def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if not argv or argv[0] in ("-h", "--help"):
+        _print_help()
+        return 0
+    if argv[0] in ("-V", "--version"):
+        print(f"ifseen {VERSION}")
+        return 0
+    try:
+        if argv[0] in SUBCOMMANDS:
+            cmd, rest = argv[0], argv[1:]
+            return {
+                "watch": cmd_watch,
+                "test": cmd_test,
+                "recipes": cmd_recipes,
+                "init": cmd_init,
+                "doctor": cmd_doctor,
+            }[cmd](rest)
+        return cmd_oneliner(argv)
+    except (ConfigError, ProviderConfigError, SourceError) as e:
+        err.print(f"[red]error:[/] {escape(str(e))}")
+        return 2
+    except KeyboardInterrupt:
+        return 130
+
+
+# -- shared options --------------------------------------------------------------------------
+
+
+def _add_run_options(p: argparse.ArgumentParser) -> None:
+    g = p.add_argument_group("running")
+    g.add_argument("--provider", help="gemini | jev | azure | systemone | openai | ollama | mock")
+    g.add_argument("--model", help="override the provider's model")
+    g.add_argument("--base-url", help="custom endpoint (self-hosted / proxies)")
+    g.add_argument("--every", help="how often to look, e.g. 500ms, 2s, 1m")
+    g.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="offline: fake probabilities, print actions instead of running them",
+    )
+    g.add_argument("--json", action="store_true", help="emit JSON lines instead of the dashboard")
+    g.add_argument("--plain", action="store_true", help="plain log lines instead of the dashboard")
+    g.add_argument("--max-ticks", type=int, help=argparse.SUPPRESS)
+
+
+def _apply_overrides(data: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
+    provider = data.get("provider") or {}
+    if isinstance(provider, str):
+        provider = {"name": provider}
+    provider = dict(provider)
+    if args.provider:
+        provider["name"] = args.provider
+    if args.model:
+        provider["model"] = args.model
+    if args.base_url:
+        provider["base_url"] = args.base_url
+    if args.dry_run:
+        provider = {"name": "mock"}
+    data = {**data, "provider": provider}
+    if args.every:
+        data["every"] = args.every
+    return data
+
+
+def _load(target: str) -> dict[str, Any]:
+    """A path to a YAML file, or the name of a built-in recipe."""
+    import yaml
+
+    path = Path(target).expanduser()
+    if path.exists():
+        try:
+            data = yaml.safe_load(path.read_text())
+        except yaml.YAMLError as e:
+            raise ConfigError(f"{path}: invalid YAML: {e}") from e
+        if not isinstance(data, dict):
+            raise ConfigError(f"{path}: expected a mapping at the top level")
+        return data
+    if target in recipe_names():
+        return recipe_data(target)
+    raise ConfigError(f"no such file or recipe: {target} (see `ifseen recipes`)")
+
+
+def run_config(cfg: WatchConfig, args: argparse.Namespace) -> int:
+    provider = build_provider(cfg.provider)
+    source = build_source(cfg.source, every=cfg.every)
+    missing = source.provides - provider.supports
+    if missing:
+        raise ProviderConfigError(
+            f"{provider.name} can't handle {', '.join(sorted(missing))} input"
+            + ("; use --provider gemini for mic sources" if "audio" in missing else "")
+        )
+
+    interactive = sys.stdout.isatty() and not (args.json or args.plain)
+    view: Any = JsonLines() if args.json else Dashboard() if interactive else PlainLog()
+    actions = ActionRunner(log=view.add, dry_run=args.dry_run)
+    engine = Engine(cfg, source, provider, actions, listener=view)
+    if args.dry_run:
+        view.add("dry", "dry run: probabilities are random and actions are only printed")
+    try:
+        with source:
+            if isinstance(view, Dashboard):
+                view.attach(engine)
+                with view:
+                    reason = engine.run(max_ticks=args.max_ticks)
+            else:
+                reason = engine.run(max_ticks=args.max_ticks)
+    finally:
+        actions.close()
+        provider.close()
+    return 130 if reason == "interrupted" else 0
+
+
+# -- commands ----------------------------------------------------------------------------------
+
+
+def cmd_watch(argv: list[str]) -> int:
+    p = argparse.ArgumentParser(prog="ifseen watch", description="Run a rules file or recipe.")
+    p.add_argument("target", help="rules.yaml or a recipe name (see `ifseen recipes`)")
+    _add_run_options(p)
+    args = p.parse_args(argv)
+    cfg = load_config(_apply_overrides(_load(args.target), args))
+    return run_config(cfg, args)
+
+
+def _slug(text: str, taken: set[str]) -> str:
+    base = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:40].strip("-") or "rule"
+    name, n = base, 2
+    while name in taken:
+        name = f"{base[:36]}-{n}"
+        n += 1
+    taken.add(name)
+    return name
+
+
+def build_oneliner_config(args: argparse.Namespace) -> dict[str, Any]:
+    source: dict[str, Any] = {}
+    if args.camera is not None:
+        source["camera"] = args.camera
+    elif args.url:
+        source["url"] = args.url
+    elif args.file:
+        source["file"] = args.file
+    elif args.screen is not None:
+        source["screen"] = int(args.screen)
+    if args.mic:
+        source["mic"] = {}
+    if not source:
+        source["screen"] = 1
+
+    then: list[Any] = []
+    then += [{"shell": c} for c in args.then or []]
+    if args.notify:
+        then.append("notify")
+    if args.say is not None:
+        then.append({"say": args.say or "{rule}"})
+    if args.ntfy:
+        then.append({"ntfy": args.ntfy})
+    if args.webhook:
+        then.append({"webhook": args.webhook})
+    if args.snapshot is not None:
+        then.append({"snapshot": args.snapshot or "ifseen-captures"})
+    if not then:
+        then = ["notify", {"log": "{when} ({percent})"}]
+    if args.once:
+        then.append("exit")
+
+    taken: set[str] = set()
+    rules = []
+    for cond in args.conditions:
+        rule: dict[str, Any] = {"name": _slug(cond, taken), "when": cond, "then": then}
+        if args.threshold is not None:
+            rule["threshold"] = args.threshold
+        if args.consecutive is not None:
+            rule["for"] = args.consecutive
+        if args.cooldown is not None:
+            rule["cooldown"] = args.cooldown
+        rules.append(rule)
+    data: dict[str, Any] = {"source": source, "rules": rules}
+    if args.context:
+        data["context"] = args.context
+    return data
+
+
+def cmd_oneliner(argv: list[str]) -> int:
+    p = argparse.ArgumentParser(
+        prog="ifseen",
+        description="Watch your screen, camera or mic and act when something is true.",
+        epilog='example: ifseen "the kettle is boiling" --camera 0 --say "tea time" --once',
+    )
+    p.add_argument(
+        "conditions", nargs="+", metavar="CONDITION", help="plain-English statement(s) to watch for"
+    )
+    src = p.add_argument_group("source (default: --screen)")
+    src.add_argument("--screen", nargs="?", const="1", metavar="N", help="monitor number (0=all)")
+    src.add_argument(
+        "--camera", nargs="?", const="0", metavar="DEV", help="webcam index or rtsp:// URL"
+    )
+    src.add_argument("--url", help="HTTP snapshot URL to poll")
+    src.add_argument("--file", help="image, .wav or video file")
+    src.add_argument("--mic", action="store_true", help="also listen (gemini only)")
+    act = p.add_argument_group("actions (default: --notify)")
+    act.add_argument("--then", action="append", metavar="CMD", help="shell command (repeatable)")
+    act.add_argument("--notify", action="store_true", help="desktop notification")
+    act.add_argument("--say", nargs="?", const="", metavar="TEXT", help="speak out loud")
+    act.add_argument("--ntfy", metavar="TOPIC", help="push to your phone via ntfy.sh")
+    act.add_argument("--webhook", metavar="URL", help="POST JSON to a URL")
+    act.add_argument("--snapshot", nargs="?", const="", metavar="DIR", help="save the frame")
+    act.add_argument("--once", action="store_true", help="exit after the first trigger")
+    tune = p.add_argument_group("tuning")
+    tune.add_argument("--threshold", type=float, help="probability needed to fire (default 0.8)")
+    tune.add_argument("--for", dest="consecutive", type=int, help="consecutive hits required")
+    tune.add_argument("--cooldown", help="min time between triggers, e.g. 30s")
+    tune.add_argument("--context", help="extra context sent with every capture")
+    _add_run_options(p)
+    args = p.parse_args(argv)
+    data = _apply_overrides(build_oneliner_config(args), args)
+    cfg = load_config(data)
+    return run_config(cfg, args)
+
+
+def cmd_test(argv: list[str]) -> int:
+    p = argparse.ArgumentParser(
+        prog="ifseen test",
+        description="Ask every rule once against a single capture and print the probabilities. "
+        "Use it to tune thresholds.",
+    )
+    p.add_argument("target", help="rules.yaml or recipe name")
+    p.add_argument("--image", help="image file to test with")
+    p.add_argument("--audio", help=".wav file to test with")
+    p.add_argument("--provider")
+    p.add_argument("--model")
+    p.add_argument("--base-url")
+    p.add_argument("--json", action="store_true")
+    args = p.parse_args(argv)
+    data = _load(args.target)
+    if args.image or args.audio:
+        src: dict[str, Any] = {}
+        if args.image:
+            src["file"] = args.image
+        elif args.audio:
+            src["file"] = args.audio
+        data = {**data, "source": src}
+    ns = argparse.Namespace(
+        provider=args.provider, model=args.model, base_url=args.base_url, every=None, dry_run=False
+    )
+    cfg = load_config(_apply_overrides(data, ns))
+    provider = build_provider(cfg.provider)
+    source = build_source(cfg.source, every=cfg.every)
+    try:
+        with source:
+            sample = source.read()
+        if args.image and args.audio:
+            from .media import wav_file_to_sample
+
+            a = wav_file_to_sample(args.audio)
+            sample.wav, sample.audio_rms = a.wav, a.audio_rms
+        questions = [Question(r.name, r.when, r.true_means, r.false_means) for r in cfg.rules]
+        try:
+            decision = provider.decide(sample, questions, cfg.context)
+        except ProviderError as e:
+            err.print(f"[red]error:[/] {escape(str(e))}")
+            return 1
+    finally:
+        provider.close()
+
+    if args.json:
+        import json
+
+        print(
+            json.dumps(
+                {
+                    "probs": decision.probs,
+                    "tokens": decision.input_tokens,
+                    "latency_ms": round(decision.latency_ms, 1),
+                }
+            )
+        )
+        return 0
+    out = Console(highlight=False)
+    table = Table(title=f"{source.describe()} → {provider.describe()}", title_justify="left")
+    table.add_column("rule", style="bold")
+    table.add_column("probability", justify="right")
+    table.add_column("threshold", justify="right")
+    table.add_column("would fire")
+    for r in cfg.rules:
+        prob = decision.probs.get(r.name, 0.0)
+        fires = prob >= r.threshold
+        table.add_row(
+            r.name,
+            f"{prob * 100:.1f}%",
+            f"{r.threshold * 100:.0f}%",
+            "[green]yes[/]" if fires else "[grey50]no[/]",
+        )
+    out.print(table)
+    cost = provider.cost_usd(decision.input_tokens)
+    out.print(
+        f"[grey50]{decision.input_tokens} input tokens · ${cost:.6f} · "
+        f"{decision.latency_ms:.0f} ms[/]"
+    )
+    return 0
+
+
+def cmd_recipes(argv: list[str]) -> int:
+    p = argparse.ArgumentParser(prog="ifseen recipes", description="List or print recipes.")
+    p.add_argument("name", nargs="?")
+    args = p.parse_args(argv)
+    if args.name:
+        try:
+            sys.stdout.write(recipe_text(args.name))
+        except KeyError as e:
+            raise ConfigError(f"no recipe named {args.name!r}") from e
+        return 0
+    out = Console(highlight=False)
+    table = Table(box=None, show_header=False, pad_edge=False)
+    table.add_column(style="bold cyan", no_wrap=True)
+    table.add_column()
+    for name in recipe_names():
+        table.add_row(name, recipe_summary(name))
+    out.print(table)
+    out.print(
+        "\n[grey50]run one:[/] ifseen watch <name>    [grey50]customise:[/] ifseen init <name>"
+    )
+    return 0
+
+
+def cmd_init(argv: list[str]) -> int:
+    p = argparse.ArgumentParser(prog="ifseen init", description="Write a starter rules file.")
+    p.add_argument("recipe", nargs="?", default="build-watcher")
+    p.add_argument("-o", "--output", default="ifseen.yaml")
+    p.add_argument("--force", action="store_true")
+    args = p.parse_args(argv)
+    try:
+        text = recipe_text(args.recipe)
+    except KeyError as e:
+        raise ConfigError(f"no recipe named {args.recipe!r} (see `ifseen recipes`)") from e
+    out = Path(args.output)
+    if out.exists() and not args.force:
+        raise ConfigError(f"{out} already exists (use --force to overwrite)")
+    out.write_text(text)
+    load_config_file(out)  # sanity check
+    print(f"wrote {out} - edit it, then: ifseen watch {out}")
+    return 0
+
+
+def cmd_doctor(argv: list[str]) -> int:
+    from importlib.util import find_spec
+
+    from .constants import AZURE_ENDPOINT_ENV, GEMINI_KEY_ENVS, JEV_KEY_ENV, OPENAI_KEY_ENV
+    from .providers import detect_provider_name
+
+    out = Console(highlight=False)
+    ok, bad = "[green]✓[/]", "[red]✗[/]"
+    out.print(f"[bold]ifseen {VERSION}[/] on Python {sys.version.split()[0]}\n")
+    out.print("[bold]keys[/]")
+    for env in (*GEMINI_KEY_ENVS, JEV_KEY_ENV, AZURE_ENDPOINT_ENV, OPENAI_KEY_ENV):
+        out.print(f"  {ok if os.environ.get(env) else '[grey50]-[/]'} {env}")
+    try:
+        out.print(f"  → auto provider: [cyan]{detect_provider_name()}[/]")
+    except ProviderConfigError:
+        out.print(
+            f"  {bad} no key found - try [cyan]--dry-run[/], or get a free Gemini key at "
+            "https://aistudio.google.com/apikey"
+        )
+    out.print("\n[bold]sources[/]")
+    for label, module, extra in (
+        ("screen", "mss", "screen"),
+        ("camera/video", "cv2", "camera"),
+        ("mic", "sounddevice", "mic"),
+    ):
+        have = find_spec(module) is not None
+        hint = "" if have else f"  [grey50]{escape(f'pip install ifseen[{extra}]')}[/]"
+        out.print(f"  {ok if have else bad} {label}{hint}")
+    if find_spec("mss") is not None:
+        try:
+            from .config import ScreenSource as ScreenCfg
+            from .sources.screen import ScreenSource
+
+            with ScreenSource(ScreenCfg()) as s:
+                sample = s.read()
+            out.print(f"  {ok} screen capture works ({sample.width}x{sample.height} sent)")
+            if sys.platform == "darwin":
+                out.print(
+                    "  [grey50]macOS: if captures only show your wallpaper, grant your "
+                    "terminal Screen Recording permission in System Settings.[/]"
+                )
+        except Exception as e:
+            out.print(f"  {bad} screen capture failed: {escape(str(e))}")
+    return 0
+
+
+def _print_help() -> None:
+    out = Console(highlight=False)
+    out.print(f"""[bold]ifseen {VERSION}[/] - if seen (or heard), then do.
+
+[bold]quick start[/]
+  ifseen "a CI build on screen has failed" --say "build broke"
+  ifseen "a person is at the door" --camera 0 --ntfy my-topic
+  ifseen "someone says my name" --mic --notify --provider gemini
+
+[bold]commands[/]
+  ifseen CONDITION... \\[options]   watch for plain-English conditions (see --help)
+  ifseen watch FILE|RECIPE        run a rules file or a built-in recipe
+  ifseen test FILE --image IMG    print each rule's probability for one capture
+  ifseen recipes [NAME]           list built-in recipes, or print one
+  ifseen init [RECIPE]            write a starter ifseen.yaml
+  ifseen doctor                   check keys, dependencies and permissions
+
+[bold]providers[/] (auto-detected from env)
+  GEMINI_API_KEY      Gemini Decision 1 - images [italic]and audio[/], free tier
+  TYPESAFE_API_KEY    Jev
+  AZURE_DECISION_*    Microsoft-Decision-1.1 on Azure Foundry
+  OPENAI_API_KEY      any OpenAI-compatible vision model (or --provider ollama, fully local)
+  --dry-run           no key needed: fake probabilities, actions printed not run
+""")
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,12 @@
+# Get pinged when a long task on screen finishes - a download, render, export, install or test run.
+source: screen
+every: 5s
+rules:
+  - name: task-finished
+    when: A progress bar, download, render, export, install or test run on screen has completed (100%, "done", "complete" or a finished summary).
+    threshold: 0.85
+    for: 2
+    then:
+      - notify: "Done! {when}"
+      - say: it's done
+      - exit

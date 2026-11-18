@@ -1,0 +1,25 @@
+# Smart doorbell for any camera: people at the door and parcels left behind, sent to your phone via ntfy.
+# Point `url` at a camera snapshot endpoint (Frigate, Home Assistant, most IP cams) or use `camera: rtsp://...`.
+source:
+  url: ${DOORBELL_SNAPSHOT_URL:-http://192.168.1.50/snapshot.jpg}
+every: 2s
+rules:
+  - name: person-at-door
+    when: A person is standing at or walking up to the front door.
+    false_means: Empty doorstep, passing cars, animals, or people only on the street in the distance.
+    threshold: 0.8
+    for: 2
+    cooldown: 2m
+    then:
+      - ntfy: ${NTFY_TOPIC:-ifseen-doorbell-change-me}
+      - snapshot: ~/ifseen-captures/doorbell
+  - name: parcel-left
+    when: A parcel, box or delivery bag has been left on the doorstep.
+    threshold: 0.85
+    for: 3
+    cooldown: 30m
+    then:
+      - ntfy:
+          topic: ${NTFY_TOPIC:-ifseen-doorbell-change-me}
+          title: "📦 Parcel delivered"
+          priority: high

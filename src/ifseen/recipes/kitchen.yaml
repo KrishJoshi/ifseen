@@ -1,0 +1,29 @@
+# Kitchen timer that actually looks: water boiling, pot boiling over, smoke, or the oven left on with nobody around.
+source:
+  camera: ${KITCHEN_CAMERA:-0}
+every: 4s
+rules:
+  - name: boiling
+    when: A pot or pan of water is at a rolling boil (lots of bubbles or steam).
+    threshold: 0.8
+    for: 2
+    cooldown: 10m
+    then:
+      - say: the water is boiling
+  - name: boiling-over
+    when: A pot is boiling over, or liquid is spilling onto the hob.
+    threshold: 0.75
+    cooldown: 2m
+    then:
+      - say: pot boiling over
+      - notify: "Pot is boiling over!"
+  - name: smoke
+    when: There is smoke rising from the hob, a pan or the oven.
+    threshold: 0.75
+    for: 2
+    cooldown: 2m
+    then:
+      - say: smoke in the kitchen
+      - ntfy:
+          topic: ${NTFY_TOPIC:-ifseen-kitchen-change-me}
+          priority: urgent

@@ -1,0 +1,20 @@
+# Catch the dog on the sofa (or the cat on the counter) and tell them off, in your voice.
+source:
+  camera: ${PET_CAMERA:-0}
+every: 3s
+rules:
+  - name: dog-on-sofa
+    when: A dog is on the sofa or couch.
+    threshold: 0.85
+    for: 2
+    cooldown: 2m
+    then:
+      - shell: afplay ~/off-the-sofa.m4a 2>/dev/null || say "off the sofa"
+      - snapshot: ~/ifseen-captures/pets
+  - name: cat-on-counter
+    when: A cat is on the kitchen counter or table.
+    threshold: 0.85
+    for: 2
+    cooldown: 2m
+    then:
+      - say: get down

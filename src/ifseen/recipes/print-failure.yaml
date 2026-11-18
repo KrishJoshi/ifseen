@@ -1,0 +1,26 @@
+# Catch 3D print failures ("spaghetti", detached prints) and pause the printer before it wastes a spool.
+source:
+  camera: ${PRINTER_CAMERA:-0}
+every: 10s
+context: Camera pointed at an FDM 3D printer bed.
+rules:
+  - name: spaghetti
+    when: The 3D print has failed - a tangled mess of loose filament ("spaghetti"), a print knocked off the bed, or the nozzle printing into thin air.
+    false_means: A normal print in progress, an empty bed, or a finished print.
+    threshold: 0.85
+    for: 3
+    cooldown: 15m
+    then:
+      - ntfy:
+          topic: ${NTFY_TOPIC:-ifseen-printer-change-me}
+          title: "🍝 Print failure detected"
+          priority: urgent
+      # OctoPrint example - uncomment and set OCTOPRINT_URL / OCTOPRINT_KEY:
+      # - shell: 'curl -s -X POST "$OCTOPRINT_URL/api/job" -H "X-Api-Key: $OCTOPRINT_KEY" -H "Content-Type: application/json" -d "{\"command\":\"pause\",\"action\":\"pause\"}"'
+  - name: print-finished
+    when: The 3D print looks complete and the print head has moved away from the finished part.
+    threshold: 0.85
+    for: 3
+    cooldown: 1h
+    then:
+      - ntfy: ${NTFY_TOPIC:-ifseen-printer-change-me}

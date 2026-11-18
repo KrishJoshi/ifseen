@@ -1,0 +1,23 @@
+# Example: an OctoPrint camera snapshot, pausing the print when it fails.
+source:
+  url: ${OCTOPRINT_URL}/webcam/?action=snapshot
+every: 15s
+context: Webcam pointed at an FDM 3D printer.
+provider:
+  name: gemini
+  resolution: low
+rules:
+  - name: spaghetti
+    when: The 3D print has failed - a tangled mess of loose filament or a print knocked off the bed.
+    false_means: A normal print in progress, an empty bed, or a finished print.
+    threshold: 0.85
+    for: 3
+    cooldown: 30m
+    then:
+      - shell: >-
+          curl -s -X POST "$OCTOPRINT_URL/api/job" -H "X-Api-Key: $OCTOPRINT_KEY"
+          -H "Content-Type: application/json" -d '{"command":"pause","action":"pause"}'
+      - ntfy:
+          topic: ${NTFY_TOPIC}
+          title: "Print paused: spaghetti detected"
+          priority: urgent

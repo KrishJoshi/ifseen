@@ -1,0 +1,35 @@
+# Camera + mic baby monitor: crying, standing up in the cot, or face covered. (Gemini - it can hear)
+source:
+  camera: ${NURSERY_CAMERA:-0}
+  mic:
+    seconds: 5
+every: 4s
+provider: gemini
+rules:
+  - name: crying
+    when: A baby or toddler is crying or screaming in the audio.
+    threshold: 0.8
+    for: 2
+    cooldown: 3m
+    then:
+      - ntfy:
+          topic: ${NTFY_TOPIC:-ifseen-nursery-change-me}
+          title: "😢 Baby is crying"
+          priority: high
+  - name: standing-up
+    when: The baby is standing up or climbing in the cot.
+    threshold: 0.85
+    for: 2
+    cooldown: 5m
+    then:
+      - ntfy: ${NTFY_TOPIC:-ifseen-nursery-change-me}
+  - name: face-covered
+    when: A blanket, toy or pillow is covering the baby's face.
+    threshold: 0.7
+    for: 2
+    cooldown: 1m
+    then:
+      - ntfy:
+          topic: ${NTFY_TOPIC:-ifseen-nursery-change-me}
+          title: "⚠️ Check on the baby"
+          priority: urgent

@@ -1,0 +1,16 @@
+# Example: fire a Home Assistant webhook automation when the garage door is left open at night.
+# In HA: Settings > Automations > trigger "Webhook" with ID ifseen_garage.
+source:
+  url:
+    url: http://homeassistant.local:8123/api/camera_proxy/camera.garage
+    headers:
+      Authorization: Bearer ${HA_TOKEN}
+every: 30s
+rules:
+  - name: garage-open
+    when: The garage door is open.
+    threshold: 0.85
+    for: 2
+    cooldown: 30m
+    then:
+      - webhook: http://homeassistant.local:8123/api/webhook/ifseen_garage

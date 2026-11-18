@@ -1,0 +1,26 @@
+# Zoned out on a call? Buzzes you when someone says your name or asks you something. (mic, Gemini only)
+source:
+  mic:
+    seconds: 6
+every: 3s
+provider: gemini
+rules:
+  - name: name-called
+    when: Someone in the audio says the name "${MY_NAME:-Alex}" or addresses that person directly.
+    threshold: 0.75
+    cooldown: 20s
+    then:
+      - notify: "👀 Someone said your name"
+      - say: heads up
+  - name: question-for-me
+    when: A speaker asks "${MY_NAME:-Alex}" a direct question and is waiting for an answer.
+    threshold: 0.75
+    cooldown: 30s
+    then:
+      - notify: "❓ You were asked a question"
+  - name: action-item
+    when: Someone assigns a task or action item to "${MY_NAME:-Alex}".
+    threshold: 0.8
+    cooldown: 1m
+    then:
+      - notify: "📝 Action item for you"

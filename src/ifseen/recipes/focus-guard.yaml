@@ -1,0 +1,19 @@
+# A gentle nudge when you drift onto social media or video sites during focus time.
+source: screen
+every: 10s
+rules:
+  - name: doomscrolling
+    when: The screen is mostly showing a social media feed or short-form video (X/Twitter, Instagram, TikTok, Reddit, YouTube Shorts, Facebook).
+    threshold: 0.8
+    for: 3
+    cooldown: 10m
+    then:
+      - say: back to work
+      - notify: "You've been scrolling for a bit. Back to it?"
+  - name: video-binge
+    when: A full-screen or large video (YouTube, Netflix, Twitch) is playing and is not a work meeting or tutorial.
+    threshold: 0.85
+    for: 6
+    cooldown: 20m
+    then:
+      - notify: "Still watching?"

@@ -1,0 +1,18 @@
+# Watch your screen and tell you the moment a CI build or deploy finishes.
+source: screen
+every: 3s
+rules:
+  - name: build-failed
+    when: A CI pipeline, build or deploy on screen has failed (red cross, "failed" or "error" status).
+    threshold: 0.85
+    for: 2
+    then:
+      - notify: "Build failed ({percent})"
+      - say: build failed
+  - name: build-passed
+    when: A CI pipeline, build or deploy on screen has just finished successfully (all green, "passed" or "success").
+    threshold: 0.85
+    for: 2
+    then:
+      - notify: "Build passed ({percent})"
+      - say: build passed
