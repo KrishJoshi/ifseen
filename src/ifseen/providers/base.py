@@ -110,6 +110,25 @@ class Provider(ABC):
         raise last
 
 
+def parse_noul_answers(
+    name: str, data: object, questions: list[Question], usage_key: str
+) -> tuple[dict[str, float], int]:
+    """Pull noul probabilities and token usage out of a decision response, defensively."""
+    if not isinstance(data, dict) or not isinstance(data.get("answers"), dict):
+        raise ProviderError(f"{name}: response had no answers")
+    answers = data["answers"]
+    probs = {}
+    for q in questions:
+        a = answers.get(q.key)
+        probs[q.key] = clamp_prob(a.get("noul")) if isinstance(a, dict) else 0.0
+    usage = data.get("usage")
+    try:
+        tokens = int(usage.get(usage_key) or 0) if isinstance(usage, dict) else 0
+    except (TypeError, ValueError):
+        tokens = 0
+    return probs, tokens
+
+
 def b64(data: bytes) -> str:
     return base64.b64encode(data).decode("ascii")
 

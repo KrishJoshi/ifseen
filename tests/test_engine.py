@@ -210,3 +210,41 @@ def test_many_rules_one_call_per_tick():
     engine, _, provider, *_ = make(rules, [{}] * 4, frames(4), skip_unchanged=False)
     engine.run()
     assert provider.calls == 4
+
+
+def test_low_threshold_rule_can_rearm():
+    probs = [0.2, 0.01, 0.2]
+    engine, events, *_ = make(
+        [{"name": "r", "when": "x", "threshold": 0.1, "cooldown": 0, "then": ["log"]}],
+        [{"r": p} for p in probs],
+        frames(3),
+        skip_unchanged=False,
+    )
+    engine.run()
+    assert fires(events) == ["r", "r"]
+
+
+class BrokenSource(ListSource):
+    def read(self):
+        raise OSError("half-written file")
+
+
+def test_unexpected_source_errors_are_reported_then_fatal():
+    from ifseen.sources import SourceError
+
+    clock = FakeClock()
+    config = load_config({"source": "screen", "rules": [{"name": "r", "when": "x"}]})
+    events = []
+    engine = Engine(
+        config,
+        BrokenSource([]),
+        ScriptedProvider([]),
+        ActionRunner(log=lambda *_: None, background=False),
+        listener=events.append,
+        clock=clock,
+        sleep=clock.sleep,
+    )
+    with pytest.raises(SourceError, match="10 times in a row"):
+        engine.run()
+    errors = [e for e in events if e["event"] == "error"]
+    assert len(errors) == 10 and errors[0]["message"] == "capture failed: OSError"

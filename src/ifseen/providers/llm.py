@@ -83,7 +83,11 @@ class OpenAICompatProvider(Provider):
         parsed = parse_probabilities(text if isinstance(text, str) else json.dumps(text))
         # Fail closed: a statement the model skipped never fires.
         probs = {q.key: clamp_prob(parsed.get(q.key, 0.0)) for q in questions}
-        tokens = int((data.get("usage") or {}).get("prompt_tokens") or 0)
+        usage = data.get("usage")
+        try:
+            tokens = int(usage.get("prompt_tokens") or 0) if isinstance(usage, dict) else 0
+        except (TypeError, ValueError):
+            tokens = 0
         return Decision(probs=probs, input_tokens=tokens, latency_ms=latency, model=self.model)
 
 

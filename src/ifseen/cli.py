@@ -12,6 +12,7 @@ import argparse
 import os
 import re
 import sys
+import wave
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +42,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ifseen {VERSION}")
         return 0
     try:
+        typo = _subcommand_typo(argv[0])
+        if typo:
+            err.print(
+                f"[red]error:[/] unknown command {escape(argv[0])!r} - did you mean "
+                f"[cyan]ifseen {typo}[/]? (quote multi-word conditions)"
+            )
+            return 2
         if argv[0] in SUBCOMMANDS:
             cmd, rest = argv[0], argv[1:]
             return {
@@ -56,6 +64,16 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     except KeyboardInterrupt:
         return 130
+
+
+def _subcommand_typo(word: str) -> str | None:
+    """'ifseen recipe' should not silently start watching for the condition 'recipe'."""
+    import difflib
+
+    if word in SUBCOMMANDS or word.startswith("-") or " " in word.strip():
+        return None
+    match = difflib.get_close_matches(word.lower(), sorted(SUBCOMMANDS), n=1, cutoff=0.75)
+    return match[0] if match else None
 
 
 # -- shared options --------------------------------------------------------------------------
@@ -175,7 +193,7 @@ def build_oneliner_config(args: argparse.Namespace) -> dict[str, Any]:
     elif args.file:
         source["file"] = args.file
     elif args.screen is not None:
-        source["screen"] = int(args.screen)
+        source["screen"] = args.screen
     if args.mic:
         source["mic"] = {}
     if not source:
@@ -225,7 +243,9 @@ def cmd_oneliner(argv: list[str]) -> int:
         "conditions", nargs="+", metavar="CONDITION", help="plain-English statement(s) to watch for"
     )
     src = p.add_argument_group("source (default: --screen)")
-    src.add_argument("--screen", nargs="?", const="1", metavar="N", help="monitor number (0=all)")
+    src.add_argument(
+        "--screen", nargs="?", const=1, type=int, metavar="N", help="monitor number (0=all)"
+    )
     src.add_argument(
         "--camera", nargs="?", const="0", metavar="DEV", help="webcam index or rtsp:// URL"
     )
@@ -286,7 +306,10 @@ def cmd_test(argv: list[str]) -> int:
         if args.image and args.audio:
             from .media import wav_file_to_sample
 
-            a = wav_file_to_sample(args.audio)
+            try:
+                a = wav_file_to_sample(args.audio)
+            except (OSError, EOFError, wave.Error) as e:
+                raise SourceError(f"could not read {args.audio} as PCM WAV") from e
             sample.wav, sample.audio_rms = a.wav, a.audio_rms
         questions = [Question(r.name, r.when, r.true_means, r.false_means) for r in cfg.rules]
         try:

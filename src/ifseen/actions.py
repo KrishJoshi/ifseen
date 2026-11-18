@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import platform
-import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -24,6 +25,8 @@ from .constants import HTTP_TIMEOUT_SECONDS, NTFY_DEFAULT_SERVER
 from .media import Sample
 
 Log = Callable[[str, str], None]  # (level, message)
+
+_SHELL_GRACE_SECONDS = 10.0
 
 
 @dataclass
@@ -50,22 +53,18 @@ class FireEvent:
 class _SafeFormatter(Formatter):
     """str.format that leaves unknown {placeholders} untouched instead of raising."""
 
-    def __init__(self, quote: bool = False):
-        self.quote = quote
-
     def get_value(self, key, args, kwargs):  # type: ignore[override]
         if isinstance(key, str) and key in kwargs:
-            v = str(kwargs[key])
-            return shlex.quote(v) if self.quote else v
+            return str(kwargs[key])
         return "{" + str(key) + "}"
 
     def format_field(self, value, format_spec):  # type: ignore[override]
         return str(value)
 
 
-def render(template: str, event: FireEvent, shell: bool = False) -> str:
+def render(template: str, event: FireEvent) -> str:
     try:
-        return _SafeFormatter(quote=shell).format(template, **event.fields())
+        return _SafeFormatter().format(template, **event.fields())
     except (ValueError, IndexError):
         return template
 
@@ -81,6 +80,9 @@ class ActionRunner:
         self.log = log
         self.dry_run = dry_run
         self._client = client
+        self._tmpdir: Path | None = None
+        self._procs: list[subprocess.Popen] = []
+        self._procs_lock = threading.Lock()
         self._pool = (
             ThreadPoolExecutor(max_workers=4, thread_name_prefix="ifseen-action")
             if background
@@ -96,7 +98,7 @@ class ActionRunner:
     def run(self, actions: list[Action], event: FireEvent) -> bool:
         """Run a rule's actions. Returns True if an `exit` action asked the watcher to stop."""
         if event.sample.jpeg is not None and event.snapshot is None:
-            event.snapshot = _temp_snapshot(event)
+            event.snapshot = self._temp_snapshot(event)
         if not actions:
             actions = [{"notify": True}]
         stop = False
@@ -106,7 +108,7 @@ class ActionRunner:
                 stop = True
                 continue
             if self.dry_run and kind not in ("log",):
-                self.log("dry", f"[{event.rule.name}] would run {kind}: {_short(opts)}")
+                self.log("dry", f"[{event.rule.name}] would run {kind}: {_describe(kind, opts)}")
                 continue
             if self._pool is None:
                 self._safe(kind, opts, event)
@@ -114,9 +116,30 @@ class ActionRunner:
                 self._pool.submit(self._safe, kind, opts, event)
         return stop
 
+    def _temp_snapshot(self, event: FireEvent) -> Path | None:
+        try:
+            if self._tmpdir is None:
+                # private per-run dir: a shared, predictable /tmp path invites symlink attacks
+                self._tmpdir = Path(tempfile.mkdtemp(prefix="ifseen-"))
+            path = self._tmpdir / f"{event.rule.name}-latest.jpg"
+            path.write_bytes(event.sample.jpeg or b"")
+            return path
+        except OSError as e:
+            self.log("warn", f"could not write temp snapshot: {e.strerror}")
+            return None
+
     def close(self) -> None:
         if self._pool is not None:
             self._pool.shutdown(wait=True, cancel_futures=False)
+        # Shell commands may still be reading $IFSEEN_SNAPSHOT (e.g. a rule ending in
+        # `exit`), so give them a moment before deleting the frames.
+        deadline = time.monotonic() + _SHELL_GRACE_SECONDS
+        for proc in self._procs:
+            with contextlib.suppress(subprocess.TimeoutExpired):
+                proc.wait(timeout=max(0.0, deadline - time.monotonic()))
+        if self._tmpdir is not None:
+            shutil.rmtree(self._tmpdir, ignore_errors=True)
+            self._tmpdir = None
         if self._client is not None:
             self._client.close()
 
@@ -125,6 +148,16 @@ class ActionRunner:
     def _safe(self, kind: str, opts: Any, event: FireEvent) -> None:
         try:
             getattr(self, f"_do_{kind}")(opts, event)
+        except httpx.HTTPStatusError as e:
+            # never echo the URL: webhook and ntfy URLs are effectively secrets
+            self.log(
+                "error",
+                f"[{event.rule.name}] {kind} failed: HTTP {e.response.status_code} "
+                f"from {e.request.url.host}",
+            )
+        except httpx.HTTPError as e:
+            host = e.request.url.host if _has_request(e) else "?"
+            self.log("error", f"[{event.rule.name}] {kind} failed: {type(e).__name__} ({host})")
         except Exception as e:  # an action failing must never kill the watcher
             self.log("error", f"[{event.rule.name}] {kind} failed: {type(e).__name__}: {e}")
 
@@ -151,7 +184,11 @@ class ActionRunner:
             raise ValueError("shell action needs a command")
         wait = isinstance(opts, dict) and bool(opts.get("wait"))
         env = {**os.environ, **{f"IFSEEN_{k.upper()}": v for k, v in event.fields().items()}}
-        proc = subprocess.Popen(render(cmd, event, shell=True), shell=True, env=env)
+        # Values reach the command only as IFSEEN_* env vars, never spliced into the command
+        # text, so file names, URLs or rule text can't inject shell syntax.
+        proc = subprocess.Popen(cmd, shell=True, env=env)
+        with self._procs_lock:
+            self._procs = [p for p in self._procs if p.poll() is None] + [proc]
         if wait:
             code = proc.wait()
             if code:
@@ -214,17 +251,20 @@ class ActionRunner:
         self.log("info", f"[{event.rule.name}] saved {path}")
 
 
-def _temp_snapshot(event: FireEvent) -> Path:
-    folder = Path(tempfile.gettempdir()) / "ifseen"
-    folder.mkdir(exist_ok=True)
-    path = folder / f"{event.rule.name}-latest.jpg"
-    path.write_bytes(event.sample.jpeg or b"")
-    return path
-
-
-def _short(opts: Any) -> str:
+def _describe(kind: str, opts: Any) -> str:
+    """Dry-run description that never prints URLs, topics or tokens."""
+    if kind in ("webhook", "ntfy"):
+        return "(destination hidden)"
     s = str(opts)
     return s if len(s) < 60 else s[:57] + "..."
+
+
+def _has_request(e: httpx.HTTPError) -> bool:
+    try:
+        e.request  # noqa: B018 - raises RuntimeError when unset
+    except RuntimeError:
+        return False
+    return True
 
 
 def desktop_notify(title: str, message: str) -> None:

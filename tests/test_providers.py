@@ -233,3 +233,25 @@ def test_providers_over_http(fake_server, name, env):
         p.close()
     assert d.probs["is-red"] > 0.9
     assert d.probs["is-blue"] < 0.1
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        [],
+        {"answers": []},
+        {"answers": {"is-red": "yes"}},
+        {"answers": {"is-red": {"noul": "high"}}, "usage": {"total_input_tokens": "lots"}},
+    ],
+)
+def test_malformed_responses_never_crash(payload):
+    client = httpx.Client(
+        transport=httpx.MockTransport(lambda r: httpx.Response(200, json=payload))
+    )
+    p = build_provider(ProviderConfig(name="gemini"), client=client, env={"GEMINI_API_KEY": "k"})
+    try:
+        d = p.decide(red_sample(), Q)
+    except ProviderError:
+        return
+    assert d.probs == {"is-red": 0.0, "is-blue": 0.0}
+    assert d.input_tokens == 0

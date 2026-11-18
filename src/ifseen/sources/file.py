@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+import wave
 from pathlib import Path
 
 from PIL import Image
@@ -61,13 +62,19 @@ class FileSource(Source):
 
     def read(self) -> Sample:
         if self.mode == "image":
-            with Image.open(self.path) as img:
-                return image_to_sample(img, label=self.describe())
+            try:
+                with Image.open(self.path) as img:
+                    return image_to_sample(img, label=self.describe())
+            except (OSError, ValueError) as e:  # missing, half-written or not an image
+                raise SourceError(f"could not read {self.path.name}: {type(e).__name__}") from e
         if self.mode == "audio":
             if self._audio_done and not self.cfg.loop:
                 raise SourceExhausted(f"finished {self.path.name}")
             self._audio_done = True
-            return wav_file_to_sample(str(self.path))
+            try:
+                return wav_file_to_sample(str(self.path))
+            except (OSError, EOFError, wave.Error) as e:
+                raise SourceError(f"could not read {self.path.name} as PCM WAV") from e
         return self._read_video()
 
     def _read_video(self) -> Sample:

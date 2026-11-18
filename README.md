@@ -158,7 +158,7 @@ rules:
     then:
       - notify: "Print failed ({percent})"         # desktop notification
       - say: print failed                           # text to speech
-      - shell: ./pause-printer.sh                   # runs with IFSEEN_* env vars
+      - shell: ./pause-printer.sh "$IFSEEN_SNAPSHOT" # gets IFSEEN_* env vars
       - webhook: {url: https://example.com/hook, image: true}
       - ntfy: {topic: my-topic, priority: urgent}   # push to phone, photo attached
       - snapshot: ~/captures                        # save the frame
@@ -166,9 +166,11 @@ rules:
       - exit                                        # stop watching
 ```
 
-**Templates** in action strings: `{rule}`, `{when}`, `{prob}`, `{percent}`, `{time}`,
-`{source}`, `{snapshot}`. In `shell` commands they're shell-quoted, and the same values are
-also exported as `IFSEEN_RULE`, `IFSEEN_PERCENT`, `IFSEEN_SNAPSHOT`, etc.
+**Templates** in `notify`, `say`, `log`, `ntfy` and `webhook` strings: `{rule}`, `{when}`,
+`{prob}`, `{percent}`, `{time}`, `{source}`, `{snapshot}`. **Shell commands are never
+templated**, so nothing from a file name, URL or rule can inject shell syntax. Instead they
+get the same values as environment variables: `$IFSEEN_RULE`, `$IFSEEN_PERCENT`,
+`$IFSEEN_SNAPSHOT` (path to the triggering frame), etc.
 
 **Writing good rules.** Decision models work best with narrow, positive statements about
 what's visible or audible. Prefer "A parcel is on the doorstep" over "Is there anything

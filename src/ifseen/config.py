@@ -71,7 +71,7 @@ class UrlSource(_Strict):
 
 
 class MicSource(_Strict):
-    seconds: float = DEFAULT_MIC_SECONDS
+    seconds: float = Field(DEFAULT_MIC_SECONDS, gt=0, le=60)
     device: int | str | None = None
     silence_rms: float = DEFAULT_SILENCE_RMS
 
@@ -92,12 +92,13 @@ class SourceConfig(_Strict):
         if not isinstance(data, dict):
             return data
         out = dict(data)
-        if out.get("screen") in (True, None) and "screen" in out:
+        if "screen" in out and (out["screen"] is True or out["screen"] is None):
             out["screen"] = {}
         if "screen" in out and isinstance(out["screen"], int):
             out["screen"] = {"monitor": out["screen"]}
         if "camera" in out and not isinstance(out["camera"], dict):
-            out["camera"] = {} if out["camera"] in (True, None) else {"device": out["camera"]}
+            cam = out["camera"]
+            out["camera"] = {} if cam is True or cam is None else {"device": cam}
         if "file" in out and isinstance(out["file"], str):
             out["file"] = {"path": out["file"]}
         if "url" in out and isinstance(out["url"], str):
@@ -105,7 +106,7 @@ class SourceConfig(_Strict):
         if "mic" in out:
             if out["mic"] is False:
                 out.pop("mic")
-            elif out["mic"] in (True, None):
+            elif out["mic"] is True or out["mic"] is None:
                 out["mic"] = {}
         return out
 
@@ -152,7 +153,7 @@ class Rule(_Strict):
     threshold: float = DEFAULT_THRESHOLD
     consecutive: int = Field(DEFAULT_CONSECUTIVE, alias="for", ge=1)
     cooldown: float = DEFAULT_COOLDOWN_SECONDS
-    hysteresis: float = DEFAULT_HYSTERESIS
+    hysteresis: float = Field(DEFAULT_HYSTERESIS, ge=0, lt=1)
     then: list[Action] = Field(default_factory=list)
     true_means: str | None = None
     false_means: str | None = None

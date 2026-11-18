@@ -42,9 +42,15 @@ class CameraSource(Source):
             device = int(device)
         self._cap = cv2.VideoCapture(device)
         if not self._cap.isOpened():
-            raise SourceError(f"could not open camera {self.cfg.device!r}")
-        self._stop.clear()
-        self._thread = threading.Thread(target=self._pump, name="ifseen-camera", daemon=True)
+            self._cap.release()
+            self._cap = None
+            raise SourceError(f"could not open {self.describe()}")
+        # A fresh stop event per pump: an old pump stuck in a blocking read() must never be
+        # revived by a later open().
+        self._stop = threading.Event()
+        self._thread = threading.Thread(
+            target=self._pump, args=(self._cap, self._stop), name="ifseen-camera", daemon=True
+        )
         self._thread.start()
         deadline = time.monotonic() + _FIRST_FRAME_TIMEOUT
         while time.monotonic() < deadline:
@@ -52,28 +58,33 @@ class CameraSource(Source):
                 if self._frame is not None or self._error:
                     break
             time.sleep(0.05)
-        if self._error:
-            raise SourceError(self._error)
-        if self._frame is None:
-            raise SourceError(f"camera {self.cfg.device!r} produced no frames")
+        if self._error or self._frame is None:
+            message = self._error or f"{self.describe()} produced no frames"
+            self.close()
+            raise SourceError(message)
 
-    def _pump(self) -> None:
+    def _pump(self, cap, stop: threading.Event) -> None:
         import cv2
 
         failures = 0
-        while not self._stop.is_set():
-            ok, frame = self._cap.read()
-            if not ok:
-                failures += 1
-                if failures > 50:
-                    self._error = f"camera {self.cfg.device!r} stopped producing frames"
-                    return
-                time.sleep(0.1)
-                continue
-            failures = 0
-            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            with self._lock:
-                self._frame = rgb
+        try:
+            while not stop.is_set():
+                ok, frame = cap.read()
+                if not ok:
+                    failures += 1
+                    if failures > 50:
+                        self._error = f"{self.describe()} stopped producing frames"
+                        return
+                    time.sleep(0.1)
+                    continue
+                failures = 0
+                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                with self._lock:
+                    self._frame = rgb
+        finally:
+            # The pump owns the capture. Releasing it from another thread while read() is
+            # blocked (common on stalled RTSP streams) can crash OpenCV.
+            cap.release()
 
     def read(self) -> Sample:
         if self._cap is None:
@@ -90,9 +101,10 @@ class CameraSource(Source):
         self._stop.set()
         if self._thread:
             self._thread.join(timeout=2)
-        if self._cap is not None:
+            self._thread = None
+        elif self._cap is not None:
             self._cap.release()
-            self._cap = None
+        self._cap = None
 
     def describe(self) -> str:
         d = self.cfg.device

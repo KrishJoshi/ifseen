@@ -127,3 +127,17 @@ def test_examples_are_valid(monkeypatch):
     assert examples
     for path in examples:
         assert load_config_file(path).rules
+
+
+def test_numeric_camera_and_screen_shorthands():
+    assert load_config(minimal(source={"camera": 1})).source.camera.device == 1
+    assert load_config(minimal(source={"camera": True})).source.camera.device == 0
+    assert load_config(minimal(source={"screen": 0})).source.screen.monitor == 0
+    assert load_config(minimal(source={"screen": 2})).source.screen.monitor == 2
+
+
+def test_mic_seconds_and_hysteresis_validated():
+    with pytest.raises(ConfigError, match="seconds"):
+        load_config(minimal(source={"mic": {"seconds": -1}}))
+    with pytest.raises(ConfigError, match="hysteresis"):
+        load_config(minimal(rules=[{"name": "a", "when": "x", "hysteresis": -0.1}]))

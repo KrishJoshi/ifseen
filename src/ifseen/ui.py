@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+import threading
 import time
 from collections import deque
 from typing import Any
@@ -48,6 +49,8 @@ class Dashboard:
         self.log: deque[tuple[float, str, str]] = deque(maxlen=8)
         self.live: Live | None = None
         self.header = ""
+        # actions log from worker threads while the engine renders from the main thread
+        self._lock = threading.RLock()
 
     # listener protocol
     def __call__(self, event: dict[str, Any]) -> None:
@@ -68,8 +71,9 @@ class Dashboard:
         self.refresh()
 
     def add(self, level: str, message: str) -> None:
-        self.log.append((time.time(), level, message))
-        self.refresh()
+        with self._lock:
+            self.log.append((time.time(), level, message))
+            self.refresh()
 
     def attach(self, engine: Engine) -> None:
         self.engine = engine
@@ -86,8 +90,9 @@ class Dashboard:
             self.live = None
 
     def refresh(self) -> None:
-        if self.live:
-            self.live.update(self.render())
+        with self._lock:
+            if self.live:
+                self.live.update(self.render())
 
     def render(self) -> Panel:
         # Below ~110 columns the "when" text is dropped; rule names are slugs of it anyway.
@@ -114,7 +119,9 @@ class Dashboard:
                 ]
                 table.add_row(*cells)
         events = Text()
-        for ts, level, msg in self.log:
+        with self._lock:
+            entries = list(self.log)
+        for ts, level, msg in entries:
             events.append(time.strftime("%H:%M:%S ", time.localtime(ts)), style="grey50")
             events.append(msg + "\n", style=_LEVEL_STYLE.get(level, ""))
         footer = Text(style="grey62")

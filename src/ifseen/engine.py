@@ -38,7 +38,8 @@ class RuleState:
             self.streak += 1
         else:
             self.streak = 0
-            if prob < r.threshold - r.hysteresis:
+            # never let the re-arm level reach 0, or a low-threshold rule could never re-arm
+            if prob < max(r.threshold - r.hysteresis, r.threshold / 2):
                 self.armed = True
         cooled = self.last_fired is None or now - self.last_fired >= r.cooldown
         if self.armed and self.streak >= r.consecutive and cooled:
@@ -141,12 +142,19 @@ class Engine:
         except SourceExhausted as e:
             self.stop(str(e))
             return
-        except SourceError as e:
+        except Exception as e:  # a flaky camera or half-written file shouldn't kill the watcher
             self._source_errors += 1
             self.stats.errors += 1
-            self._emit("error", message=str(e))
+            message = (
+                str(e) if isinstance(e, SourceError) else f"capture failed: {type(e).__name__}"
+            )
+            self._emit("error", message=message)
             if self._source_errors >= _MAX_CONSECUTIVE_SOURCE_ERRORS:
-                raise
+                if isinstance(e, SourceError):
+                    raise
+                raise SourceError(
+                    f"{message} ({_MAX_CONSECUTIVE_SOURCE_ERRORS} times in a row)"
+                ) from e
             return
 
         probs = self._decide(sample, now)

@@ -256,3 +256,31 @@ def test_package_ships_recipes():
     import ifseen.recipes as r
 
     assert any(p.name.endswith(".yaml") for p in Path(r.__file__).parent.iterdir())
+
+
+def test_subcommand_typos_are_caught(capsys):
+    assert main(["recipe"]) == 2
+    assert "did you mean" in capsys.readouterr().err
+
+
+def test_bad_screen_number_is_a_usage_error(capsys):
+    with pytest.raises(SystemExit) as exc:
+        main(["something", "--screen", "abc"])
+    assert exc.value.code == 2
+
+
+def test_unreadable_image_fails_cleanly(env, tmp_path):
+    bad = tmp_path / "broken.png"
+    bad.write_bytes(b"not a png")
+    proc = run_cli(["test", "build-watcher", "--image", str(bad)], env)
+    assert proc.returncode == 2
+    assert "could not read broken.png" in proc.stderr
+    assert "Traceback" not in proc.stderr
+
+
+def test_bad_wav_in_test_command_fails_cleanly(env, red_png, tmp_path):
+    bad = tmp_path / "bad.wav"
+    bad.write_bytes(b"RIFF nope")
+    proc = run_cli(["test", "build-watcher", "--image", str(red_png), "--audio", str(bad)], env)
+    assert proc.returncode == 2 and "PCM WAV" in proc.stderr
+    assert "Traceback" not in proc.stderr

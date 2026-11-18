@@ -21,10 +21,14 @@ def test_render_templates_and_unknown_placeholders():
     assert render("{rule} {percent} {nope}", e) == "door 93% {nope}"
 
 
-def test_render_shell_quotes_values():
-    e = event(when="it's $(rm -rf /) time")
-    out = render("echo {when}", e, shell=True)
-    assert out == "echo 'it'\"'\"'s $(rm -rf /) time'"
+def test_shell_commands_are_never_templated(tmp_path):
+    # rule text, file names and URLs must not be spliced into shell syntax
+    e = event(when="it's $(touch pwned) time")
+    out = tmp_path / "out.txt"
+    runner = ActionRunner(log=lambda *a: None, background=False)
+    runner.run([{"shell": {"cmd": f'echo "{{when}}|$IFSEEN_WHEN" > {out}', "wait": True}}], e)
+    assert out.read_text().strip() == "{when}|it's $(touch pwned) time"
+    assert not (tmp_path / "pwned").exists()
 
 
 def test_shell_action_gets_env_and_runs(tmp_path):
@@ -103,3 +107,43 @@ def test_default_action_is_notify(monkeypatch):
 
 def test_json_roundtrip_of_fields():
     assert json.dumps(event().fields())
+
+
+def test_http_errors_never_log_the_url():
+    logs = []
+    client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(500)))
+    runner = ActionRunner(log=lambda lvl, m: logs.append(m), background=False, client=client)
+    runner.run([{"webhook": "https://hooks.example.com/services/SECRET123"}], event())
+    runner.run([{"ntfy": "secret-topic-456"}], event())
+    assert len(logs) == 2
+    joined = " ".join(logs)
+    assert "HTTP 500" in joined and "hooks.example.com" in joined
+    assert "SECRET123" not in joined and "secret-topic-456" not in joined
+
+
+def test_dry_run_hides_destinations():
+    logs = []
+    runner = ActionRunner(log=lambda lvl, m: logs.append(m), dry_run=True, background=False)
+    runner.run(
+        [{"ntfy": {"topic": "t", "token": "tk_SECRET"}}, {"webhook": "https://x/SECRET"}], event()
+    )
+    assert logs and all("SECRET" not in m for m in logs)
+
+
+def test_temp_snapshot_is_private_per_run():
+    runner = ActionRunner(log=lambda *a: None, background=False)
+    e = event()
+    runner.run([{"log": True}], e)
+    assert e.snapshot is not None and e.snapshot.exists()
+    assert e.snapshot.parent.name.startswith("ifseen-")
+    assert oct(e.snapshot.parent.stat().st_mode)[-3:] == "700"
+
+
+def test_close_removes_temp_frames_after_shell_finishes(tmp_path):
+    copy = tmp_path / "copy.jpg"
+    runner = ActionRunner(log=lambda *a: None)
+    e = event()
+    runner.run([{"shell": f'sleep 0.3; cp "$IFSEEN_SNAPSHOT" {copy}'}], e)
+    runner.close()  # must wait for the shell before deleting the frame it is reading
+    assert copy.exists() and copy.read_bytes()[:2] == b"\xff\xd8"
+    assert e.snapshot is not None and not e.snapshot.parent.exists()

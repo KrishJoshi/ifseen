@@ -9,11 +9,10 @@ from ..media import Sample
 from .base import (
     Decision,
     Provider,
-    ProviderError,
     Question,
     b64,
-    clamp_prob,
     describe_capture,
+    parse_noul_answers,
 )
 
 
@@ -70,10 +69,5 @@ class GeminiProvider(Provider):
         body = self.build_request(sample, questions, context)
         headers = {"x-goog-api-key": self.api_key, **self.extra_headers}
         data, latency = self._post(self.url, body, headers)
-        answers = data.get("answers")
-        if not isinstance(answers, dict):
-            raise ProviderError("gemini: response had no answers")
-        probs = {q.key: clamp_prob((answers.get(q.key) or {}).get("noul")) for q in questions}
-        usage = data.get("usage") or {}
-        tokens = int(usage.get("total_input_tokens") or 0)
+        probs, tokens = parse_noul_answers(self.name, data, questions, "total_input_tokens")
         return Decision(probs=probs, input_tokens=tokens, latency_ms=latency, model=self.model)

@@ -11,11 +11,10 @@ from ..media import Sample
 from .base import (
     Decision,
     Provider,
-    ProviderError,
     Question,
     b64,
-    clamp_prob,
     describe_capture,
+    parse_noul_answers,
 )
 
 
@@ -72,15 +71,10 @@ class SystemOneProvider(Provider):
         self.check_sample(sample)
         body, headers = self.build_request(sample, questions, context)
         data, latency = self._post(self.url, body, headers)
-        answers = data.get("answers")
-        if not isinstance(answers, dict):
-            raise ProviderError(f"{self.name}: response had no answers")
-        probs = {q.key: clamp_prob((answers.get(q.key) or {}).get("noul")) for q in questions}
-        usage = data.get("usage") or {}
-        tokens = int(usage.get("input_tokens") or 0)
+        probs, tokens = parse_noul_answers(self.name, data, questions, "input_tokens")
         return Decision(
             probs=probs,
             input_tokens=tokens,
             latency_ms=latency,
-            model=str(data.get("model") or self.model),
+            model=str(data.get("model") or self.model),  # data is a dict here
         )
