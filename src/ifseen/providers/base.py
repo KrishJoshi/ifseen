@@ -102,6 +102,11 @@ class Provider(ABC):
                         f"{self.name}: authentication failed "
                         f"(HTTP {r.status_code}) - check your API key"
                     )
+                if r.status_code == 402:
+                    # out of credits / billing disabled: retrying can't help, stop the watcher
+                    raise ProviderConfigError(
+                        f"{self.name}: billing problem (HTTP 402): {_error_text(r)}"
+                    )
                 if r.status_code not in _RETRY_STATUSES:
                     raise last
             if attempt < _MAX_ATTEMPTS - 1:

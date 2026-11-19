@@ -255,3 +255,26 @@ def test_malformed_responses_never_crash(payload):
         return
     assert d.probs == {"is-red": 0.0, "is-blue": 0.0}
     assert d.input_tokens == 0
+
+
+def test_out_of_credits_is_fatal_not_retried():
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        return httpx.Response(
+            402,
+            json={
+                "error": {
+                    "code": 402,
+                    "status": "RESOURCE_EXHAUSTED",
+                    "message": "Your prepayment credits are depleted.",
+                }
+            },
+        )
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    p = build_provider(ProviderConfig(name="gemini"), client=client, env={"GEMINI_API_KEY": "k"})
+    with pytest.raises(ProviderConfigError, match="credits are depleted"):
+        p.decide(red_sample(), Q)
+    assert len(calls) == 1
