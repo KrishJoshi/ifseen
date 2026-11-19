@@ -144,6 +144,7 @@ provider:                   # optional - auto-detected from env vars
 
 every: 2s                   # how often to look (min 100ms)
 skip_unchanged: true        # don't call the API when the frame hasn't changed / audio is silent
+change_threshold: 0.25      # % of pixels that must change for a frame to count as changed
 max_skip: 60s               # ...but re-check at least this often
 context: Camera above my 3D printer.   # optional text sent with every capture
 

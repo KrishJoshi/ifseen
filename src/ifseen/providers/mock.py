@@ -31,7 +31,7 @@ class MockProvider(Provider):
         if sample.jpeg is not None:
             sig = thumbnail_signature(sample.jpeg)
             if self._last_sig is not None:
-                motion = min(1.0, signature_distance(sig, self._last_sig) / 40)
+                motion = min(1.0, signature_distance(sig, self._last_sig) / 5)
             self._last_sig = sig
         out = {}
         for q in questions:

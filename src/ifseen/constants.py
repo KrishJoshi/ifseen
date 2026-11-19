@@ -11,9 +11,14 @@ DEFAULT_COOLDOWN_SECONDS = 30.0
 # A rule re-arms once its probability drops this far below its threshold.
 DEFAULT_HYSTERESIS = 0.15
 
-# Mean absolute pixel difference (0-255) on a 32x32 greyscale thumbnail below which
-# a frame counts as "unchanged" and the previous answers are reused.
-DEFAULT_CHANGE_THRESHOLD = 2.5
+# A frame counts as "unchanged" (previous answers reused, no API call) when fewer than
+# this percentage of thumbnail pixels changed noticeably. Colour matters: a status turning
+# from green to red barely changes brightness, so a greyscale mean diff misses it.
+DEFAULT_CHANGE_THRESHOLD = 0.25
+CHANGE_THUMBNAIL_SIZE = 96
+# Per-pixel change (0-255, any RGB channel) that counts as "noticeable" - above JPEG and
+# sensor noise after downscaling.
+CHANGE_PIXEL_DELTA = 32
 # Even when nothing changes, re-ask at least this often.
 DEFAULT_MAX_SKIP_SECONDS = 60.0
 # RMS (int16 scale) below which an audio chunk counts as silence.

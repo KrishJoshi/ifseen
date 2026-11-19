@@ -8,9 +8,15 @@ import time
 import wave
 from dataclasses import dataclass, field
 
-from PIL import Image
+from PIL import Image, ImageChops
 
-from .constants import IMAGE_MAX_SIDE, IMAGE_MIN_SIDE, JPEG_QUALITY
+from .constants import (
+    CHANGE_PIXEL_DELTA,
+    CHANGE_THUMBNAIL_SIZE,
+    IMAGE_MAX_SIDE,
+    IMAGE_MIN_SIDE,
+    JPEG_QUALITY,
+)
 
 
 @dataclass
@@ -68,15 +74,24 @@ def image_to_sample(img: Image.Image, label: str = "") -> Sample:
 
 
 def thumbnail_signature(jpeg: bytes) -> bytes:
-    """32x32 greyscale fingerprint used for cheap change detection."""
+    """Small RGB fingerprint used for cheap change detection."""
+    size = (CHANGE_THUMBNAIL_SIZE, CHANGE_THUMBNAIL_SIZE)
     with Image.open(io.BytesIO(jpeg)) as img:
-        return img.convert("L").resize((32, 32), Image.BILINEAR).tobytes()
+        return img.convert("RGB").resize(size, Image.BILINEAR).tobytes()
 
 
 def signature_distance(a: bytes, b: bytes) -> float:
+    """Percentage (0-100) of thumbnail pixels that changed noticeably in any channel."""
     if len(a) != len(b) or not a:
-        return 255.0
-    return sum(abs(x - y) for x, y in zip(a, b, strict=False)) / len(a)
+        return 100.0
+    size = (CHANGE_THUMBNAIL_SIZE, CHANGE_THUMBNAIL_SIZE)
+    if len(a) != size[0] * size[1] * 3:
+        return 100.0
+    diff = ImageChops.difference(Image.frombytes("RGB", size, a), Image.frombytes("RGB", size, b))
+    r, g, bl = diff.split()
+    strongest = ImageChops.lighter(ImageChops.lighter(r, g), bl)
+    changed = strongest.point(lambda v: 255 if v > CHANGE_PIXEL_DELTA else 0).histogram()[255]
+    return 100.0 * changed / (size[0] * size[1])
 
 
 def pcm16_to_wav(pcm: bytes, sample_rate: int, channels: int = 1) -> bytes:
