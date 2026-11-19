@@ -14,7 +14,7 @@ ifseen "a pan is cooking on a lit hob and nobody is in the kitchen" --camera 0 -
 
 <img src="docs/media/hero.gif" alt="ifseen watching a kitchen camera: the cook walks out leaving the hob on and the hob-unattended rule fires at 89%" width="900">
 
-<sub>AI-generated scene · real ifseen output (Gemini Decision 1) · <a href="https://krishjoshi.github.io/ifseen/">website</a></sub>
+<sub>AI-generated scene · real ifseen output (Gemini Decision 1) · <a href="https://krishj.com/ifseen/">website</a></sub>
 
 <img src="docs/dashboard.svg" alt="ifseen live dashboard" width="900">
 
