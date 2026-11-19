@@ -1,0 +1,65 @@
+{
+  "name": "ifseen",
+  "version": "0.1.0",
+  "description": "If seen (or heard), then do. Ask decision models (Gemini Decision, Jev, Microsoft-Decision) yes/no questions about images, and drive `ifseen serve` watchers and live events from TypeScript.",
+  "license": "MIT",
+  "author": "Krish Joshi",
+  "homepage": "https://github.com/KrishJoshi/ifseen/tree/main/js#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KrishJoshi/ifseen.git",
+    "directory": "js"
+  },
+  "bugs": {
+    "url": "https://github.com/KrishJoshi/ifseen/issues"
+  },
+  "keywords": [
+    "ifseen",
+    "decision-model",
+    "gemini-decision",
+    "gemini",
+    "jev",
+    "system-one",
+    "microsoft-decision",
+    "home-automation",
+    "home-assistant",
+    "computer-vision",
+    "camera",
+    "automation",
+    "server-sent-events",
+    "sse"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p examples/tsconfig.json",
+    "pretest": "rm -rf build-test && tsc -p tsconfig.test.json",
+    "test": "node --test build-test/test/*.test.js",
+    "test:unit": "npm run pretest && node --test build-test/test/unit-*.test.js",
+    "prepublishOnly": "npm run typecheck && npm run build && npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}
