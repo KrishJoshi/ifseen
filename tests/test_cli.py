@@ -243,6 +243,7 @@ def test_oneliner_config_builder():
         consecutive=2,
         cooldown="10s",
         context=None,
+        prefilter=None,
     )
     data = build_oneliner_config(ns)
     assert data["source"] == {"camera": "0", "mic": {}}
@@ -250,6 +251,12 @@ def test_oneliner_config_builder():
     assert names == ["kettle-is-boiling", "kettle-is-boiling-2"]
     assert data["rules"][0]["then"] == [{"shell": "say hi"}, "notify", {"ntfy": "t"}, "exit"]
     assert data["rules"][0]["for"] == 2
+    assert "prefilter" not in data
+    ns.prefilter = "A kettle is visible."
+    assert build_oneliner_config(ns)["prefilter"] == {
+        "provider": "local",
+        "when": "A kettle is visible.",
+    }
 
 
 def test_package_ships_recipes():
@@ -284,3 +291,65 @@ def test_bad_wav_in_test_command_fails_cleanly(env, red_png, tmp_path):
     proc = run_cli(["test", "build-watcher", "--image", str(red_png), "--audio", str(bad)], env)
     assert proc.returncode == 2 and "PCM WAV" in proc.stderr
     assert "Traceback" not in proc.stderr
+
+
+def test_prefilter_gates_the_main_provider(fake_server, env, red_png, tmp_path):
+    rules = tmp_path / "r.yaml"
+    rules.write_text(f"""
+source: {{file: {red_png}}}
+every: 200ms
+provider: {{name: gemini, base_url: {fake_server.url}/v1beta/decisions}}
+prefilter:
+  provider: {{name: gemini, base_url: {fake_server.url}/v1beta/decisions}}
+  when: The frame is mostly blue.
+rules:
+  - {{name: red, when: The frame is mostly red.}}
+""")
+    proc = run_cli(["watch", str(rules), "--json", "--max-ticks", "1"], env)
+    assert proc.returncode == 0, proc.stderr
+    events = [json.loads(line) for line in proc.stdout.splitlines()]
+    assert events[0]["prefilter"].startswith("gemini")
+    decision = next(e for e in events if e["event"] == "decision")
+    assert decision["skipped"] == "prefilter" and decision["probs"] == {"red": 0.0}
+
+    test = run_cli(["test", str(rules), "--image", str(red_png)], env)
+    assert test.returncode == 0, test.stderr
+    assert "main provider would be skipped" in " ".join(test.stdout.split())
+
+
+def test_dry_run_swaps_the_prefilter_for_mock(env, red_png, tmp_path):
+    rules = tmp_path / "r.yaml"
+    rules.write_text(f"""
+source: {{file: {red_png}}}
+prefilter: {{provider: gemini, when: A person is visible.}}
+rules:
+  - {{name: red, when: The frame is mostly red.}}
+""")
+    env = {k: v for k, v in env.items() if k != "GEMINI_API_KEY"}
+    proc = run_cli(["watch", str(rules), "--dry-run", "--json", "--max-ticks", "1"], env)
+    assert proc.returncode == 0, proc.stderr
+    events = [json.loads(line) for line in proc.stdout.splitlines()]
+    start = next(e for e in events if e["event"] == "start")
+    assert start["prefilter"].startswith("mock")
+
+
+def test_image_only_prefilter_rejects_mic_only_source(env, tmp_path):
+    import wave
+
+    clip = tmp_path / "a.wav"
+    with wave.open(str(clip), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(16000)
+        w.writeframes(b"\x10\x00" * 16000)
+    rules = tmp_path / "r.yaml"
+    rules.write_text(f"""
+source: {{file: {clip}}}
+provider: gemini
+prefilter: {{provider: {{name: openai, model: m, base_url: http://127.0.0.1:9}}, when: x}}
+rules:
+  - {{name: r, when: someone speaks}}
+""")
+    proc = run_cli(["watch", str(rules), "--json", "--max-ticks", "1"], env)
+    assert proc.returncode == 2
+    assert "prefilter provider openai can't handle audio" in proc.stderr

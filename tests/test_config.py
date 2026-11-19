@@ -1,6 +1,7 @@
 import pytest
 
 from ifseen.config import ConfigError, expand_env, load_config, load_config_file, parse_duration
+from ifseen.constants import DEFAULT_PREFILTER_THRESHOLD
 from ifseen.recipes import recipe_data, recipe_names
 
 
@@ -141,3 +142,32 @@ def test_mic_seconds_and_hysteresis_validated():
         load_config(minimal(source={"mic": {"seconds": -1}}))
     with pytest.raises(ConfigError, match="hysteresis"):
         load_config(minimal(rules=[{"name": "a", "when": "x", "hysteresis": -0.1}]))
+
+
+def test_prefilter_config():
+    cfg = load_config(minimal(prefilter={"provider": "mock", "when": "  A person is visible. "}))
+    assert cfg.prefilter.provider.name == "mock"
+    assert cfg.prefilter.when == "A person is visible."
+    assert cfg.prefilter.threshold == DEFAULT_PREFILTER_THRESHOLD
+    assert load_config(minimal()).prefilter is None
+    cfg = load_config(
+        minimal(prefilter={"provider": {"name": "mock", "seed": 1}, "when": "x", "threshold": 0.3})
+    )
+    assert cfg.prefilter.threshold == 0.3 and cfg.prefilter.provider.seed == 1
+
+
+@pytest.mark.parametrize(
+    "prefilter,msg",
+    [
+        ({"provider": "mock", "when": "x", "threshold": 1.0}, "threshold"),
+        ({"provider": "mock", "when": "x", "threshold": 0}, "threshold"),
+        ({"provider": "mock", "when": "   "}, "cannot be empty"),
+        ({"provider": "auto", "when": "x"}, "explicit provider"),
+        ({"when": "x"}, "provider"),
+        ({"provider": "mock"}, "when"),
+        ({"provider": "mock", "when": "x", "bogus": 1}, "bogus"),
+    ],
+)
+def test_prefilter_validation(prefilter, msg):
+    with pytest.raises(ConfigError, match=msg):
+        load_config(minimal(prefilter=prefilter))

@@ -63,12 +63,38 @@ PRICE_PER_M_INPUT = {
     "openai": 0.0,
     "ollama": 0.0,
     "mock": 0.0,
+    "local": 0.0,
 }
 
-PROVIDER_NAMES = ("gemini", "jev", "azure", "systemone", "openai", "ollama", "mock")
+PROVIDER_NAMES = ("gemini", "jev", "azure", "systemone", "openai", "ollama", "local", "mock")
+
+# Free offline zero-shot provider (`pip install 'ifseen[local]'`).
+LOCAL_DEFAULT_MODEL = "google/siglip-base-patch16-224"
+# Raw SigLIP match probabilities for true captions mostly sit around 0.01-0.3, so a rule
+# without a contrast phrase is scored as sigmoid(logit + offset). 3.0 gave the best accuracy
+# at a 0.5 threshold across the hard-rules benchmark; it's a starting point, not calibration.
+LOCAL_SIGLIP_LOGIT_OFFSET = 3.0
+# CLIP has no per-caption probability, so a rule without a contrast competes with these.
+LOCAL_GENERIC_LABELS = (
+    "a photo.",
+    "a screenshot of a computer screen.",
+    "a picture of something else.",
+    "an everyday scene.",
+)
+LOCAL_MODULES = ("torch", "transformers")
 
 NTFY_DEFAULT_SERVER = "https://ntfy.sh"
 
 ACTION_KINDS = frozenset({"notify", "say", "shell", "webhook", "ntfy", "snapshot", "log", "exit"})
 # Actions that may be written as a bare string with no options.
 BARE_ACTIONS = frozenset({"notify", "log", "exit", "snapshot", "say"})
+
+# Cascade: a cheap provider answers one gating question before the main provider is called.
+# Deliberately permissive: a false pass costs one normal call, a false block misses an event.
+# Local SigLIP presence scores ("A dog is visible.") were 0.02-0.5 when true and under 0.003
+# when absent in the hard-rules benchmark, so 0.5 would block real events.
+DEFAULT_PREFILTER_THRESHOLD = 0.05
+PREFILTER_KEY = "__prefilter__"
+PREFILTER_SKIP_REASON = "prefilter"
+# Provider used by the one-liner's --prefilter flag: free, local and image-only.
+PREFILTER_DEFAULT_PROVIDER = "local"

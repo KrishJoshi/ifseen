@@ -57,6 +57,8 @@ class Dashboard:
         kind = event["event"]
         if kind == "start":
             self.header = f"{event['source']}  →  {event['provider']}"
+            if event.get("prefilter"):
+                self.header = f"{event['source']}  →  {event['prefilter']}  →  {event['provider']}"
         elif kind == "fire":
             self.add(
                 "fire", f"🔔 {event['rule']}: {event['when']} ({event['probability'] * 100:.0f}%)"
@@ -127,6 +129,9 @@ class Dashboard:
         footer = Text(style="grey62")
         if self.engine:
             s = self.engine.stats
+            if self.engine.prefilter is not None:
+                gate = "-" if s.last_prefilter_prob is None else f"{s.last_prefilter_prob:.0%}"
+                footer.append(f"prefilter {gate}  prefiltered {s.prefiltered}  ")
             footer.append(
                 f"calls {s.calls}  skipped {s.skipped}  errors {s.errors}  "
                 f"latency {s.last_latency_ms:.0f}ms  tokens {s.input_tokens:,}  "

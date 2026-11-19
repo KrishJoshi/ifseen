@@ -19,6 +19,7 @@ from .constants import (
     DEFAULT_HYSTERESIS,
     DEFAULT_MAX_SKIP_SECONDS,
     DEFAULT_MIC_SECONDS,
+    DEFAULT_PREFILTER_THRESHOLD,
     DEFAULT_SILENCE_RMS,
     DEFAULT_THRESHOLD,
 )
@@ -27,7 +28,9 @@ _DURATION = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*(ms|s|m|h)?\s*$")
 _UNITS = {"ms": 0.001, "s": 1.0, "m": 60.0, "h": 3600.0, None: 1.0}
 _RULE_NAME = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
-ProviderName = Literal["auto", "gemini", "jev", "azure", "systemone", "openai", "ollama", "mock"]
+ProviderName = Literal[
+    "auto", "gemini", "jev", "azure", "systemone", "openai", "ollama", "local", "mock"
+]
 
 
 class ConfigError(ValueError):
@@ -207,9 +210,41 @@ class Rule(_Strict):
         return out
 
 
+class Prefilter(_Strict):
+    """A cheap gating question; the main provider is only asked when it passes."""
+
+    when: str
+    provider: ProviderConfig
+    threshold: float = DEFAULT_PREFILTER_THRESHOLD
+    true_means: str | None = None
+    false_means: str | None = None
+
+    @field_validator("when")
+    @classmethod
+    def _when(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("'when' cannot be empty")
+        return v.strip()
+
+    @field_validator("threshold")
+    @classmethod
+    def _threshold(cls, v: float) -> float:
+        if not 0.0 < v < 1.0:
+            raise ValueError("threshold must be between 0 and 1 (exclusive)")
+        return v
+
+    @field_validator("provider")
+    @classmethod
+    def _explicit(cls, v: ProviderConfig) -> ProviderConfig:
+        if v.name == "auto":
+            raise ValueError("prefilter needs an explicit provider, e.g. 'provider: local'")
+        return v
+
+
 class WatchConfig(_Strict):
     source: SourceConfig
     provider: ProviderConfig = Field(default_factory=ProviderConfig)
+    prefilter: Prefilter | None = None
     every: float = DEFAULT_EVERY_SECONDS
     skip_unchanged: bool = True
     change_threshold: float = DEFAULT_CHANGE_THRESHOLD

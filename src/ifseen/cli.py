@@ -13,6 +13,7 @@ import os
 import re
 import sys
 import wave
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -22,9 +23,9 @@ from rich.table import Table
 
 from .actions import ActionRunner
 from .config import ConfigError, WatchConfig, load_config, load_config_file
-from .constants import VERSION
+from .constants import PREFILTER_DEFAULT_PROVIDER, PREFILTER_KEY, VERSION
 from .engine import Engine
-from .providers import ProviderConfigError, ProviderError, Question, build_provider
+from .providers import Provider, ProviderConfigError, ProviderError, Question, build_provider
 from .recipes import recipe_data, recipe_names, recipe_summary, recipe_text
 from .sources import SourceError, build_source
 from .ui import Dashboard, JsonLines, PlainLog
@@ -81,7 +82,9 @@ def _subcommand_typo(word: str) -> str | None:
 
 def _add_run_options(p: argparse.ArgumentParser) -> None:
     g = p.add_argument_group("running")
-    g.add_argument("--provider", help="gemini | jev | azure | systemone | openai | ollama | mock")
+    g.add_argument(
+        "--provider", help="gemini | jev | azure | systemone | openai | ollama | local | mock"
+    )
     g.add_argument("--model", help="override the provider's model")
     g.add_argument("--base-url", help="custom endpoint (self-hosted / proxies)")
     g.add_argument("--every", help="how often to look, e.g. 500ms, 2s, 1m")
@@ -108,6 +111,8 @@ def _apply_overrides(data: dict[str, Any], args: argparse.Namespace) -> dict[str
         provider["base_url"] = args.base_url
     if args.dry_run:
         provider = {"name": "mock"}
+        if isinstance(data.get("prefilter"), dict):
+            data = {**data, "prefilter": {**data["prefilter"], "provider": "mock"}}
     data = {**data, "provider": provider}
     if args.every:
         data["every"] = args.every
@@ -132,6 +137,20 @@ def _load(target: str) -> dict[str, Any]:
     raise ConfigError(f"no such file or recipe: {target} (see `ifseen recipes`)")
 
 
+def _build_prefilter(cfg: WatchConfig, provides: frozenset[str]) -> Provider | None:
+    if cfg.prefilter is None:
+        return None
+    prefilter = build_provider(cfg.prefilter.provider)
+    # An image-only prefilter just ignores the audio of a camera + mic source, but it has
+    # nothing to look at with a mic-only source.
+    if not provides & prefilter.supports:
+        prefilter.close()
+        raise ProviderConfigError(
+            f"prefilter provider {prefilter.name} can't handle {', '.join(sorted(provides))} input"
+        )
+    return prefilter
+
+
 def run_config(cfg: WatchConfig, args: argparse.Namespace) -> int:
     provider = build_provider(cfg.provider)
     source = build_source(cfg.source, every=cfg.every)
@@ -141,11 +160,12 @@ def run_config(cfg: WatchConfig, args: argparse.Namespace) -> int:
             f"{provider.name} can't handle {', '.join(sorted(missing))} input"
             + ("; use --provider gemini for mic sources" if "audio" in missing else "")
         )
+    prefilter = _build_prefilter(cfg, source.provides)
 
     interactive = sys.stdout.isatty() and not (args.json or args.plain)
     view: Any = JsonLines() if args.json else Dashboard() if interactive else PlainLog()
     actions = ActionRunner(log=view.add, dry_run=args.dry_run)
-    engine = Engine(cfg, source, provider, actions, listener=view)
+    engine = Engine(cfg, source, provider, actions, listener=view, prefilter=prefilter)
     if args.dry_run:
         view.add("dry", "dry run: probabilities are random and actions are only printed")
     try:
@@ -159,6 +179,8 @@ def run_config(cfg: WatchConfig, args: argparse.Namespace) -> int:
     finally:
         actions.close()
         provider.close()
+        if prefilter is not None:
+            prefilter.close()
     return 130 if reason == "interrupted" else 0
 
 
@@ -228,6 +250,8 @@ def build_oneliner_config(args: argparse.Namespace) -> dict[str, Any]:
             rule["cooldown"] = args.cooldown
         rules.append(rule)
     data: dict[str, Any] = {"source": source, "rules": rules}
+    if args.prefilter:
+        data["prefilter"] = {"provider": PREFILTER_DEFAULT_PROVIDER, "when": args.prefilter}
     if args.context:
         data["context"] = args.context
     return data
@@ -265,6 +289,11 @@ def cmd_oneliner(argv: list[str]) -> int:
     tune.add_argument("--for", dest="consecutive", type=int, help="consecutive hits required")
     tune.add_argument("--cooldown", help="min time between triggers, e.g. 30s")
     tune.add_argument("--context", help="extra context sent with every capture")
+    tune.add_argument(
+        "--prefilter",
+        metavar="TEXT",
+        help="cheap free local check; the main provider is only asked when it's true",
+    )
     _add_run_options(p)
     args = p.parse_args(argv)
     data = _apply_overrides(build_oneliner_config(args), args)
@@ -300,6 +329,8 @@ def cmd_test(argv: list[str]) -> int:
     cfg = load_config(_apply_overrides(data, ns))
     provider = build_provider(cfg.provider)
     source = build_source(cfg.source, every=cfg.every)
+    prefilter: Provider | None = None
+    gate = None
     try:
         with source:
             sample = source.read()
@@ -313,12 +344,22 @@ def cmd_test(argv: list[str]) -> int:
             sample.wav, sample.audio_rms = a.wav, a.audio_rms
         questions = [Question(r.name, r.when, r.true_means, r.false_means) for r in cfg.rules]
         try:
+            prefilter = _build_prefilter(cfg, source.provides)
+            if prefilter is not None and cfg.prefilter is not None:
+                pf = cfg.prefilter
+                pre_sample = sample
+                if sample.has_audio and "audio" not in prefilter.supports:
+                    pre_sample = replace(sample, wav=None, audio_rms=0.0)
+                q = Question(PREFILTER_KEY, pf.when, pf.true_means, pf.false_means)
+                gate = prefilter.decide(pre_sample, [q], cfg.context).probs.get(PREFILTER_KEY, 0.0)
             decision = provider.decide(sample, questions, cfg.context)
         except ProviderError as e:
             err.print(f"[red]error:[/] {escape(str(e))}")
             return 1
     finally:
         provider.close()
+        if prefilter is not None:
+            prefilter.close()
 
     if args.json:
         import json
@@ -329,6 +370,7 @@ def cmd_test(argv: list[str]) -> int:
                     "probs": decision.probs,
                     "tokens": decision.input_tokens,
                     "latency_ms": round(decision.latency_ms, 1),
+                    **({"prefilter": gate} if gate is not None else {}),
                 }
             )
         )
@@ -354,6 +396,16 @@ def cmd_test(argv: list[str]) -> int:
         f"[grey50]{decision.input_tokens} input tokens · ${cost:.6f} · "
         f"{decision.latency_ms:.0f} ms[/]"
     )
+    if gate is not None and cfg.prefilter is not None:
+        passed = gate >= cfg.prefilter.threshold
+        verdict = "main provider would be called" if passed else "main provider would be skipped"
+        out.print(
+            f"prefilter {escape(repr(cfg.prefilter.when))} {gate * 100:.1f}% "
+            f"(threshold {cfg.prefilter.threshold * 100:.0f}%) → "
+            + ("[green]" if passed else "[yellow]")
+            + f"{verdict}[/]"
+            + ("" if passed else " [grey50](all rules would read 0%)[/]")
+        )
     return 0
 
 
@@ -402,7 +454,14 @@ def cmd_init(argv: list[str]) -> int:
 def cmd_doctor(argv: list[str]) -> int:
     from importlib.util import find_spec
 
-    from .constants import AZURE_ENDPOINT_ENV, GEMINI_KEY_ENVS, JEV_KEY_ENV, OPENAI_KEY_ENV
+    from .constants import (
+        AZURE_ENDPOINT_ENV,
+        GEMINI_KEY_ENVS,
+        JEV_KEY_ENV,
+        LOCAL_DEFAULT_MODEL,
+        LOCAL_MODULES,
+        OPENAI_KEY_ENV,
+    )
     from .providers import detect_provider_name
 
     out = Console(highlight=False)
@@ -418,6 +477,13 @@ def cmd_doctor(argv: list[str]) -> int:
             f"  {bad} no key found - try [cyan]--dry-run[/], or get a free Gemini key at "
             "https://aistudio.google.com/apikey"
         )
+    out.print("\n[bold]free offline provider[/]")
+    missing = [m for m in LOCAL_MODULES if find_spec(m) is None]
+    if missing:
+        hint = escape("pip install 'ifseen[local]'")
+        out.print(f"  [grey50]- local (needs {', '.join(missing)}): {hint}[/]")
+    else:
+        out.print(f"  {ok} local: [cyan]--provider local[/] ({LOCAL_DEFAULT_MODEL}, images only)")
     out.print("\n[bold]sources[/]")
     for label, module, extra in (
         ("screen", "mss", "screen"),
@@ -467,6 +533,7 @@ def _print_help() -> None:
   TYPESAFE_API_KEY    Jev
   AZURE_DECISION_*    Microsoft-Decision-1.1 on Azure Foundry
   OPENAI_API_KEY      any OpenAI-compatible vision model (or --provider ollama, fully local)
+  --provider local    free offline SigLIP, images only (pip install 'ifseen[local]')
   --dry-run           no key needed: fake probabilities, actions printed not run
 """)
 

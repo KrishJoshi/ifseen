@@ -5,6 +5,7 @@ from conftest import solid_jpeg
 
 from ifseen.actions import ActionRunner
 from ifseen.config import load_config
+from ifseen.constants import PREFILTER_KEY
 from ifseen.engine import Engine
 from ifseen.media import Sample
 from ifseen.providers import Decision, Provider, ProviderConfigError, ProviderError
@@ -248,3 +249,131 @@ def test_unexpected_source_errors_are_reported_then_fatal():
         engine.run()
     errors = [e for e in events if e["event"] == "error"]
     assert len(errors) == 10 and errors[0]["message"] == "capture failed: OSError"
+
+
+class RecordingPrefilter(ScriptedProvider):
+    name = "gate"
+    supports = frozenset({"image"})
+    price_per_m_input = 0.0
+
+    def __init__(self, script):
+        super().__init__(script)
+        self.samples = []
+
+    def decide(self, sample, questions, context=None):
+        self.samples.append(sample)
+        assert [q.key for q in questions] == [PREFILTER_KEY]
+        return super().decide(sample, questions, context)
+
+
+def make_gated(gate_script, script, samples, threshold=0.5, **cfg):
+    clock = FakeClock()
+    config = load_config(
+        {
+            "source": "screen",
+            "rules": [{"name": "r", "when": "x", "then": ["log"]}],
+            "every": "1s",
+            "prefilter": {
+                "provider": "mock",
+                "when": "A person is visible.",
+                "threshold": threshold,
+            },
+            **cfg,
+        }
+    )
+    events = []
+    main = ScriptedProvider(script)
+    gate = RecordingPrefilter([{PREFILTER_KEY: p} for p in gate_script])
+    engine = Engine(
+        config,
+        ListSource(samples),
+        main,
+        ActionRunner(log=lambda *_: None, background=False),
+        listener=events.append,
+        clock=clock,
+        sleep=clock.sleep,
+        prefilter=gate,
+    )
+    return engine, events, main, gate, clock
+
+
+def test_prefilter_closed_skips_main_and_fails_closed():
+    engine, events, main, gate, _ = make_gated(
+        [0.1, 0.2], [{"r": 0.99}] * 2, frames(2), skip_unchanged=False
+    )
+    engine.run()
+    assert gate.calls == 2 and main.calls == 0
+    assert engine.states[0].prob == 0.0 and fires(events) == []
+    s = engine.stats
+    assert (s.skipped, s.prefiltered, s.prefilter_calls, s.calls) == (2, 2, 2, 0)
+    assert s.last_skip_reason == "prefilter" and s.last_prefilter_prob == 0.2
+    decisions = [e for e in events if e["event"] == "decision"]
+    assert decisions[0]["skipped"] == "prefilter" and decisions[0]["prefilter"] == 0.1
+    assert decisions[0]["probs"] == {"r": 0.0}
+
+
+def test_prefilter_open_calls_main():
+    engine, events, main, gate, _ = make_gated([0.9], [{"r": 0.95}], frames(1))
+    engine.run()
+    assert gate.calls == 1 and main.calls == 1
+    assert fires(events) == ["r"]
+    decision = next(e for e in events if e["event"] == "decision")
+    assert decision["prefilter"] == 0.9 and "skipped" not in decision
+    # main provider tokens priced at $1/M, the free prefilter adds tokens but no cost
+    assert engine.stats.input_tokens == 2000
+    assert engine.stats.cost_usd == pytest.approx(0.001)
+
+
+def test_prefilter_unchanged_frames_reuse_closed_answer():
+    same = [Sample(jpeg=solid_jpeg((10, 200, 10))) for _ in range(4)]
+    engine, _, main, gate, _ = make_gated([0.1] * 4, [{"r": 0.99}] * 4, same)
+    engine.run()
+    assert gate.calls == 1 and main.calls == 0
+    assert engine.stats.prefiltered == 1 and engine.stats.skipped == 4
+    assert engine.stats.last_skip_reason == "unchanged"
+    assert engine.states[0].prob == 0.0
+
+
+def test_prefilter_threshold_is_inclusive():
+    engine, _, main, *_ = make_gated([0.6], [{"r": 0.1}], frames(1), threshold=0.6)
+    engine.run()
+    assert main.calls == 1
+
+
+def test_prefilter_errors_back_off_and_recover():
+    clock_engine = make_gated([], [{"r": 0.9}], frames(3), skip_unchanged=False)
+    engine, events, main, gate, clock = clock_engine
+    gate.script = [ProviderError("gate down"), ProviderError("gate down"), {PREFILTER_KEY: 0.9}]
+    engine.run()
+    assert [e["event"] for e in events].count("error") == 2
+    assert engine.stats.errors == 2 and main.calls == 1
+    assert fires(events) == ["r"]
+    assert clock.t > 3
+
+
+def test_prefilter_config_errors_are_fatal():
+    engine, _, main, gate, _ = make_gated([], [{"r": 0.9}], frames(1))
+    gate.script = [ProviderConfigError("torch missing")]
+    with pytest.raises(ProviderConfigError):
+        engine.run()
+    assert main.calls == 0
+
+
+def test_image_only_prefilter_never_sees_audio():
+    sample = Sample(jpeg=solid_jpeg((1, 2, 3)), wav=b"RIFF....", audio_rms=500.0)
+    engine, _, main, gate, _ = make_gated([0.9], [{"r": 0.1}], [sample])
+    engine.run()
+    assert gate.samples[0].wav is None and gate.samples[0].jpeg == sample.jpeg
+    assert sample.wav == b"RIFF...."  # the main provider still gets the audio
+
+
+def test_prefilter_provider_must_match_config():
+    config = load_config({"source": "screen", "rules": [{"name": "r", "when": "x"}]})
+    with pytest.raises(ValueError, match="prefilter"):
+        Engine(
+            config,
+            ListSource([]),
+            ScriptedProvider([]),
+            ActionRunner(log=lambda *_: None, background=False),
+            prefilter=ScriptedProvider([]),
+        )

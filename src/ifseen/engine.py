@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from .actions import ActionRunner, FireEvent
 from .config import Rule, WatchConfig
+from .constants import PREFILTER_KEY, PREFILTER_SKIP_REASON
 from .media import Sample, signature_distance, thumbnail_signature
-from .providers import Provider, ProviderConfigError, ProviderError, Question
+from .providers import Decision, Provider, ProviderConfigError, ProviderError, Question
 from .sources import Source, SourceError, SourceExhausted
 
 _MAX_CONSECUTIVE_SOURCE_ERRORS = 10
@@ -69,6 +70,9 @@ class Stats:
     cost_usd: float = 0.0
     last_latency_ms: float = 0.0
     last_skip_reason: str = ""
+    prefilter_calls: int = 0
+    prefiltered: int = 0
+    last_prefilter_prob: float | None = None
 
     def cost_per_hour(self) -> float:
         elapsed = max(1.0, time.time() - self.started)
@@ -85,10 +89,24 @@ class Engine:
         listener: Listener | None = None,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep,
+        prefilter: Provider | None = None,
     ):
+        if (prefilter is None) != (cfg.prefilter is None):
+            raise ValueError("pass a prefilter provider exactly when the config has a prefilter")
         self.cfg = cfg
         self.source = source
         self.provider = provider
+        self.prefilter = prefilter
+        self.prefilter_question = (
+            Question(
+                PREFILTER_KEY,
+                cfg.prefilter.when,
+                cfg.prefilter.true_means,
+                cfg.prefilter.false_means,
+            )
+            if cfg.prefilter is not None
+            else None
+        )
         self.actions = actions
         self.listener = listener or (lambda e: None)
         self.clock = clock
@@ -112,6 +130,7 @@ class Engine:
             source=self.source.describe(),
             provider=self.provider.describe(),
             rules=[r.name for r in self.cfg.rules],
+            **({"prefilter": self.prefilter.describe()} if self.prefilter else {}),
         )
         try:
             while not self.stopped and (max_ticks is None or self.stats.ticks < max_ticks):
@@ -175,8 +194,67 @@ class Engine:
             self.stats.skipped += 1
             self.stats.last_skip_reason = skip
             return dict(self._last_probs)
+        gate: float | None = None
+        tokens = 0
+        if self.prefilter is not None:
+            pre = self._ask_prefilter(sample)
+            if pre is None:
+                return None
+            gate = pre.probs.get(PREFILTER_KEY, 0.0)
+            tokens = pre.input_tokens
+            if gate < self.cfg.prefilter.threshold:  # type: ignore[union-attr]
+                # Fail closed: nothing fires unless the cheap check lets the main model look.
+                zeros = {q.key: 0.0 for q in self.questions}
+                self.stats.skipped += 1
+                self.stats.prefiltered += 1
+                self.stats.last_skip_reason = PREFILTER_SKIP_REASON
+                self.stats.last_latency_ms = pre.latency_ms
+                self._remember(sample, now, zeros)
+                self._emit(
+                    "decision",
+                    probs=zeros,
+                    latency_ms=round(pre.latency_ms, 1),
+                    tokens=tokens,
+                    prefilter=round(gate, 4),
+                    skipped=PREFILTER_SKIP_REASON,
+                )
+                return zeros
+        decision = self._call(self.provider, sample, self.questions)
+        if decision is None:
+            return None
+        self.stats.calls += 1
+        self.stats.input_tokens += decision.input_tokens
+        self.stats.cost_usd += self.provider.cost_usd(decision.input_tokens)
+        self.stats.last_latency_ms = decision.latency_ms
+        self._remember(sample, now, decision.probs)
+        extra = {} if gate is None else {"prefilter": round(gate, 4)}
+        self._emit(
+            "decision",
+            probs={k: round(v, 4) for k, v in decision.probs.items()},
+            latency_ms=round(decision.latency_ms, 1),
+            tokens=decision.input_tokens + tokens,
+            **extra,
+        )
+        return decision.probs
+
+    def _ask_prefilter(self, sample: Sample) -> Decision | None:
+        assert self.prefilter is not None and self.prefilter_question is not None
+        if sample.has_audio and "audio" not in self.prefilter.supports:
+            sample = replace(sample, wav=None, audio_rms=0.0)
+        decision = self._call(self.prefilter, sample, [self.prefilter_question])
+        if decision is None:
+            return None
+        self.stats.prefilter_calls += 1
+        self.stats.input_tokens += decision.input_tokens
+        self.stats.cost_usd += self.prefilter.cost_usd(decision.input_tokens)
+        self.stats.last_prefilter_prob = decision.probs.get(PREFILTER_KEY, 0.0)
+        return decision
+
+    def _call(
+        self, provider: Provider, sample: Sample, questions: list[Question]
+    ) -> Decision | None:
         try:
-            decision = self.provider.decide(sample, self.questions, self.cfg.context)
+            decision = provider.decide(sample, questions, self.cfg.context)
         except ProviderConfigError:
             raise
         except ProviderError as e:
@@ -185,21 +263,13 @@ class Engine:
             self._emit("error", message=str(e), retry_in=round(self._backoff, 1))
             return None
         self._backoff = 0.0
-        self.stats.calls += 1
-        self.stats.input_tokens += decision.input_tokens
-        self.stats.cost_usd += self.provider.cost_usd(decision.input_tokens)
-        self.stats.last_latency_ms = decision.latency_ms
+        return decision
+
+    def _remember(self, sample: Sample, now: float, probs: dict[str, float]) -> None:
         self._last_call_at = now
-        self._last_probs = decision.probs
+        self._last_probs = probs
         if sample.jpeg is not None:
             self._last_sig = thumbnail_signature(sample.jpeg)
-        self._emit(
-            "decision",
-            probs={k: round(v, 4) for k, v in decision.probs.items()},
-            latency_ms=round(decision.latency_ms, 1),
-            tokens=decision.input_tokens,
-        )
-        return decision.probs
 
     def _skip_reason(self, sample: Sample, now: float) -> str:
         if not self.cfg.skip_unchanged:

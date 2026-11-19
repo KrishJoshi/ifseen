@@ -27,6 +27,7 @@ from ..constants import (
 from .base import Decision, Provider, ProviderConfigError, ProviderError, Question
 from .gemini import GeminiProvider
 from .llm import OpenAICompatProvider
+from .local import LocalProvider
 from .mock import MockProvider
 from .systemone import SystemOneProvider
 
@@ -44,7 +45,8 @@ def detect_provider_name(env: dict[str, str] | None = None) -> str:
     raise ProviderConfigError(
         "no decision-model key found. Set one of GEMINI_API_KEY (recommended - free tier "
         "at https://aistudio.google.com/apikey), TYPESAFE_API_KEY, AZURE_DECISION_ENDPOINT + "
-        "AZURE_DECISION_KEY, or OPENAI_API_KEY. Or try it offline with --dry-run."
+        "AZURE_DECISION_KEY, or OPENAI_API_KEY. Or run free and offline with --provider local "
+        "(pip install 'ifseen[local]'), or try it with --dry-run."
     )
 
 
@@ -68,6 +70,9 @@ def build_provider(
 
     if name == "mock":
         return MockProvider(seed=cfg.seed)
+
+    if name == "local":
+        return LocalProvider(model=cfg.model)
 
     if name == "gemini":
         key = _key(env, cfg, GEMINI_KEY_ENVS)
@@ -159,6 +164,7 @@ def build_provider(
 __all__ = [
     "Decision",
     "GeminiProvider",
+    "LocalProvider",
     "MockProvider",
     "OpenAICompatProvider",
     "Provider",

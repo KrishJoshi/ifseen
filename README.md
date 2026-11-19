@@ -54,7 +54,8 @@ rules:
 - **Debounced and calm.** Thresholds, `for: N` consecutive hits, cooldowns and hysteresis, so
   you get one alert per event, not one every two seconds.
 - **Bring any provider.** Gemini, Jev, Azure Microsoft-Decision, a self-hosted Jev-compatible
-  server, or any OpenAI-compatible vision model, including **fully local with Ollama**.
+  server, or any OpenAI-compatible vision model, including **fully local with Ollama**, or
+  free on-device SigLIP (`--provider local`), alone or as a cheap first check.
 - **Does real things.** Desktop notifications, speech, shell commands, webhooks, push
   notifications with the snapshot attached (ntfy), saving frames, or exiting so you can chain
   it in scripts.
@@ -67,7 +68,8 @@ pipx install "ifseen[all]"        # or: uv tool install "ifseen[all]"
 
 Extras if you want to keep it lean: `ifseen[screen]` (mss), `ifseen[camera]` (OpenCV, also
 used for video files and RTSP), `ifseen[mic]` (sounddevice). Snapshot URLs, images and WAV
-files need no extras.
+files need no extras. `ifseen[local]` (torch + transformers) adds the free offline provider;
+it's big, so it isn't part of `all`.
 
 Then get a key. The easiest is a **free Gemini API key** from
 [Google AI Studio](https://aistudio.google.com/apikey):
@@ -136,7 +138,7 @@ source:                     # one visual source and/or a mic
   # mic: {seconds: 5}       #   last N seconds of audio each tick (Gemini only)
 
 provider:                   # optional - auto-detected from env vars
-  name: gemini              #   gemini | jev | azure | systemone | openai | ollama | mock
+  name: gemini              #   gemini | jev | azure | systemone | openai | ollama | local | mock
   # model: gemini-decision-1
   # resolution: low         #   gemini: low | medium | high - fewer image tokens = cheaper
   # base_url: ...           #   proxies, self-hosted servers
@@ -147,6 +149,11 @@ skip_unchanged: true        # don't call the API when the frame hasn't changed /
 change_threshold: 0.25      # % of pixels that must change for a frame to count as changed
 max_skip: 60s               # ...but re-check at least this often
 context: Camera above my 3D printer.   # optional text sent with every capture
+
+prefilter:                  # optional cheap first check, see "Cheap first check" below
+  provider: local           #   any provider; required, never auto-detected
+  when: a photo of a 3D printer.
+  threshold: 0.05           #   main provider is only called at or above this (default 0.05)
 
 rules:
   - name: spaghetti         # letters, digits, - and _
@@ -178,6 +185,36 @@ what's visible or audible. Prefer "A parcel is on the doorstep" over "Is there a
 unusual?". Split complex conditions into several rules. Use `false_means` to rule out
 look-alikes.
 
+## Cheap first check (cascade)
+
+A `prefilter` asks one cheap question every tick and only calls your main provider when it
+passes. Pair the free, offline `local` provider (good at "is there a person/dog/car?") with a
+decision model for the harder rules:
+
+```yaml
+source: {camera: 0}
+provider: gemini
+prefilter:
+  provider: local
+  when: a photo of a dog.
+  threshold: 0.05
+rules:
+  - name: dog-on-sofa
+    when: A dog is lying on the sofa.
+```
+
+When the prefilter is below its threshold, every rule reads 0% (it fails closed, so nothing
+fires) and the tick counts as skipped with reason `prefilter`. The dashboard footer shows
+the latest prefilter score and how many ticks it saved, and `--json` decision events carry
+`prefilter` (its probability) and `skipped: "prefilter"`. Unchanged-frame skipping still runs
+first, so a static scene costs neither call. `ifseen test` prints whether the prefilter would
+have let the main provider look. One-liners can use `--prefilter "A dog is visible."`.
+
+Keep the prefilter question broad and its threshold low: a missed prefilter means a missed
+event, while a false pass only costs one normal call. That's why the default is 0.05: with
+`local`, "a photo of a dog." scored at least 0.13 on photos with a dog and at most 0.02 without
+in our benchmark, so the useful cut-off sits far below 50%. Check yours with `ifseen test`.
+
 ## Tuning thresholds
 
 `ifseen test` asks every rule once and prints the probabilities, so you can pick thresholds
@@ -207,9 +244,40 @@ image doorstep.jpg → gemini (gemini-decision-1)
 | `systemone` | `base_url` (+ optional `TYPESAFE_API_KEY`) | ✅ | | any self-hosted Jev-compatible `/v1/systemone` server |
 | `openai` | `OPENAI_API_KEY` (+ `OPENAI_BASE_URL`), `model` | ✅ | | any OpenAI-compatible vision chat model. Not calibrated, slower |
 | `ollama` | `model` | ✅ | | fully local, e.g. `--provider ollama --model gemma3` |
+| `local` | none (`pip install 'ifseen[local]'`) | ✅ | | free, offline SigLIP zero-shot. Fast, but weak on screen text and states; see below |
 | `mock` | | ✅ | ✅ | what `--dry-run` uses |
 
-With no `provider` set, ifseen picks the first one it finds a key for, in that order.
+With no `provider` set, ifseen picks the first one it finds a key for, in that order
+(`local` is never picked automatically).
+
+### Free & offline: `--provider local`
+
+```bash
+pip install 'ifseen[local]'       # torch + transformers, ~1 GB with the model
+ifseen "a photo of a dog on a sofa" --camera 0 --provider local --threshold 0.5
+```
+
+`local` runs a zero-shot image-text model on your machine (default
+`google/siglip-base-patch16-224`, or any CLIP/SigLIP id as `model`). It uses Apple MPS or
+CUDA when available, takes about 20 ms per frame on an M-series Mac after a one-off model
+load and download, costs nothing and sends nothing anywhere. It can't hear.
+
+How it scores a rule:
+
+- **No `false_means`:** SigLIP's own image-caption match score, shifted (`sigmoid(logit + 3)`)
+  because raw SigLIP scores for true captions mostly sit around 1-30%. Good for "is X there /
+  is X on Y" rules.
+- **With `false_means`:** a two-way choice between `when` and `false_means`. Use this for
+  states whose "no" looks like the "yes": `when: The door is open.` +
+  `false_means: The door is closed.`
+
+The numbers aren't calibrated like a decision model's: always pick thresholds with
+`ifseen test --provider local`, and phrase rules like captions ("a photo of a dog on a
+sofa"). Long rules are cut at 64 tokens, and `context` and `true_means` are ignored. In
+[our benchmark](benchmarks/hard-rules-results.md) it matched Gemini Decision 1 on objects
+and simple spatial rules, but read CI status off a screenshot barely better than chance
+and missed most boiling pots. It works best as a free [prefilter](#cheap-first-check-cascade) in
+front of a decision model.
 
 **What does it cost?** Measured with Gemini Decision 1: a 1280×800 frame is about 1,350
 input tokens ($0.000135), or about 520 tokens ($0.00005) with `resolution: low`, which was
@@ -231,10 +299,10 @@ docker run --rm -e GEMINI_API_KEY -e NTFY_TOPIC -e DOORBELL_SNAPSHOT_URL ifseen 
 
 ## Privacy
 
-Frames and audio are sent to the provider you choose, and nowhere else. If that's a problem
-for a given camera, use `--provider ollama` (or a self-hosted `systemone` server) and nothing
-leaves your machine. Snapshots are only written to disk when a rule fires and you've asked
-for them.
+Frames and audio are sent to the provider you choose, and nowhere else. If that's a problem for
+a given camera, use `--provider local` or `--provider ollama` (or a self-hosted `systemone`
+server) and nothing leaves your machine. Snapshots are only written to disk when a rule fires
+and you've asked for them.
 
 macOS asks for **Screen Recording** permission for your terminal the first time you capture
 the screen, and on recent versions periodically re-confirms it. `ifseen doctor` checks
