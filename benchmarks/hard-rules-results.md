@@ -38,6 +38,8 @@ median per capture. Cost is per 1,000 captures.
 |---|---|---|---|---|---|
 | Gemini Decision 1 | **100%** | **1.00** | 0.90 / 0.12 | 596 ms | $0.13 |
 | Gemini Decision 1 + contrast | **100%** | **1.00** | 0.91 / 0.11 | 374 ms | $0.13 |
+| TypeSafe Jev 1.14 | **100%** | **1.00** | 0.99 / 0.49 | **174 ms** | $0.13 |
+| TypeSafe Jev 1.14 + contrast | **100%** | **1.00** | 0.99 / 0.19 | **172 ms** | $0.13 |
 | Azure gpt-5.4-mini | 98% | **1.00** | 0.99 / 0.98 | 1,152 ms | $1.01 |
 | SigLIP, ifseen `local` | 75% | 0.82 | 0.03 / 0.93 | 20 ms | $0 |
 | CLIP, generic captions | 52% | 0.86 | 0.65 / 0.99 | 12 ms | $0 |
@@ -52,6 +54,8 @@ the screen rules worse for both local models (AUC 0.39-0.58).
 |---|---|---|---|---|---|
 | Gemini Decision 1 | **100%** | **1.00** | 0.88 / 0.15 | 679 ms | $0.13 |
 | Gemini Decision 1 + contrast | **100%** | **1.00** | 0.91 / 0.11 | 472 ms | $0.13 |
+| TypeSafe Jev 1.14 | **100%** | **1.00** | 0.83 / 0.10 | **192 ms** | $0.10 |
+| TypeSafe Jev 1.14 + contrast | **100%** | **1.00** | 0.80 / 0.08 | **185 ms** | $0.10 |
 | Azure gpt-5.4-mini | 96% | **1.00** | 0.98 / 0.95 | 2,298 ms | $0.80 |
 | SigLIP, ifseen `local` | **100%** | **1.00** | 0.54 / 0.26 | 18 ms | $0 |
 | CLIP, contrast | 77% | 0.87 | 0.11 / 0.96 | 11 ms | $0 |
@@ -67,6 +71,8 @@ offset that puts them on the right side of 0.5 was chosen on this same data. CLI
 |---|---|---|---|---|---|
 | Gemini Decision 1 | **100%** | **1.00** | 0.55 / 0.33 | 763 ms | $0.13 |
 | Gemini Decision 1 + contrast | **100%** | **1.00** | 0.86 / 0.16 | 439 ms | $0.14 |
+| TypeSafe Jev 1.14 | **100%** | **1.00** | 0.65 / 0.16 | **188 ms** | $0.11 |
+| TypeSafe Jev 1.14 + contrast | **100%** | **1.00** | 0.70 / 0.16 | **196 ms** | $0.11 |
 | Azure gpt-5.4-mini | 91% | 0.99 | 0.88 / 0.97 | 1,580 ms | $0.83 |
 | SigLIP, ifseen `local` (contrast) | 78% | 0.94 | 0.14 / 0.55 | 19 ms | $0 |
 | CLIP, contrast | 84% | 0.91 | 0.07 / 0.71 | 12 ms | $0 |
@@ -83,9 +89,9 @@ the other categories, so I'd treat that as overfitting.
 |---|---|---|---|---|---|
 | Gemini Decision 1 | **100%** | **1.00** | 0.52 / 0.47 | 539 ms | $0.025 |
 | Gemini Decision 1 + contrast | **100%** | **1.00** | 0.92 / 0.49 | 337 ms | $0.028 |
-| gpt-5.4-mini, SigLIP, CLIP | n/a | | | | |
+| Jev, gpt-5.4-mini, SigLIP, CLIP | n/a | | | | |
 
-The local models are image-only, and we didn't send audio to the Azure deployment. The
+Jev and the local models are image-only, and we didn't send audio to the Azure deployment. The
 closest calls were the "Chris" sound-alikes, at 0.46-0.49 for "says the name Krish": correct,
 but only just. At ifseen's default 0.8 threshold they're safely below.
 
@@ -110,6 +116,12 @@ a dog." scored at least 0.13 with a dog in frame and at most 0.02 without. So if
 default threshold is 0.05, not 0.5.
 
 ## Conclusion
+
+- **Jev (added 2026-11-19, same 78 images, through ifseen's `jev` provider) matched Gemini
+  Decision 1 at 100% on every image category, at about 3-4× lower latency (~180 ms median vs
+  ~600 ms) and similar cost.** Its "yes" scores were higher (screen text ≥ 0.99), and on screen
+  text its highest "no" (0.49) was closer to 0.5 than Gemini's, which `false_means` fixed
+  (0.19). Jev can't hear, so audio rules still need Gemini.
 
 - **Decision models win wherever the answer depends on reading or understanding the scene.**
   That covers CI status text (100% vs 55% for SigLIP), boiling vs still water, and anything

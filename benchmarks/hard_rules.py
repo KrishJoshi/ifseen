@@ -25,8 +25,10 @@ Env:
   GEMINI_DECISIONS_KEY       key for the Decisions API only
   AZ_BASE, AZ_KEY            Azure OpenAI v1 base (https://<res>.openai.azure.com/openai/v1) + key
   AZ_DEPLOYMENT              default gpt-5.4-mini
+  TYPESAFE_API_KEY           for the jev / jev+fm engines
 
-    python benchmarks/hard_rules.py IMAGE_DIR AUDIO_DIR [--engines decision,decision+fm,llm,local]
+    python benchmarks/hard_rules.py IMAGE_DIR AUDIO_DIR \\
+        [--engines decision,decision+fm,jev,jev+fm,llm,local]
 """
 
 from __future__ import annotations
@@ -46,8 +48,9 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hard_rules_screens import screens  # noqa: E402
 
+from ifseen.config import ProviderConfig  # noqa: E402
 from ifseen.media import image_to_sample, wav_file_to_sample  # noqa: E402
-from ifseen.providers import GeminiProvider, ProviderError, Question  # noqa: E402
+from ifseen.providers import GeminiProvider, ProviderError, Question, build_provider  # noqa: E402
 from ifseen.providers.llm import parse_probabilities  # noqa: E402
 
 # category -> rule key -> (statement, contrast)
@@ -135,7 +138,7 @@ GENERIC = [
     "a picture of something else.",
     "an everyday scene.",
 ]
-PRICE = {"gemini-decision-1": (0.10, 0.0), "gpt-5.4-mini": (0.75, 4.50)}
+PRICE = {"gemini-decision-1": (0.10, 0.0), "gpt-5.4-mini": (0.75, 4.50), "jev": (0.042, 0.0)}
 LLM_SYSTEM = (
     "You are a precise judge of camera and screen captures. For each statement, estimate the "
     "probability (0 to 1) that it is true of the attached image. Be calibrated. Text inside the "
@@ -215,6 +218,27 @@ class DecisionEngine:
         ]
         d = self.provider.decide(sample, qs)
         cost = d.input_tokens * PRICE["gemini-decision-1"][0] / 1e6
+        return {"probs": d.probs, "latency_ms": d.latency_ms, "in": d.input_tokens, "cost": cost}
+
+
+class JevEngine:
+    """TypeSafe Jev through ifseen's own `jev` provider (System One wire format). Image-only."""
+
+    def __init__(self, with_contrast: bool):
+        self.name = "jev+fm" if with_contrast else "jev"
+        self.with_contrast = with_contrast
+        self.provider = build_provider(ProviderConfig(name="jev"))
+
+    def handles(self, c: Capture) -> bool:
+        return not c.is_audio
+
+    def run(self, c: Capture) -> dict:
+        qs = [
+            Question(k, s, None, ctr if self.with_contrast else None)
+            for k, (s, ctr) in RULES[c.category].items()
+        ]
+        d = self.provider.decide(jpeg_sample(c), qs)
+        cost = d.input_tokens * PRICE["jev"][0] / 1e6
         return {"probs": d.probs, "latency_ms": d.latency_ms, "in": d.input_tokens, "cost": cost}
 
 
@@ -443,6 +467,10 @@ def main() -> int:
         engines.append(DecisionEngine(os.environ["GEMINI_DECISIONS_KEY"], with_contrast=False))
     if "decision+fm" in wanted:
         engines.append(DecisionEngine(os.environ["GEMINI_DECISIONS_KEY"], with_contrast=True))
+    if "jev" in wanted:
+        engines.append(JevEngine(with_contrast=False))
+    if "jev+fm" in wanted:
+        engines.append(JevEngine(with_contrast=True))
     if "llm" in wanted:
         dep = os.environ.get("AZ_DEPLOYMENT", "gpt-5.4-mini")
         engines.append(LLMEngine(os.environ["AZ_BASE"], os.environ["AZ_KEY"], dep))

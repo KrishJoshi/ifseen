@@ -500,7 +500,7 @@
           <thead><tr><th scope="col">Provider</th><th scope="col">Env / config</th><th scope="col">Sees</th><th scope="col">Hears</th><th scope="col">Notes</th></tr></thead>
           <tbody>
             <tr><td><code>gemini</code></td><td><code class="env">GEMINI_API_KEY</code></td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="yes hear" aria-label="yes">✓</span></td><td>Gemini Decision 1. Free tier; $0.10 / 1M input tokens. <span class="chip mint">live-tested</span></td></tr>
-            <tr><td><code>jev</code></td><td><code class="env">TYPESAFE_API_KEY</code></td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="no" aria-label="no"></span></td><td>TypeSafe Jev 1.13+; $0.042 / 1M input tokens.</td></tr>
+            <tr><td><code>jev</code></td><td><code class="env">TYPESAFE_API_KEY</code></td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="no" aria-label="no"></span></td><td>TypeSafe Jev 1.13+; $0.042 / 1M input tokens. Fastest: ~180 ms. <span class="chip mint">live-tested</span></td></tr>
             <tr><td><code>azure</code></td><td><code class="env">AZURE_DECISION_ENDPOINT / _KEY / _DEPLOYMENT</code></td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="no" aria-label="no"></span></td><td>Microsoft-Decision-1.1 on Azure Foundry.</td></tr>
             <tr><td><code>systemone</code></td><td><code class="env">base_url</code> (+ <code class="env">TYPESAFE_API_KEY</code>)</td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="no" aria-label="no"></span></td><td>Any self-hosted Jev-compatible <code>/v1/systemone</code> server.</td></tr>
             <tr><td><code>openai</code></td><td><code class="env">OPENAI_API_KEY</code> (+ <code class="env">OPENAI_BASE_URL</code>)</td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="no" aria-label="no"></span></td><td>Any OpenAI-compatible vision chat model. Not calibrated, slower.</td></tr>
@@ -512,7 +512,7 @@
       </div>
       <div class="prov-notes">
         <div><strong>Privacy</strong>Frames and audio go to the provider you choose and nowhere else. Use Ollama or a self-hosted server and nothing leaves your machine.</div>
-        <div><strong>Not yet benchmarked</strong>Jev and Microsoft-Decision are supported but haven't been live-tested here yet, so there are no numbers for them on this page.</div>
+        <div><strong>Not yet benchmarked</strong>Microsoft-Decision is supported but hasn't been live-tested here yet, so there are no numbers for it on this page.</div>
         <div><strong>Proxies &amp; custom keys</strong><code>base_url</code> and <code>api_key_env</code> work for proxies, gateways and self-hosted servers.</div>
       </div>
     </div>
@@ -573,22 +573,26 @@
           <div class="bars" data-bars>
             <span class="who" style="margin-top:6px"><b>Screen text</b></span>
             <div class="row"><span class="who"><b>Gemini Decision 1</b></span><span class="bt"><i style="--w:100%;background:var(--mint)"></i></span><span class="v">100%</span></div>
+            <div class="row"><span class="who"><b>TypeSafe Jev</b></span><span class="bt"><i style="--w:100%;background:var(--coral)"></i></span><span class="v">100%</span></div>
             <div class="row"><span class="who">gpt-5.4-mini</span><span class="bt"><i style="--w:98%;background:rgba(58,58,56,0.25)"></i></span><span class="v">98%</span></div>
             <div class="row"><span class="who">SigLIP · local, free</span><span class="bt"><i style="--w:75%;background:var(--gold)"></i></span><span class="v">75%</span></div>
             <span class="who" style="margin-top:6px"><b>Spatial</b></span>
             <div class="row"><span class="who"><b>Gemini Decision 1</b></span><span class="bt"><i style="--w:100%;background:var(--mint)"></i></span><span class="v">100%</span></div>
+            <div class="row"><span class="who"><b>TypeSafe Jev</b></span><span class="bt"><i style="--w:100%;background:var(--coral)"></i></span><span class="v">100%</span></div>
             <div class="row"><span class="who">gpt-5.4-mini</span><span class="bt"><i style="--w:96%;background:rgba(58,58,56,0.25)"></i></span><span class="v">96%</span></div>
             <div class="row"><span class="who">SigLIP · local, free</span><span class="bt"><i style="--w:100%;background:var(--gold)"></i></span><span class="v">100%</span></div>
             <span class="who" style="margin-top:6px"><b>Scene state</b></span>
             <div class="row"><span class="who"><b>Gemini Decision 1</b></span><span class="bt"><i style="--w:100%;background:var(--mint)"></i></span><span class="v">100%</span></div>
+            <div class="row"><span class="who"><b>TypeSafe Jev</b></span><span class="bt"><i style="--w:100%;background:var(--coral)"></i></span><span class="v">100%</span></div>
             <div class="row"><span class="who">gpt-5.4-mini</span><span class="bt"><i style="--w:91%;background:rgba(58,58,56,0.25)"></i></span><span class="v">91%</span></div>
             <div class="row"><span class="who">SigLIP · local, free</span><span class="bt"><i style="--w:78%;background:var(--gold)"></i></span><span class="v">78%</span></div>
             <span class="who" style="margin-top:6px"><b>Audio</b></span>
             <div class="row"><span class="who"><b>Gemini Decision 1</b></span><span class="bt"><i style="--w:100%;background:var(--mint)"></i></span><span class="v">100%</span></div>
+            <div class="row"><span class="who">TypeSafe Jev</span><span class="bt"><i style="--w:0%;background:var(--coral)"></i></span><span class="v">n/a</span></div>
             <div class="row"><span class="who">gpt-5.4-mini</span><span class="bt"><i style="--w:0%;background:rgba(58,58,56,0.25)"></i></span><span class="v">n/a</span></div>
             <div class="row"><span class="who">SigLIP · local, free</span><span class="bt"><i style="--w:0%;background:var(--gold)"></i></span><span class="v">n/a</span></div>
           </div>
-          <p class="foot-note">Median latency: Decision ~0.6–0.8s · gpt-5.4-mini 1.2–2.3s · SigLIP ~20ms. Cost per 1,000 images: Decision $0.13 · gpt-5.4-mini $0.80–1.01 · SigLIP $0. Takeaway: local is great for “is X there?”; reading text, judging scene states and listening need a decision model — or use local as a free <code>prefilter</code> in front of one.</p>
+          <p class="foot-note">Median latency: Jev ~0.18s · Gemini Decision ~0.6–0.8s · gpt-5.4-mini 1.2–2.3s · SigLIP ~20ms. Cost per 1,000 images: Jev $0.10–0.13 · Gemini Decision $0.13 · gpt-5.4-mini $0.80–1.01 · SigLIP $0. Jev is image-only, so audio needs Gemini. Takeaway: local is great for “is X there?”; reading text, judging scene states and listening need a decision model — or use local as a free <code>prefilter</code> in front of one.</p>
         </div>
 
         <div class="wide">

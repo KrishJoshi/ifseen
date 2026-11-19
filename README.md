@@ -245,7 +245,7 @@ image doorstep.jpg → gemini (gemini-decision-1)
 | provider | env vars | sees | hears | notes |
 |---|---|:-:|:-:|---|
 | `gemini` | `GEMINI_API_KEY` | ✅ | ✅ | Gemini Decision 1. Free tier; $0.10 / 1M input tokens |
-| `jev` | `TYPESAFE_API_KEY` | ✅ | | TypeSafe Jev 1.13+; $0.042 / 1M input tokens |
+| `jev` | `TYPESAFE_API_KEY` | ✅ | | TypeSafe Jev 1.13+; $0.042 / 1M input tokens. Live-tested: 100% on the hard-rules images, ~180 ms |
 | `azure` | `AZURE_DECISION_ENDPOINT`, `AZURE_DECISION_KEY`, `AZURE_DECISION_DEPLOYMENT` | ✅ | | Microsoft-Decision-1.1 on Azure Foundry |
 | `systemone` | `base_url` (+ optional `TYPESAFE_API_KEY`) | ✅ | | any self-hosted Jev-compatible `/v1/systemone` server |
 | `openai` | `OPENAI_API_KEY` (+ `OPENAI_BASE_URL`), `model` | ✅ | | any OpenAI-compatible vision chat model. Not calibrated, slower |
