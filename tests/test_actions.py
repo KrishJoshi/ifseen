@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 import time
 
 import httpx
@@ -143,7 +144,8 @@ def test_temp_snapshot_is_private_per_run():
     runner.run([{"log": True}], e)
     assert e.snapshot is not None and e.snapshot.exists()
     assert e.snapshot.parent.name.startswith("ifseen-")
-    assert oct(e.snapshot.parent.stat().st_mode)[-3:] == "700"
+    if sys.platform != "win32":  # no POSIX permission bits on Windows
+        assert oct(e.snapshot.parent.stat().st_mode)[-3:] == "700"
 
 
 def test_close_removes_temp_frames_after_shell_finishes(tmp_path):

@@ -9,6 +9,7 @@ ifseen recipes | ifseen init doorbell | ifseen doctor
 from __future__ import annotations
 
 import argparse
+import contextlib
 import os
 import sys
 import wave
@@ -36,7 +37,18 @@ SUBCOMMANDS = {"watch", "test", "recipes", "init", "doctor", "serve"}
 err = Console(stderr=True, highlight=False, soft_wrap=True)
 
 
+def _tolerate_narrow_encodings() -> None:
+    """Never crash on output: Windows consoles and pipes often use cp1252, which can't encode
+    the arrows and box drawing the CLI prints. Keep their encoding but replace what won't fit."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            with contextlib.suppress(ValueError, OSError):
+                reconfigure(errors="replace")
+
+
 def main(argv: list[str] | None = None) -> int:
+    _tolerate_narrow_encodings()
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv or argv[0] in ("-h", "--help"):
         _print_help()
