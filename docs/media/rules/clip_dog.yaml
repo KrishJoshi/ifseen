@@ -1,0 +1,17 @@
+source:
+  file:
+    path: dog.mp4
+    realtime: false
+every: 500ms
+skip_unchanged: false
+rules:
+- name: dog-on-sofa
+  when: A dog is lying or sitting on the sofa.
+  threshold: 0.8
+  then:
+  - log: '{rule} {percent}'
+- name: dog-on-floor
+  when: A dog is on the floor.
+  threshold: 0.8
+  then:
+  - log: '{rule} {percent}'

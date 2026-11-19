@@ -1,0 +1,17 @@
+{"rules":"pet","image":"dog_couch","result":{"probs": {"dog-on-sofa": 0.9356898678017055, "dog-on-floor": 0.08874484007277293}, "tokens": 1266, "latency_ms": 613.9}}
+{"rules":"pet","image":"dog_floor","result":{"probs": {"dog-on-sofa": 0.061824023296638046, "dog-on-floor": 0.9464399323145212}, "tokens": 1266, "latency_ms": 950.2}}
+{"rules":"doorbell","image":"door_parcel","result":{"probs": {"parcel-left": 0.9456209153442202, "doorstep-empty": 0.07661479207638285}, "tokens": 1271, "latency_ms": 904.2}}
+{"rules":"doorbell","image":"door_empty","result":{"probs": {"parcel-left": 0.059814066925129854, "doorstep-empty": 0.8897123636248112}, "tokens": 1271, "latency_ms": 698.4}}
+{"rules":"kitchen","image":"pot_boilover","result":{"probs": {"boiling-over": 0.9445731922907423, "gentle-simmer": 0.06324813361232597}, "tokens": 1280, "latency_ms": 943.0}}
+{"rules":"kitchen","image":"pot_simmer","result":{"probs": {"boiling-over": 0.1270996192004667, "gentle-simmer": 0.828457772370048}, "tokens": 1279, "latency_ms": 2039.4}}
+{"rules":"printer3d","image":"print_fail","result":{"probs": {"spaghetti": 0.9317980765363515, "print-ok": 0.07949473463309761}, "tokens": 1278, "latency_ms": 1761.8}}
+{"rules":"printer3d","image":"print_good","result":{"probs": {"spaghetti": 0.08851828790478916, "print-ok": 0.8395682643836387}, "tokens": 1278, "latency_ms": 905.6}}
+{"rules":"desk","image":"laptop_unlocked","result":{"probs": {"laptop-unlocked-unattended": 0.9444403518731409, "screen-locked": 0.061942301691151544, "person-at-desk": 0.11031204526924296}, "tokens": 1324, "latency_ms": 1126.3}}
+{"rules":"desk","image":"laptop_locked","result":{"probs": {"laptop-unlocked-unattended": 0.09054411521911887, "screen-locked": 0.9209833728150371, "person-at-desk": 0.12389829589010326}, "tokens": 1323, "latency_ms": 730.9}}
+{"rules":"desk","image":"laptop_person","result":{"probs": {"laptop-unlocked-unattended": 0.15241741632491654, "screen-locked": 0.0901432574607983, "person-at-desk": 0.9287766070146498}, "tokens": 1323, "latency_ms": 991.8}}
+{"rules":"meeting-room","image":"room_occupied","result":{"probs": {"room-occupied": 0.923606458983469, "room-empty": 0.0921936933334589}, "tokens": 1262, "latency_ms": 2548.6}}
+{"rules":"meeting-room","image":"room_empty","result":{"probs": {"room-occupied": 0.09769743877984537, "room-empty": 0.9262504100372121}, "tokens": 1262, "latency_ms": 596.0}}
+{"rules":"office-printer","image":"printer_jam","result":{"probs": {"paper-jam": 0.9407473760295668, "printer-ready": 0.0610471524102722}, "tokens": 1272, "latency_ms": 619.8}}
+{"rules":"office-printer","image":"printer_ready","result":{"probs": {"paper-jam": 0.07299533765376139, "printer-ready": 0.9529559680732026}, "tokens": 1272, "latency_ms": 1358.7}}
+{"rules":"reception","image":"reception_visitor","result":{"probs": {"visitor-waiting": 0.8888447337265205, "reception-empty": 0.04372260898126745}, "tokens": 1265, "latency_ms": 620.3}}
+{"rules":"reception","image":"reception_empty","result":{"probs": {"visitor-waiting": 0.054312643117625896, "reception-empty": 0.9497005791746428}, "tokens": 1265, "latency_ms": 710.4}}

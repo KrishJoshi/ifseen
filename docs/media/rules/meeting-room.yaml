@@ -1,0 +1,13 @@
+source:
+  camera: 0
+rules:
+- name: room-occupied
+  when: People are in the meeting room.
+  threshold: 0.8
+  then:
+  - log
+- name: room-empty
+  when: The meeting room is empty.
+  threshold: 0.8
+  then:
+  - log

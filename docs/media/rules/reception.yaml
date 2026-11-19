@@ -1,0 +1,13 @@
+source:
+  camera: 0
+rules:
+- name: visitor-waiting
+  when: A visitor is waiting at the reception desk.
+  threshold: 0.8
+  then:
+  - log
+- name: reception-empty
+  when: Nobody is in the reception area.
+  threshold: 0.8
+  then:
+  - log

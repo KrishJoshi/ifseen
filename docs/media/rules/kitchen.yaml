@@ -1,0 +1,13 @@
+source:
+  camera: 0
+rules:
+- name: boiling-over
+  when: A pot on the hob is boiling over, with foam or water spilling over the rim.
+  threshold: 0.8
+  then:
+  - log
+- name: gentle-simmer
+  when: A pot is simmering calmly and is not spilling over.
+  threshold: 0.8
+  then:
+  - log

@@ -1,0 +1,18 @@
+{"event": "start", "time": 1795094376.698, "source": "video desk.mp4", "provider": "gemini (gemini-decision-1)", "rules": ["laptop-unlocked-unattended", "person-at-desk"]}
+{"event": "decision", "time": 1795094378.167, "probs": {"laptop-unlocked-unattended": 0.0988, "person-at-desk": 0.8997}, "latency_ms": 1414.3, "tokens": 1280}
+{"event": "fire", "time": 1795094378.167, "rule": "person-at-desk", "when": "A person is sitting at the desk.", "probability": 0.8997}
+{"event": "log", "level": "info", "message": "[person-at-desk] person-at-desk 90%", "time": 1795094378.171}
+{"event": "decision", "time": 1795094378.739, "probs": {"laptop-unlocked-unattended": 0.1254, "person-at-desk": 0.9049}, "latency_ms": 548.8, "tokens": 1280}
+{"event": "decision", "time": 1795094379.432, "probs": {"laptop-unlocked-unattended": 0.1339, "person-at-desk": 0.9164}, "latency_ms": 677.2, "tokens": 1280}
+{"event": "decision", "time": 1795094379.991, "probs": {"laptop-unlocked-unattended": 0.1921, "person-at-desk": 0.9221}, "latency_ms": 539.6, "tokens": 1280}
+{"event": "decision", "time": 1795094380.485, "probs": {"laptop-unlocked-unattended": 0.3653, "person-at-desk": 0.4746}, "latency_ms": 474.0, "tokens": 1280}
+{"event": "decision", "time": 1795094381.157, "probs": {"laptop-unlocked-unattended": 0.4048, "person-at-desk": 0.2502}, "latency_ms": 635.9, "tokens": 1280}
+{"event": "decision", "time": 1795094381.647, "probs": {"laptop-unlocked-unattended": 0.82, "person-at-desk": 0.1354}, "latency_ms": 466.8, "tokens": 1280}
+{"event": "fire", "time": 1795094381.648, "rule": "laptop-unlocked-unattended", "when": "A laptop at an empty desk is unlocked and showing apps or documents, with nobody sitting there.", "probability": 0.82}
+{"event": "log", "level": "info", "message": "[laptop-unlocked-unattended] laptop-unlocked-unattended 82%", "time": 1795094381.648}
+{"event": "decision", "time": 1795094382.37, "probs": {"laptop-unlocked-unattended": 0.8601, "person-at-desk": 0.1074}, "latency_ms": 684.9, "tokens": 1280}
+{"event": "decision", "time": 1795094383.385, "probs": {"laptop-unlocked-unattended": 0.8888, "person-at-desk": 0.0945}, "latency_ms": 980.1, "tokens": 1280}
+{"event": "decision", "time": 1795094384.126, "probs": {"laptop-unlocked-unattended": 0.8788, "person-at-desk": 0.0889}, "latency_ms": 704.2, "tokens": 1280}
+{"event": "decision", "time": 1795094384.869, "probs": {"laptop-unlocked-unattended": 0.8955, "person-at-desk": 0.14}, "latency_ms": 710.6, "tokens": 1280}
+{"event": "decision", "time": 1795094385.666, "probs": {"laptop-unlocked-unattended": 0.9048, "person-at-desk": 0.135}, "latency_ms": 737.4, "tokens": 1280}
+{"event": "stop", "time": 1795094385.666, "reason": "finished desk.mp4"}

@@ -1,0 +1,18 @@
+{"event": "start", "time": 1795094376.709, "source": "video parcel.mp4", "provider": "gemini (gemini-decision-1)", "rules": ["parcel-left", "person-at-door"]}
+{"event": "decision", "time": 1795094377.53, "probs": {"parcel-left": 0.1434, "person-at-door": 0.1175}, "latency_ms": 769.2, "tokens": 1277}
+{"event": "decision", "time": 1795094378.101, "probs": {"parcel-left": 0.1072, "person-at-door": 0.2803}, "latency_ms": 539.2, "tokens": 1277}
+{"event": "decision", "time": 1795094378.82, "probs": {"parcel-left": 0.1461, "person-at-door": 0.3183}, "latency_ms": 677.1, "tokens": 1277}
+{"event": "decision", "time": 1795094379.558, "probs": {"parcel-left": 0.1492, "person-at-door": 0.8358}, "latency_ms": 700.8, "tokens": 1277}
+{"event": "fire", "time": 1795094379.558, "rule": "person-at-door", "when": "A person is at the front door.", "probability": 0.8358}
+{"event": "log", "level": "info", "message": "[person-at-door] person-at-door 84%", "time": 1795094379.56}
+{"event": "decision", "time": 1795094380.361, "probs": {"parcel-left": 0.1766, "person-at-door": 0.9509}, "latency_ms": 754.5, "tokens": 1277}
+{"event": "decision", "time": 1795094381.294, "probs": {"parcel-left": 0.4242, "person-at-door": 0.9576}, "latency_ms": 886.5, "tokens": 1277}
+{"event": "decision", "time": 1795094381.988, "probs": {"parcel-left": 0.4761, "person-at-door": 0.9363}, "latency_ms": 599.7, "tokens": 1277}
+{"event": "decision", "time": 1795094383.17, "probs": {"parcel-left": 0.3119, "person-at-door": 0.9453}, "latency_ms": 1125.0, "tokens": 1277}
+{"event": "decision", "time": 1795094383.838, "probs": {"parcel-left": 0.7721, "person-at-door": 0.9328}, "latency_ms": 602.3, "tokens": 1277}
+{"event": "decision", "time": 1795094384.76, "probs": {"parcel-left": 0.9453, "person-at-door": 0.3706}, "latency_ms": 856.1, "tokens": 1277}
+{"event": "fire", "time": 1795094384.76, "rule": "parcel-left", "when": "A parcel or package has been left on the doorstep and nobody is with it.", "probability": 0.9453}
+{"event": "log", "level": "info", "message": "[parcel-left] parcel-left 95%", "time": 1795094384.765}
+{"event": "decision", "time": 1795094385.374, "probs": {"parcel-left": 0.9513, "person-at-door": 0.3417}, "latency_ms": 527.1, "tokens": 1277}
+{"event": "decision", "time": 1795094386.009, "probs": {"parcel-left": 0.9609, "person-at-door": 0.1728}, "latency_ms": 551.5, "tokens": 1277}
+{"event": "stop", "time": 1795094386.009, "reason": "finished parcel.mp4"}

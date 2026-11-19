@@ -1,0 +1,13 @@
+source:
+  camera: 0
+rules:
+- name: spaghetti
+  when: The 3D print has failed and is a tangle of loose filament.
+  threshold: 0.85
+  then:
+  - log
+- name: print-ok
+  when: A 3D print is in progress and looks clean and intact.
+  threshold: 0.8
+  then:
+  - log

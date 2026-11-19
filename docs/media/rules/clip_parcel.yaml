@@ -1,0 +1,17 @@
+source:
+  file:
+    path: parcel.mp4
+    realtime: false
+every: 500ms
+skip_unchanged: false
+rules:
+- name: parcel-left
+  when: A parcel or package has been left on the doorstep and nobody is with it.
+  threshold: 0.85
+  then:
+  - log: '{rule} {percent}'
+- name: person-at-door
+  when: A person is at the front door.
+  threshold: 0.8
+  then:
+  - log: '{rule} {percent}'

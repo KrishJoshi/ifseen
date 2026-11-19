@@ -373,3 +373,19 @@
   syncExtra();
   build();
 })();
+
+/* ---------- demo video: autoplay only when motion is OK and it's on screen ---------- */
+(function () {
+  var v = document.getElementById("demo-video");
+  if (!v) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
+    v.controls = true;
+    return;
+  }
+  new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { var p = v.play(); if (p && p.catch) p.catch(function () { v.controls = true; }); }
+      else v.pause();
+    });
+  }, { threshold: 0.25 }).observe(v);
+})();

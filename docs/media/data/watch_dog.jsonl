@@ -1,0 +1,18 @@
+{"event": "start", "time": 1795094338.91, "source": "video dog.mp4", "provider": "gemini (gemini-decision-1)", "rules": ["dog-on-sofa", "dog-on-floor"]}
+{"event": "decision", "time": 1795094339.871, "probs": {"dog-on-sofa": 0.06, "dog-on-floor": 0.9299}, "latency_ms": 913.5, "tokens": 1270}
+{"event": "fire", "time": 1795094339.871, "rule": "dog-on-floor", "when": "A dog is on the floor.", "probability": 0.9299}
+{"event": "log", "level": "info", "message": "[dog-on-floor] dog-on-floor 93%", "time": 1795094339.878}
+{"event": "decision", "time": 1795094340.619, "probs": {"dog-on-sofa": 0.0642, "dog-on-floor": 0.9294}, "latency_ms": 711.7, "tokens": 1270}
+{"event": "decision", "time": 1795094341.267, "probs": {"dog-on-sofa": 0.0878, "dog-on-floor": 0.92}, "latency_ms": 612.6, "tokens": 1270}
+{"event": "decision", "time": 1795094342.121, "probs": {"dog-on-sofa": 0.0899, "dog-on-floor": 0.9269}, "latency_ms": 813.9, "tokens": 1270}
+{"event": "decision", "time": 1795094342.711, "probs": {"dog-on-sofa": 0.0965, "dog-on-floor": 0.9369}, "latency_ms": 545.7, "tokens": 1270}
+{"event": "decision", "time": 1795094343.405, "probs": {"dog-on-sofa": 0.1007, "dog-on-floor": 0.7945}, "latency_ms": 643.3, "tokens": 1270}
+{"event": "decision", "time": 1795094344.218, "probs": {"dog-on-sofa": 0.162, "dog-on-floor": 0.7199}, "latency_ms": 761.9, "tokens": 1270}
+{"event": "decision", "time": 1795094344.885, "probs": {"dog-on-sofa": 0.2772, "dog-on-floor": 0.0812}, "latency_ms": 613.2, "tokens": 1270}
+{"event": "decision", "time": 1795094345.914, "probs": {"dog-on-sofa": 0.6092, "dog-on-floor": 0.0794}, "latency_ms": 976.6, "tokens": 1270}
+{"event": "decision", "time": 1795094346.847, "probs": {"dog-on-sofa": 0.9275, "dog-on-floor": 0.1083}, "latency_ms": 889.8, "tokens": 1270}
+{"event": "fire", "time": 1795094346.847, "rule": "dog-on-sofa", "when": "A dog is lying or sitting on the sofa.", "probability": 0.9275}
+{"event": "log", "level": "info", "message": "[dog-on-sofa] dog-on-sofa 93%", "time": 1795094346.849}
+{"event": "decision", "time": 1795094347.803, "probs": {"dog-on-sofa": 0.951, "dog-on-floor": 0.0788}, "latency_ms": 889.8, "tokens": 1270}
+{"event": "decision", "time": 1795094348.861, "probs": {"dog-on-sofa": 0.9438, "dog-on-floor": 0.0785}, "latency_ms": 993.6, "tokens": 1270}
+{"event": "stop", "time": 1795094348.861, "reason": "finished dog.mp4"}

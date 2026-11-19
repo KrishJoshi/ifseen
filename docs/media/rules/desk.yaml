@@ -1,0 +1,18 @@
+source:
+  camera: 0
+rules:
+- name: laptop-unlocked-unattended
+  when: A laptop at an empty desk is unlocked and showing apps or documents, with nobody sitting there.
+  threshold: 0.8
+  then:
+  - log
+- name: screen-locked
+  when: The laptop is showing a lock screen.
+  threshold: 0.8
+  then:
+  - log
+- name: person-at-desk
+  when: A person is sitting at the desk.
+  threshold: 0.8
+  then:
+  - log

@@ -1,0 +1,13 @@
+source:
+  camera: 0
+rules:
+- name: paper-jam
+  when: The printer's screen shows a paper jam or error.
+  threshold: 0.8
+  then:
+  - log
+- name: printer-ready
+  when: The printer's screen shows that it is ready.
+  threshold: 0.8
+  then:
+  - log

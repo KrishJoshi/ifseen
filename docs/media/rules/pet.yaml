@@ -1,0 +1,10 @@
+source: {camera: 0}
+rules:
+  - name: dog-on-sofa
+    when: A dog is lying or sitting on the sofa.
+    threshold: 0.8
+    then: [log]
+  - name: dog-on-floor
+    when: A dog is on the floor.
+    threshold: 0.8
+    then: [log]

@@ -1,0 +1,13 @@
+source:
+  camera: 0
+rules:
+- name: parcel-left
+  when: A parcel or package has been left on the doorstep.
+  threshold: 0.85
+  then:
+  - log
+- name: doorstep-empty
+  when: The doorstep is empty, with nothing left on it.
+  threshold: 0.8
+  then:
+  - log

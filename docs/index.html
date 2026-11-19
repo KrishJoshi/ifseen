@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=13">
+  <link rel="stylesheet" href="assets/style.css?v=14">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -281,6 +281,130 @@
     </div>
   </section>
 
+  <!-- ================= DEMO ================= -->
+  <section class="section" id="demo" aria-labelledby="demo-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>++</b> See it work</div>
+        <div>
+          <h2 id="demo-title">Real frames.<br><em>Real</em> numbers.</h2>
+          <p class="lede">Each scene comes in a pair: one where the rule is true and a near-identical one where it isn't. Every probability below is a real <code>ifseen</code> output from Gemini Decision 1, one call per frame. Nothing tuned or retouched.</p>
+        </div>
+      </div>
+      <p class="demo-disclose"><span class="chip gold">AI-generated scenes</span><span class="chip mint">real ifseen outputs</span><span class="label">Scenes: Gemini 2.5 Flash Image + Veo 3.1 Lite · <a href="https://github.com/KrishJoshi/ifseen/blob/main/docs/media/README.md">prompts, rules &amp; raw numbers</a></span></p>
+
+      <figure class="demo-hero">
+        <div class="demo-video">
+          <video id="demo-video" muted loop playsinline preload="metadata" poster="media/hero-poster.webp" width="1280" height="540" aria-label="Three clips with ifseen's live rule probabilities: a dog jumps onto the sofa, a courier leaves a parcel, an office worker walks away from an unlocked laptop">
+            <source src="media/hero.mp4" type="video/mp4">
+            <source src="media/hero.webm" type="video/webm">
+          </video>
+        </div>
+        <figcaption><span class="label"><b>ifseen watch</b> · every: 500ms · realtime: false · then: [log]</span><span class="label">Bars ease between decisions for smoothness; every number and FIRED moment is from the real run</span></figcaption>
+      </figure>
+      <div class="cards-head demo-head">
+        <h3>Home</h3>
+        <span class="label"><b>01</b> · rule true (left) vs false (right) · click for the full annotated frame</span>
+      </div>
+      <div class="demo-grid">
+        <article class="demo-pair">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/dog-couch.webp"><img src="media/stills/dog-couch.webp" alt="Pet camera: a golden retriever lying on a grey sofa, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 93.6%</span></a>
+            <a class="demo-shot" href="media/stills/dog-floor.webp"><img src="media/stills/dog-floor.webp" alt="Same room: the dog lying on the rug next to the sofa, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag">— 6.2%</span></a>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label">Pet cam</span>
+            <p class="demo-rule"><code>dog-on-sofa</code> “A dog is lying or sitting on the sofa.” <span>threshold 80%</span></p>
+            <p class="foot-note">Opposite rule <code>dog-on-floor</code>: 8.9% → 94.6%</p>
+          </div>
+        </article>
+        <article class="demo-pair">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/door-parcel.webp"><img src="media/stills/door-parcel.webp" alt="Doorbell camera: a cardboard parcel on the doormat, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 94.6%</span></a>
+            <a class="demo-shot" href="media/stills/door-empty.webp"><img src="media/stills/door-empty.webp" alt="Same doorstep with nothing on it, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag">— 6.0%</span></a>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label mint">Doorbell</span>
+            <p class="demo-rule"><code>parcel-left</code> “A parcel or package has been left on the doorstep.” <span>threshold 85%</span></p>
+            <p class="foot-note">Opposite rule <code>doorstep-empty</code>: 7.7% → 89.0%</p>
+          </div>
+        </article>
+        <article class="demo-pair">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/pot-boilover.webp"><img src="media/stills/pot-boilover.webp" alt="Kitchen webcam: a saucepan boiling over with foam, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 94.5%</span></a>
+            <a class="demo-shot" href="media/stills/pot-simmer.webp"><img src="media/stills/pot-simmer.webp" alt="Same pan gently simmering, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag">— 12.7%</span></a>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label gold">Kitchen</span>
+            <p class="demo-rule"><code>boiling-over</code> “A pot on the hob is boiling over, with foam or water spilling over the rim.” <span>threshold 80%</span></p>
+            <p class="foot-note">Opposite rule <code>gentle-simmer</code>: 6.3% → 82.8%</p>
+          </div>
+        </article>
+        <article class="demo-pair">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/print-fail.webp"><img src="media/stills/print-fail.webp" alt="Printer webcam: failed print, a tangle of orange filament, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 93.2%</span></a>
+            <a class="demo-shot" href="media/stills/print-good.webp"><img src="media/stills/print-good.webp" alt="Same printer with a clean half-finished vase, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag">— 8.9%</span></a>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label forest">3D printer</span>
+            <p class="demo-rule"><code>spaghetti</code> “The 3D print has failed and is a tangle of loose filament.” <span>threshold 85%</span></p>
+            <p class="foot-note">Opposite rule <code>print-ok</code>: 7.9% → 84.0%</p>
+          </div>
+        </article>
+      </div>
+      <div class="cards-head demo-head">
+        <h3>Office</h3>
+        <span class="label"><b>02</b> · rule true (left) vs false (right) · click for the full annotated frame</span>
+      </div>
+      <div class="demo-grid">
+        <article class="demo-pair">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/laptop-unlocked.webp"><img src="media/stills/laptop-unlocked.webp" alt="Office camera: unlocked laptop showing a spreadsheet at an empty desk, with ifseen's real rule probabilities" width="1000" height="1049" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 94.4%</span></a>
+            <a class="demo-shot" href="media/stills/laptop-locked.webp"><img src="media/stills/laptop-locked.webp" alt="Same desk with the laptop on its lock screen, with ifseen's real rule probabilities" width="1000" height="1049" loading="lazy" decoding="async"><span class="demo-tag">— 9.1%</span></a>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label">Hot desk</span>
+            <p class="demo-rule"><code>laptop-unlocked-unattended</code> “A laptop at an empty desk is unlocked and showing apps or documents, with nobody sitting there.” <span>threshold 80%</span></p>
+            <p class="foot-note">Opposite rule <code>screen-locked</code>: 6.2% → 92.1%</p>
+          </div>
+        </article>
+        <article class="demo-pair">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/room-occupied.webp"><img src="media/stills/room-occupied.webp" alt="Meeting room camera: four people in a meeting, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 92.4%</span></a>
+            <a class="demo-shot" href="media/stills/room-empty.webp"><img src="media/stills/room-empty.webp" alt="Same meeting room, empty, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag">— 9.8%</span></a>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label mint">Meeting room</span>
+            <p class="demo-rule"><code>room-occupied</code> “People are in the meeting room.” <span>threshold 80%</span></p>
+            <p class="foot-note">Opposite rule <code>room-empty</code>: 9.2% → 92.6%</p>
+          </div>
+        </article>
+        <article class="demo-pair">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/printer-jam.webp"><img src="media/stills/printer-jam.webp" alt="Printer panel showing &#x27;Paper jam in Tray 2&#x27;, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 94.1%</span></a>
+            <a class="demo-shot" href="media/stills/printer-ready.webp"><img src="media/stills/printer-ready.webp" alt="Printer panel showing &#x27;Ready&#x27;, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag">— 7.3%</span></a>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label gold">Printer</span>
+            <p class="demo-rule"><code>paper-jam</code> “The printer&#x27;s screen shows a paper jam or error.” <span>threshold 80%</span></p>
+            <p class="foot-note">Opposite rule <code>printer-ready</code>: 6.1% → 95.3%</p>
+          </div>
+        </article>
+        <article class="demo-pair">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/reception-visitor.webp"><img src="media/stills/reception-visitor.webp" alt="Reception camera: a visitor waiting at an unattended desk, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 88.9%</span></a>
+            <a class="demo-shot" href="media/stills/reception-empty.webp"><img src="media/stills/reception-empty.webp" alt="Same reception area, empty, with ifseen's real rule probabilities" width="1000" height="931" loading="lazy" decoding="async"><span class="demo-tag">— 5.4%</span></a>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label forest">Reception</span>
+            <p class="demo-rule"><code>visitor-waiting</code> “A visitor is waiting at the reception desk.” <span>threshold 80%</span></p>
+            <p class="foot-note">Opposite rule <code>reception-empty</code>: 4.4% → 95.0%</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
   <!-- ================= RECIPES ================= -->
   <section class="section" id="recipes" aria-labelledby="recipes-title">
     <div class="wrap">
@@ -512,6 +636,6 @@
   </div>
 </footer>
 
-<script src="assets/app.js?v=13" defer></script>
+<script src="assets/app.js?v=14" defer></script>
 </body>
 </html>
