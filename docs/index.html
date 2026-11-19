@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=16">
+  <link rel="stylesheet" href="assets/style.css?v=18">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -77,7 +77,7 @@
           <button class="copy" type="button" data-copy-target="hero-cmd">Copy</button>
         </div>
         <div class="hero-actions">
-          <a class="btn btn-solid btn-lg" href="#install">pipx install "ifseen[all]"</a>
+          <a class="btn btn-solid btn-lg" href="#install">Get started in 3 steps</a>
           <a class="btn btn-ghost btn-lg" href="#usecases">See the use cases →</a>
         </div>
         <ul class="hero-integrations" aria-label="Integrations">
@@ -131,6 +131,97 @@
           <div class="core" aria-hidden="true"><i></i><span>ifseen</span></div>
         </div>
       </figure>
+    </div>
+  </section>
+
+  <!-- ================= GET STARTED ================= -->
+  <section class="section start" id="install" aria-labelledby="start-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>00.</b> Get started</div>
+        <div>
+          <h2 id="start-title">Running in<br><em>three</em> steps.</h2>
+          <p class="lede">Install it, add a key (or don't), run a ready-made recipe. A couple of minutes, start to finish.</p>
+        </div>
+      </div>
+
+      <ol class="start-steps">
+        <li class="start-step">
+          <div class="start-head"><span class="label"><b>01</b> Install</span><a class="label rel-link" href="https://github.com/KrishJoshi/ifseen/releases/latest">All downloads &amp; checksums →</a></div>
+          <div class="tabbox">
+            <div class="os-tabs" role="tablist" aria-label="Install ifseen on" data-os-detect>
+              <button class="os-tab" type="button" role="tab" id="tab-macos" aria-controls="panel-macos" aria-selected="true">macOS</button>
+              <button class="os-tab" type="button" role="tab" id="tab-windows" aria-controls="panel-windows" aria-selected="false" tabindex="-1">Windows</button>
+              <button class="os-tab" type="button" role="tab" id="tab-linux" aria-controls="panel-linux" aria-selected="false" tabindex="-1">Linux</button>
+              <button class="os-tab" type="button" role="tab" id="tab-docker" aria-controls="panel-docker" aria-selected="false" tabindex="-1">Docker</button>
+              <button class="os-tab" type="button" role="tab" id="tab-ha" aria-controls="panel-ha" aria-selected="false" tabindex="-1">Home Assistant</button>
+              <button class="os-tab" type="button" role="tab" id="tab-python" aria-controls="panel-python" aria-selected="false" tabindex="-1">Python</button>
+            </div>
+
+            <div class="os-panel" role="tabpanel" id="panel-macos" aria-labelledby="tab-macos" tabindex="0">
+              <div class="run"><code id="i-mac-brew">brew install krishjoshi/tap/ifseen</code><button class="copy" type="button" data-copy-target="i-mac-brew">Copy</button></div>
+              <p class="alt">No Homebrew? <code>curl -fsSL https://krishj.com/ifseen/install.sh | sh</code> verifies the checksum, installs to <code>~/.local/bin</code> (no sudo) and clears Gatekeeper's quarantine flag. Apple silicon and Intel; one binary, no Python.</p>
+              <p class="upkeep"><b>Upgrade</b> <code>brew upgrade ifseen</code> (or re-run the script) · <b>Uninstall</b> <code>brew uninstall ifseen</code> (or <code>rm ~/.local/bin/ifseen</code>)</p>
+            </div>
+
+            <div class="os-panel" role="tabpanel" id="panel-windows" aria-labelledby="tab-windows" tabindex="0" hidden>
+              <div class="run ps"><code id="i-win-ps">irm https://krishj.com/ifseen/install.ps1 | iex</code><button class="copy" type="button" data-copy-target="i-win-ps">Copy</button></div>
+              <p class="alt">PowerShell. Installs to <code>%LOCALAPPDATA%\Programs\ifseen</code> and adds it to your PATH; open a new terminal after. Or with Scoop: <code>scoop bucket add krishjoshi https://github.com/KrishJoshi/scoop-bucket; scoop install ifseen</code>. Or <a href="https://github.com/KrishJoshi/ifseen/releases/latest">download the .exe</a>: it's unsigned, so SmartScreen may need <b>More info → Run anyway</b>.</p>
+              <p class="upkeep"><b>Upgrade</b> re-run the command (or <code>scoop update ifseen</code>) · <b>Uninstall</b> delete that folder (or <code>scoop uninstall ifseen</code>)</p>
+            </div>
+
+            <div class="os-panel" role="tabpanel" id="panel-linux" aria-labelledby="tab-linux" tabindex="0" hidden>
+              <div class="run"><code id="i-linux-sh">curl -fsSL https://krishj.com/ifseen/install.sh | sh</code><button class="copy" type="button" data-copy-target="i-linux-sh">Copy</button></div>
+              <p class="alt">x86_64 and arm64 (glibc). Verifies the checksum, installs to <code>~/.local/bin</code>, no sudo. Pin with <code>IFSEEN_VERSION=0.1.0</code>, move with <code>IFSEEN_INSTALL_DIR</code>. The mic needs <code>sudo apt install libportaudio2</code>. Homebrew works too.</p>
+              <p class="upkeep"><b>Upgrade</b> re-run the command · <b>Uninstall</b> <code>rm ~/.local/bin/ifseen</code></p>
+            </div>
+
+            <div class="os-panel" role="tabpanel" id="panel-docker" aria-labelledby="tab-docker" tabindex="0" hidden>
+              <div class="mock">
+                <div class="mock-bar"><span>Docker Compose · amd64 + arm64 (Pi 4/5 OK)</span><button class="copy" type="button" data-copy-target="i-compose">Copy</button></div>
+<pre id="i-compose">mkdir ifseen &amp;&amp; cd ifseen
+curl -fsSLO https://raw.githubusercontent.com/KrishJoshi/ifseen/main/docker/compose.yaml
+curl -fsSL https://raw.githubusercontent.com/KrishJoshi/ifseen/main/docker/.env.example -o .env
+mkdir rules &amp;&amp; curl -fsSL https://raw.githubusercontent.com/KrishJoshi/ifseen/main/docker/rules/doorbell.yaml -o rules/doorbell.yaml</pre>
+              </div>
+              <p class="alt">Put your key and camera snapshot URL in <code>.env</code> (RTSP: edit <code>rules/doorbell.yaml</code>), then <code>docker compose up -d &amp;&amp; docker compose logs -f</code>. Every <code>rules/*.yaml</code> is a watcher. No screen or mic inside a container. <a href="https://github.com/KrishJoshi/ifseen/blob/main/docs/docker.md">Docker guide →</a></p>
+              <p class="upkeep"><b>Upgrade</b> <code>docker compose pull &amp;&amp; docker compose up -d</code> · <b>Uninstall</b> <code>docker compose down</code></p>
+            </div>
+
+            <div class="os-panel" role="tabpanel" id="panel-ha" aria-labelledby="tab-ha" tabindex="0" hidden>
+              <div><a class="btn btn-solid btn-lg" href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FKrishJoshi%2Fifseen">Add repository to Home Assistant</a></div>
+              <p class="alt">Then install the <b>ifseen</b> add-on: a prebuilt image for amd64 and aarch64, so it takes seconds. Or add <code>https://github.com/KrishJoshi/ifseen</code> under Settings → Add-ons → Add-on store → ⋮ → Repositories. <a href="#integrate">Setup steps below →</a></p>
+              <p class="upkeep"><b>Upgrade</b> the update shows up in Settings like any add-on · <b>Uninstall</b> from the add-on's page</p>
+            </div>
+
+            <div class="os-panel" role="tabpanel" id="panel-python" aria-labelledby="tab-python" tabindex="0" hidden>
+              <div class="run"><code id="i1">pipx install "ifseen[all]"</code><button class="copy" type="button" data-copy-target="i1">Copy</button></div>
+              <p class="alt">Any OS, Python 3.10+. Or <code>uv tool install "ifseen[all]"</code>. Add <code>[local]</code> for the free, offline SigLIP provider (pulls in torch, so the standalone binaries leave it out). Lean extras: <code>[screen]</code> <code>[camera]</code> <code>[mic]</code> <code>[mqtt]</code>.</p>
+              <p class="upkeep"><b>Upgrade</b> <code>pipx upgrade ifseen</code> · <b>Uninstall</b> <code>pipx uninstall ifseen</code></p>
+            </div>
+          </div>
+        </li>
+
+        <li class="start-step">
+          <div class="start-head"><span class="label"><b>02</b> Get a key</span><a class="label rel-link" href="#keys">All key options →</a></div>
+          <div class="key-opts">
+            <div><span class="chip mint">recommended</span><strong>Gemini Decision 1</strong><p>Free tier from <a href="https://aistudio.google.com/apikey">Google AI Studio</a>. Images and audio.</p><div class="run"><code id="i2">export GEMINI_API_KEY=...</code><button class="copy" type="button" data-copy-target="i2">Copy</button></div></div>
+            <div><span class="chip coral">fastest</span><strong>TypeSafe Jev</strong><p>Key from <a href="https://console.typesafe.ai">console.typesafe.ai</a>. Images only, ~180 ms.</p><div class="run"><code id="i-jev">export TYPESAFE_API_KEY=...</code><button class="copy" type="button" data-copy-target="i-jev">Copy</button></div></div>
+            <div><span class="chip">no key</span><strong>Free or fake</strong><p><code>--provider local</code> runs SigLIP offline (Python install). <code>--dry-run</code> uses random probabilities.</p><div class="run"><code id="i3">ifseen watch doorbell --dry-run</code><button class="copy" type="button" data-copy-target="i3">Copy</button></div></div>
+          </div>
+          <p class="win-note">On Windows PowerShell: <code>$env:GEMINI_API_KEY = "..."</code>.</p>
+        </li>
+
+        <li class="start-step">
+          <div class="start-head"><span class="label"><b>03</b> Run your first rule</span><a class="label rel-link" href="#recipes">All recipes →</a></div>
+          <ol class="how-steps">
+            <li><div class="run"><code id="i-doctor">ifseen doctor</code><button class="copy" type="button" data-copy-target="i-doctor">Copy</button></div><p>Checks keys, extras and capture permissions.</p></li>
+            <li><div class="run"><code id="i-init">ifseen init appliance-done</code><button class="copy" type="button" data-copy-target="i-init">Copy</button></div><p>Writes <code>ifseen.yaml</code> from a recipe.</p></li>
+            <li><p class="how-text">Edit <code>ifseen.yaml</code>: point <code>source</code> at your camera, screen or snapshot URL and reword the rules.</p></li>
+            <li><div class="run"><code id="i-watch">ifseen watch ifseen.yaml</code><button class="copy" type="button" data-copy-target="i-watch">Copy</button></div><p>Live dashboard; actions run when a rule fires.</p></li>
+          </ol>
+        </li>
+      </ol>
     </div>
   </section>
 
@@ -618,69 +709,117 @@
       <div class="section-head">
         <div class="idx"><b>03.</b> Integrate</div>
         <div>
-          <h2 id="int-title">Plug it into<br><em>what you run.</em></h2>
-          <p class="lede">The CLI is one way in. Rules also become Home Assistant entities, Python callbacks, a typed JS client and a local HTTP + SSE API. Same rules file everywhere.</p>
+          <h2 id="int-title">Choose<br><em>your</em> setup.</h2>
+          <p class="lede">The CLI is one way in. The same rules file also becomes Home Assistant entities, an always-on container, Python callbacks, a typed JS client or a local HTTP + SSE API.</p>
         </div>
       </div>
 
-      <div class="bento">
-        <article class="cell wide">
-          <span class="cell-label mint">Home Assistant · MQTT discovery</span>
-          <h3>Every rule becomes an entity.</h3>
-          <div class="int-ha">
-            <div>
-              <p>Add an <code>mqtt:</code> section and each rules file shows up as a device. Each rule gets a <code>binary_sensor</code> (on when it fires, off when it re-arms) and a probability sensor, plus status, cost-per-hour and model-call sensors, a <b>Last trigger</b> camera, a pause switch and a trigger event. Shorthand: <code>mqtt: core-mosquitto</code>.</p>
-              <ul class="int-entities" aria-label="Entities for a rules file named kitchen">
-                <li><code>binary_sensor.kitchen_hob_unattended</code></li>
-                <li><code>sensor.kitchen_hob_unattended_probability</code></li>
-                <li><code>event.kitchen_trigger</code></li>
-                <li><code>camera.kitchen_last_trigger</code></li>
-                <li><code>switch.kitchen_watching</code></li>
-                <li><code>sensor.kitchen_status</code> · <code>_cost_per_hour</code> · <code>_model_calls</code></li>
+      <div class="tabbox setup">
+        <div class="os-tabs" role="tablist" aria-label="Choose your setup">
+          <button class="os-tab" type="button" role="tab" id="stab-ha" aria-controls="spanel-ha" aria-selected="true">Home Assistant</button>
+          <button class="os-tab" type="button" role="tab" id="stab-docker" aria-controls="spanel-docker" aria-selected="false" tabindex="-1">Docker Compose</button>
+          <button class="os-tab" type="button" role="tab" id="stab-py" aria-controls="spanel-py" aria-selected="false" tabindex="-1">Python</button>
+          <button class="os-tab" type="button" role="tab" id="stab-js" aria-controls="spanel-js" aria-selected="false" tabindex="-1">JavaScript</button>
+          <button class="os-tab" type="button" role="tab" id="stab-http" aria-controls="spanel-http" aria-selected="false" tabindex="-1">HTTP API</button>
+          <button class="os-tab" type="button" role="tab" id="stab-notify" aria-controls="spanel-notify" aria-selected="false" tabindex="-1">Notifications</button>
+        </div>
+
+        <!-- Home Assistant -->
+        <div class="os-panel setup-panel" role="tabpanel" id="spanel-ha" aria-labelledby="stab-ha" tabindex="0">
+          <div class="setup-guide">
+            <p class="needs"><span class="label">Needs</span> Home Assistant OS or Supervised. Elsewhere, any MQTT broker + an <code>mqtt:</code> section works.</p>
+            <ol class="how-steps">
+              <li><div><a class="btn btn-solid" href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FKrishJoshi%2Fifseen">Add repository to Home Assistant</a></div></li>
+              <li><p class="how-text">Install the <b>ifseen</b> add-on, and the <b>Mosquitto broker</b> add-on if you don't have one. MQTT is picked up automatically.</p></li>
+              <li><p class="how-text">Pick a provider and paste its key in the add-on's <b>Configuration</b> tab (or turn on <b>Dry run</b>).</p></li>
+              <li><p class="how-text">Save a rules file like the one here in <code>/addon_configs/xxxxxxxx_ifseen/</code> (Samba or File editor), or paste it into the <b>rules</b> option. Start the add-on.</p></li>
+            </ol>
+            <div class="you-get">
+              <span class="label">You get · one device per file</span>
+              <ul class="int-entities" aria-label="Entities for a rules file named front-door">
+                <li><code>binary_sensor.front_door_person_at_door</code></li>
+                <li><code>sensor.front_door_person_at_door_probability</code></li>
+                <li><code>event.front_door_trigger</code> · <code>camera.front_door_last_trigger</code></li>
+                <li><code>switch.front_door_watching</code> · status &amp; cost sensors</li>
               </ul>
-              <p>Any HA camera works as the source through <code>camera_proxy</code>. On Home Assistant OS there's an add-on (add-on repository: <code>github.com/KrishJoshi/ifseen</code>) that configures MQTT from the Mosquitto add-on for you.</p>
-              <div class="chips"><span class="chip mint">tested against a real MQTT broker</span><span class="chip ghost">not yet verified in a live HA instance</span></div>
             </div>
-            <div class="int-code">
-              <div class="mock">
-                <div class="mock-bar"><span>kitchen.yaml</span><button class="copy" type="button" data-copy-target="int-ha-yaml">Copy</button></div>
+            <div class="chips"><span class="chip mint">tested against a real MQTT broker</span><span class="chip ghost">not yet verified in a live HA instance</span></div>
+            <a class="label full-guide" href="https://github.com/KrishJoshi/ifseen/blob/main/docs/homeassistant.md">Full guide →</a>
+          </div>
+          <div class="int-code">
+            <div class="mock">
+              <div class="mock-bar"><span>front-door.yaml</span><button class="copy" type="button" data-copy-target="int-ha-yaml">Copy</button></div>
 <pre id="int-ha-yaml"><span class="y-k">source</span>:
   <span class="y-k">url</span>:
-    <span class="y-k">url</span>: <span class="y-s">http://homeassistant.local:8123/api/camera_proxy/camera.kitchen</span>
-    <span class="y-k">headers</span>: {<span class="y-k">Authorization</span>: <span class="y-s">"Bearer ${HA_TOKEN}"</span>}
-<span class="y-k">every</span>: <span class="y-n">4s</span>
-<span class="y-k">mqtt</span>: {<span class="y-k">host</span>: <span class="y-s">homeassistant.local</span>, <span class="y-k">username</span>: <span class="y-s">ifseen</span>, <span class="y-k">password</span>: <span class="y-s">"${MQTT_PASSWORD}"</span>}
+    <span class="y-k">url</span>: <span class="y-s">http://supervisor/core/api/camera_proxy/camera.front_door</span>
+    <span class="y-k">headers</span>: {<span class="y-k">Authorization</span>: <span class="y-s">"Bearer ${SUPERVISOR_TOKEN}"</span>}
+<span class="y-k">every</span>: <span class="y-n">3s</span>
 <span class="y-k">rules</span>:
-  - <span class="y-k">name</span>: <span class="y-a">hob-unattended</span>
-    <span class="y-k">when</span>: <span class="y-s">A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen.</span>
-    <span class="y-k">for</span>: <span class="y-n">3</span>
-    <span class="y-k">ha_device_class</span>: <span class="y-s">safety</span></pre>
-              </div>
-              <div class="mock">
-                <div class="mock-bar"><span>automation</span><button class="copy" type="button" data-copy-target="int-ha-auto">Copy</button></div>
-<pre id="int-ha-auto"><span class="y-k">alias</span>: <span class="y-s">Hob left on</span>
-<span class="y-k">triggers</span>:
+  - <span class="y-k">name</span>: <span class="y-a">person-at-door</span>
+    <span class="y-k">when</span>: <span class="y-s">A person is standing at the front door.</span>
+    <span class="y-k">for</span>: <span class="y-n">2</span>
+    <span class="y-k">ha_device_class</span>: <span class="y-s">occupancy</span></pre>
+            </div>
+            <div class="mock">
+              <div class="mock-bar"><span>automation</span><button class="copy" type="button" data-copy-target="int-ha-auto">Copy</button></div>
+<pre id="int-ha-auto"><span class="y-k">triggers</span>:
   - <span class="y-k">trigger</span>: <span class="y-s">state</span>
-    <span class="y-k">entity_id</span>: <span class="y-s">binary_sensor.kitchen_hob_unattended</span>
+    <span class="y-k">entity_id</span>: <span class="y-s">binary_sensor.front_door_person_at_door</span>
     <span class="y-k">to</span>: <span class="y-s">"on"</span>
 <span class="y-k">actions</span>:
   - <span class="y-k">action</span>: <span class="y-s">notify.mobile_app_my_phone</span>
-    <span class="y-k">data</span>: {<span class="y-k">message</span>: <span class="y-s">"Hob is on and nobody's in the kitchen"</span>}</pre>
-              </div>
+    <span class="y-k">data</span>: {<span class="y-k">message</span>: <span class="y-s">"Someone's at the door"</span>}</pre>
             </div>
           </div>
-        </article>
+        </div>
 
-        <article class="cell">
-          <span class="cell-label gold">Python</span>
-          <h3>One-shot checks or a live watcher.</h3>
-          <p><code>check()</code> returns probabilities for an image. <code>Watcher</code> takes callbacks, sync or async; <code>run()</code>, <code>await run_async()</code> or <code>start()</code> in a thread.</p>
-          <div class="mock">
-            <div class="mock-bar"><span>dock.py</span><button class="copy" type="button" data-copy-target="int-py">Copy</button></div>
+        <!-- Docker Compose -->
+        <div class="os-panel setup-panel" role="tabpanel" id="spanel-docker" aria-labelledby="stab-docker" tabindex="0" hidden>
+          <div class="setup-guide">
+            <p class="needs"><span class="label">Needs</span> Docker with Compose, on amd64 or arm64 (a Raspberry Pi 4/5 is fine), and a camera with an RTSP or snapshot URL.</p>
+            <ol class="how-steps">
+              <li><div class="run"><code id="s-dc-1">mkdir ifseen &amp;&amp; cd ifseen &amp;&amp; curl -fsSLO https://raw.githubusercontent.com/KrishJoshi/ifseen/main/docker/compose.yaml</code><button class="copy" type="button" data-copy-target="s-dc-1">Copy</button></div></li>
+              <li><div class="run"><code id="s-dc-2">curl -fsSL https://raw.githubusercontent.com/KrishJoshi/ifseen/main/docker/.env.example -o .env</code><button class="copy" type="button" data-copy-target="s-dc-2">Copy</button></div><p>Then put <code>GEMINI_API_KEY</code> in <code>.env</code>.</p></li>
+              <li><div class="run"><code id="s-dc-3">mkdir rules &amp;&amp; curl -fsSL https://raw.githubusercontent.com/KrishJoshi/ifseen/main/docker/rules/doorbell.yaml -o rules/doorbell.yaml</code><button class="copy" type="button" data-copy-target="s-dc-3">Copy</button></div><p>Set <code>DOORBELL_SNAPSHOT_URL</code> in <code>.env</code> (or edit the file for RTSP). Every <code>rules/*.yaml</code> becomes a watcher.</p></li>
+              <li><div class="run"><code id="s-dc-4">docker compose up -d &amp;&amp; docker compose logs -f</code><button class="copy" type="button" data-copy-target="s-dc-4">Copy</button></div></li>
+            </ol>
+            <p class="you-get-p"><span class="label">You get</span> One always-on container running <code>ifseen serve</code> over all your rules files. Upgrade with <code>docker compose pull &amp;&amp; docker compose up -d</code>. No screen or mic inside a container.</p>
+            <a class="label full-guide" href="https://github.com/KrishJoshi/ifseen/blob/main/docs/docker.md">Full guide →</a>
+          </div>
+          <div class="int-code">
+            <div class="mock">
+              <div class="mock-bar"><span>one-off, no compose</span><button class="copy" type="button" data-copy-target="int-docker-run">Copy</button></div>
+<pre id="int-docker-run">docker run --rm -e GEMINI_API_KEY -e NTFY_TOPIC \
+  -e DOORBELL_SNAPSHOT_URL ghcr.io/krishjoshi/ifseen watch doorbell</pre>
+            </div>
+            <div class="mock">
+              <div class="mock-bar"><span>a Home Assistant camera as the source</span><button class="copy" type="button" data-copy-target="int-docker-src">Copy</button></div>
+<pre id="int-docker-src"><span class="y-k">source</span>:
+  <span class="y-k">url</span>:
+    <span class="y-k">url</span>: <span class="y-s">http://homeassistant.local:8123/api/camera_proxy/camera.front_door</span>
+    <span class="y-k">headers</span>: {<span class="y-k">Authorization</span>: <span class="y-s">"Bearer ${HA_TOKEN}"</span>}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Python -->
+        <div class="os-panel setup-panel" role="tabpanel" id="spanel-py" aria-labelledby="stab-py" tabindex="0" hidden>
+          <div class="setup-guide">
+            <p class="needs"><span class="label">Needs</span> Python 3.10+.</p>
+            <ol class="how-steps">
+              <li><div class="run"><code id="s-py-1">pip install "ifseen[camera]"</code><button class="copy" type="button" data-copy-target="s-py-1">Copy</button></div></li>
+              <li><div class="run"><code id="s-py-2">export GEMINI_API_KEY=...</code><button class="copy" type="button" data-copy-target="s-py-2">Copy</button></div><p>Or pass <code>api_key=</code> explicitly.</p></li>
+              <li><p class="how-text"><code>check()</code> for one image, or a <code>Watcher</code> with sync or async callbacks: <code>run()</code>, <code>await run_async()</code> or <code>start()</code> in a thread.</p></li>
+            </ol>
+            <p class="you-get-p"><span class="label">You get</span> Probabilities as a dict, or an event per fire with the rule name, probability and frame.</p>
+            <a class="label full-guide" href="https://github.com/KrishJoshi/ifseen#use-it-from-python">Full guide →</a>
+          </div>
+          <div class="int-code">
+            <div class="mock">
+              <div class="mock-bar"><span>dock.py</span><button class="copy" type="button" data-copy-target="int-py">Copy</button></div>
 <pre id="int-py"><span class="y-k">from</span> ifseen <span class="y-k">import</span> Watcher, check
 
-probs = check(<span class="y-s">"dock.jpg"</span>, [<span class="y-s">"A person has no hi-vis vest."</span>],
-              provider=<span class="y-s">"jev"</span>)
+probs = check(<span class="y-s">"dock.jpg"</span>, [<span class="y-s">"A person has no hi-vis vest."</span>])
 
 w = Watcher(source={<span class="y-s">"camera"</span>: <span class="y-n">0</span>}, provider=<span class="y-s">"gemini"</span>, every=<span class="y-s">"2s"</span>)
 
@@ -690,15 +829,25 @@ w = Watcher(source={<span class="y-s">"camera"</span>: <span class="y-n">0</span
     print(event.name, event.probability)
 
 w.run()</pre>
+            </div>
           </div>
-        </article>
+        </div>
 
-        <article class="cell">
-          <span class="cell-label coral">JavaScript / TypeScript</span>
-          <h3><code>npm install ifseen</code></h3>
-          <p>Zero dependencies; Node 18+, Bun, Deno and browsers. <code>check()</code> calls a decision API directly (server-side). <code>IfseenClient</code> talks to <code>ifseen serve</code>: watchers, snapshots and a fetch-based SSE stream with an optional bearer token.</p>
-          <div class="mock">
-            <div class="mock-bar"><span>shelf.ts</span><button class="copy" type="button" data-copy-target="int-js">Copy</button></div>
+        <!-- JavaScript -->
+        <div class="os-panel setup-panel" role="tabpanel" id="spanel-js" aria-labelledby="stab-js" tabindex="0" hidden>
+          <div class="setup-guide">
+            <p class="needs"><span class="label">Needs</span> Node 18+, Bun or Deno. Zero dependencies. Live watchers also need the CLI installed.</p>
+            <ol class="how-steps">
+              <li><div class="run"><code id="s-js-1">npm install ifseen</code><button class="copy" type="button" data-copy-target="s-js-1">Copy</button></div></li>
+              <li><p class="how-text">One-shot: <code>check()</code> calls a decision API directly. Server-side only: a key in a browser is public.</p></li>
+              <li><div class="run"><code id="s-js-3">ifseen serve doorbell</code><button class="copy" type="button" data-copy-target="s-js-3">Copy</button></div><p>Then <code>IfseenClient</code> drives watchers, snapshots and the live event stream.</p></li>
+            </ol>
+            <p class="you-get-p"><span class="label">You get</span> Typed results and a fetch-based SSE stream, with an optional bearer token.</p>
+            <a class="label full-guide" href="https://github.com/KrishJoshi/ifseen/tree/main/js#readme">Full guide →</a>
+          </div>
+          <div class="int-code">
+            <div class="mock">
+              <div class="mock-bar"><span>shelf.ts</span><button class="copy" type="button" data-copy-target="int-js">Copy</button></div>
 <pre id="int-js"><span class="y-k">import</span> { check, IfseenClient } <span class="y-k">from</span> <span class="y-s">"ifseen"</span>;
 
 <span class="y-k">const</span> probs = <span class="y-k">await</span> check(<span class="y-s">"shelf.jpg"</span>,
@@ -706,46 +855,66 @@ w.run()</pre>
   { provider: <span class="y-s">"gemini"</span>, apiKey: process.env.GEMINI_API_KEY });
 
 <span class="y-k">const</span> client = <span class="y-k">new</span> IfseenClient({ token: process.env.IFSEEN_TOKEN });
-client.on(<span class="y-s">"fire"</span>, (e) =&gt; console.log(e.rule, e.probability));
-<span class="y-k">for await</span> (<span class="y-k">const</span> e <span class="y-k">of</span> client.events({ types: [<span class="y-s">"fire"</span>] })) { <span class="y-c">/* ... */</span> }</pre>
+client.on(<span class="y-s">"fire"</span>, (e) =&gt; console.log(e.rule, e.probability));</pre>
+            </div>
           </div>
-        </article>
+        </div>
 
-        <article class="cell">
-          <span class="cell-label forest">HTTP API · <code>ifseen serve</code></span>
-          <h3>Local REST + Server-Sent Events.</h3>
-          <p>Loopback only by default; listening on your LAN requires a token. One-shot <code>/v1/check</code>, watcher CRUD, the latest frame as JPEG, and a live <code>/v1/events</code> stream.</p>
-          <div class="mock">
-            <div class="mock-bar"><span>terminal</span><button class="copy" type="button" data-copy-target="int-http">Copy</button></div>
-<pre id="int-http">ifseen serve legacy-screen-alarm        <span class="y-c"># http://127.0.0.1:8899</span>
-
-curl -N <span class="y-s">"localhost:8899/v1/events?types=fire"</span>
+        <!-- HTTP API -->
+        <div class="os-panel setup-panel" role="tabpanel" id="spanel-http" aria-labelledby="stab-http" tabindex="0" hidden>
+          <div class="setup-guide">
+            <p class="needs"><span class="label">Needs</span> The CLI. Loopback only by default; listening on your LAN requires a token.</p>
+            <ol class="how-steps">
+              <li><div class="run"><code id="s-http-1">ifseen serve legacy-screen-alarm</code><button class="copy" type="button" data-copy-target="s-http-1">Copy</button></div><p>Serves on <code>http://127.0.0.1:8899</code>.</p></li>
+              <li><div class="run"><code id="s-http-2">curl -N "localhost:8899/v1/events?types=fire"</code><button class="copy" type="button" data-copy-target="s-http-2">Copy</button></div></li>
+              <li><div class="run"><code id="s-http-3">curl -s localhost:8899/v1/watchers/legacy-screen-alarm/snapshot -o frame.jpg</code><button class="copy" type="button" data-copy-target="s-http-3">Copy</button></div></li>
+            </ol>
+            <p class="you-get-p"><span class="label">You get</span> REST + Server-Sent Events from any language.</p>
+            <div class="chips"><span class="chip">GET /v1/health</span><span class="chip">POST /v1/check</span><span class="chip">/v1/watchers</span><span class="chip">…/snapshot</span><span class="chip gold">SSE /v1/events</span></div>
+            <a class="label full-guide" href="https://github.com/KrishJoshi/ifseen/blob/main/docs/api.md">Full guide →</a>
+          </div>
+          <div class="int-code">
+            <div class="mock">
+              <div class="mock-bar"><span>terminal</span><button class="copy" type="button" data-copy-target="int-http">Copy</button></div>
+<pre id="int-http">curl -s localhost:8899/v1/health
 curl -s localhost:8899/v1/watchers
-curl -s localhost:8899/v1/watchers/legacy-screen-alarm/snapshot -o frame.jpg</pre>
+curl -s localhost:8899/v1/check -H 'content-type: application/json' \
+  -d '{"image_base64": "...", "rules": ["A parcel is on the doorstep."]}'</pre>
+            </div>
           </div>
-          <div class="chips"><span class="chip">GET /v1/health</span><span class="chip">POST /v1/check</span><span class="chip">/v1/watchers</span><span class="chip">…/snapshot</span><span class="chip gold">SSE /v1/events</span></div>
-        </article>
+        </div>
 
-        <article class="cell">
-          <span class="cell-label">Cost &amp; outputs</span>
-          <h3>A free local model as the bouncer.</h3>
-          <p><code>--provider local</code> runs SigLIP on your machine: free, offline, ~20 ms. As a <code>prefilter</code> it gates the paid model, which is only called when the cheap check passes.</p>
-          <div class="mock">
-            <div class="mock-bar"><span>prefilter</span><button class="copy" type="button" data-copy-target="int-pre">Copy</button></div>
-<pre id="int-pre"><span class="y-k">provider</span>: <span class="y-s">gemini</span>
-<span class="y-k">prefilter</span>:
-  <span class="y-k">provider</span>: <span class="y-s">local</span>
-  <span class="y-k">when</span>: <span class="y-s">a photo of a person.</span>
-  <span class="y-k">threshold</span>: <span class="y-n">0.05</span></pre>
+        <!-- Notifications -->
+        <div class="os-panel setup-panel" role="tabpanel" id="spanel-notify" aria-labelledby="stab-notify" tabindex="0" hidden>
+          <div class="setup-guide">
+            <p class="needs"><span class="label">Needs</span> Nothing extra. For phone pushes, the free <a href="https://ntfy.sh">ntfy</a> app.</p>
+            <ol class="how-steps">
+              <li><p class="how-text">Install ntfy on your phone and subscribe to a hard-to-guess topic.</p></li>
+              <li><div class="run"><code id="s-nt-2">ifseen "a parcel has been left on the doorstep" --camera 0 --ntfy my-secret-topic --for 2</code><button class="copy" type="button" data-copy-target="s-nt-2">Copy</button></div></li>
+              <li><p class="how-text">In a rules file, list as many actions under <code>then:</code> as you like.</p></li>
+            </ol>
+            <p class="you-get-p"><span class="label">You get</span> A push with the photo attached, webhooks with the image, shell commands with <code>$IFSEEN_*</code> env vars, desktop notifications, speech, saved frames.</p>
+            <a class="label full-guide" href="https://github.com/KrishJoshi/ifseen#rules-file-reference">Full guide →</a>
           </div>
-          <div class="chips"><span class="chip coral">webhook + image</span><span class="chip mint">ntfy push with photo</span><span class="chip gold">shell · $IFSEEN_* env</span><span class="chip">--json lines</span><span class="chip forest">Docker</span></div>
-        </article>
+          <div class="int-code">
+            <div class="mock">
+              <div class="mock-bar"><span>then:</span><button class="copy" type="button" data-copy-target="int-then">Copy</button></div>
+<pre id="int-then"><span class="y-k">then</span>:
+  - <span class="y-k">ntfy</span>: {<span class="y-k">topic</span>: <span class="y-s">my-topic</span>, <span class="y-k">priority</span>: <span class="y-s">urgent</span>}   <span class="y-c"># photo attached</span>
+  - <span class="y-k">webhook</span>: {<span class="y-k">url</span>: <span class="y-s">https://example.com/hook</span>, <span class="y-k">image</span>: <span class="y-n">true</span>}
+  - <span class="y-k">shell</span>: <span class="y-s">./pause-printer.sh "$IFSEEN_SNAPSHOT"</span>
+  - <span class="y-k">notify</span>: <span class="y-s">"{rule} ({percent})"</span>
+  - <span class="y-k">say</span>: <span class="y-s">someone's at the door</span></pre>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="cards-head" id="keys">
-        <h3>API keys</h3>
-        <span class="label">Never in rule files · there is no key field</span>
-      </div>
+      <details class="keys-more" id="keys">
+        <summary class="cards-head">
+          <h3>All key options</h3>
+          <span class="label">Never in rule files · there is no key field</span>
+        </summary>
       <div class="keys-get">
         <div><span class="chip mint">gemini</span><strong>Gemini Decision 1</strong><p>Free tier at <a href="https://aistudio.google.com/apikey">aistudio.google.com/apikey</a>. Images and audio.</p></div>
         <div><span class="chip coral">jev</span><strong>TypeSafe Jev</strong><p>Key from <a href="https://console.typesafe.ai">console.typesafe.ai</a>. Images only; fastest, ~180 ms.</p></div>
@@ -762,10 +931,11 @@ curl -s localhost:8899/v1/watchers/legacy-screen-alarm/snapshot -o frame.jpg</pr
             <tr><td><code>JS / TS</code></td><td><code>check(img, rules, { provider: "gemini", apiKey })</code>, or the same env vars in Node, Bun and Deno. Don't call providers from a browser: the key is visible to anyone. Use <code>ifseen serve</code> or your backend.</td></tr>
             <tr><td><code>ifseen serve</code></td><td>Keys live only in the server's environment. HTTP clients never send provider keys, and custom endpoints are blocked by default so a client can't redirect your key elsewhere.</td></tr>
             <tr><td><code>HA add-on</code></td><td>Password fields in the add-on options: <code>gemini_api_key</code>, <code>typesafe_api_key</code>, <code>openai_api_key</code>, <code>azure_decision_key</code> (+ endpoint and deployment).</td></tr>
-            <tr><td><code>Docker</code></td><td><code>docker run --rm -e GEMINI_API_KEY ifseen watch kitchen</code> passes the key through from your shell.</td></tr>
+            <tr><td><code>Docker</code></td><td>Put it in the compose <code>.env</code> file, or <code>docker run --rm -e GEMINI_API_KEY ghcr.io/krishjoshi/ifseen watch kitchen</code> passes it through from your shell.</td></tr>
           </tbody>
         </table>
       </div>
+      </details>
     </div>
   </section>
 
@@ -978,12 +1148,7 @@ curl -s localhost:8899/v1/watchers/legacy-screen-alarm/snapshot -o frame.jpg</pr
           </div>
         </div>
       </form>
-
-      <div class="install" id="install">
-        <div><span class="label"><b>01</b> Install</span><div class="run"><code id="i1">pipx install "ifseen[all]"</code><button class="copy" type="button" data-copy-target="i1">Copy</button></div><p>Or <code>uv tool install "ifseen[all]"</code>. Lean extras: <code>[screen]</code>, <code>[camera]</code>, <code>[mic]</code>.</p></div>
-        <div><span class="label"><b>02</b> Get a key</span><div class="run"><code id="i2">export GEMINI_API_KEY=...</code><button class="copy" type="button" data-copy-target="i2">Copy</button></div><p>Gemini: free from <a href="https://aistudio.google.com/apikey">Google AI Studio</a>. Or <code>TYPESAFE_API_KEY</code> for Jev (images, fastest). <code>ifseen doctor</code> checks keys and permissions. <a href="#keys">All key options →</a></p></div>
-        <div><span class="label"><b>03</b> Or no key at all</span><div class="run"><code id="i3">ifseen watch doorbell --dry-run</code><button class="copy" type="button" data-copy-target="i3">Copy</button></div><p>Random probabilities, actions printed instead of run. Or <code>--provider local</code> for free, offline SigLIP.</p></div>
-      </div>
+      <p class="builder-next"><a class="btn btn-ghost btn-lg" href="#install">Not installed yet? Get started →</a></p>
     </div>
   </section>
 </main>
@@ -1004,6 +1169,6 @@ curl -s localhost:8899/v1/watchers/legacy-screen-alarm/snapshot -o frame.jpg</pr
   </div>
 </footer>
 
-<script src="assets/app.js?v=16" defer></script>
+<script src="assets/app.js?v=18" defer></script>
 </body>
 </html>

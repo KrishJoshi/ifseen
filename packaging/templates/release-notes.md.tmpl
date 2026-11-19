@@ -1,0 +1,39 @@
+## Install
+
+**macOS / Linux**
+
+```sh
+curl -fsSL https://krishj.com/ifseen/install.sh | sh
+# or: brew install krishjoshi/tap/ifseen
+```
+
+**Windows** (PowerShell)
+
+```powershell
+irm https://krishj.com/ifseen/install.ps1 | iex
+# or: scoop bucket add krishjoshi https://github.com/KrishJoshi/scoop-bucket; scoop install ifseen
+```
+
+**Python** (includes the optional free offline `local` provider via `[local]`)
+
+```sh
+pipx install "ifseen[all]==$version"
+```
+
+**Docker** (cameras, snapshot URLs and files; no screen or mic in a container)
+
+```sh
+docker run --rm -e GEMINI_API_KEY ghcr.io/krishjoshi/ifseen:$version --help
+```
+
+**Home Assistant**: add `https://github.com/$repo` as an add-on repository
+([one click](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FKrishJoshi%2Fifseen)).
+The add-on pulls a prebuilt image for amd64 / aarch64.
+
+**JavaScript / TypeScript**: `npm install ifseen@$version`
+
+The standalone binaries below bundle the screen, camera, mic and MQTT extras (not the
+torch-based `local` provider). They're unsigned: macOS may need
+`xattr -d com.apple.quarantine ./ifseen` (the install script does this for you), and Windows
+SmartScreen may ask you to click **More info > Run anyway**. On Linux the mic needs
+PortAudio (`sudo apt install libportaudio2`). Verify downloads with `SHA256SUMS`.

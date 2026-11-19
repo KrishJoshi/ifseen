@@ -47,6 +47,49 @@
     });
   });
 
+  /* ---------- tabs: installer + setup picker (ARIA tablist, roving tabindex) ---------- */
+  document.querySelectorAll("[role=tablist]").forEach(function (list) {
+    var tabs = Array.prototype.slice.call(list.querySelectorAll("[role=tab]"));
+    function select(tab, focus) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+      });
+      if (focus) tab.focus();
+    }
+    list.addEventListener("click", function (e) {
+      var t = e.target.closest("[role=tab]");
+      if (t) select(t, false);
+    });
+    list.addEventListener("keydown", function (e) {
+      var i = tabs.indexOf(document.activeElement);
+      if (i < 0) return;
+      var next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+      if (next === undefined) return;
+      e.preventDefault();
+      select(tabs[(next + tabs.length) % tabs.length], true);
+    });
+    if (list.hasAttribute("data-os-detect")) {
+      var ua = navigator.userAgent.toLowerCase();
+      var plat = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || ua).toLowerCase();
+      var os = /android|iphone|ipad/.test(ua) ? null : /win/.test(plat) ? "windows" : /mac/.test(plat) ? "macos" : /linux|x11|cros/.test(plat) ? "linux" : null;
+      var tab = os && document.getElementById("tab-" + os);
+      if (tab) select(tab, false);
+    }
+  });
+
+  /* "All key options" is collapsed: open it whenever #keys is the target */
+  var keys = document.getElementById("keys");
+  function openKeys() { if (keys && location.hash === "#keys") keys.open = true; }
+  window.addEventListener("hashchange", openKeys);
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest('a[href="#keys"]');
+    if (a && keys) keys.open = true;
+  });
+  openKeys();
+
   /* ---------- nav ---------- */
   var toggle = document.querySelector(".nav-toggle");
   var menu = document.getElementById("nav-menu");

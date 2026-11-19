@@ -1,0 +1,46 @@
+# ifseen with Docker Compose. Quick start (full guide: docs/docker.md):
+#
+#   curl -fsSLO https://raw.githubusercontent.com/KrishJoshi/ifseen/main/docker/compose.yaml
+#   curl -fsSL https://raw.githubusercontent.com/KrishJoshi/ifseen/main/docker/.env.example -o .env
+#   mkdir rules && curl -fsSL https://raw.githubusercontent.com/KrishJoshi/ifseen/main/docker/rules/doorbell.yaml -o rules/doorbell.yaml
+#   # put your key and camera in .env, then:
+#   docker compose up -d && docker compose logs -f
+#
+# Every rules/*.yaml file becomes one watcher, all run by a single `ifseen serve`.
+services:
+  ifseen:
+    image: ghcr.io/krishjoshi/ifseen:${IFSEEN_TAG:-latest}
+    container_name: ifseen
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./rules:/rules:ro
+    entrypoint: ["sh", "-c"]
+    # Collects rules/*.yaml and *.yml; IFSEEN_SERVE_ARGS (from .env) adds flags like --dry-run.
+    # `$$` is a literal `$` for the container's shell (Compose would expand a single one).
+    command:
+      - |
+        set --
+        for f in /rules/*.yaml /rules/*.yml; do [ -e "$$f" ] && set -- "$$@" "$$f"; done
+        if [ "$$#" -eq 0 ]; then
+          echo "no rules files in ./rules - add one (see docs/docker.md)" >&2
+          exit 1
+        fi
+        exec ifseen serve $${IFSEEN_SERVE_ARGS:-} "$$@"
+    # The HTTP API stays inside the container unless you publish it. To reach it from other
+    # machines, set IFSEEN_TOKEN and IFSEEN_SERVE_ARGS=--host 0.0.0.0 in .env, then uncomment:
+    # ports:
+    #   - "8899:8899"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import os, urllib.request as u
+          h = {"Authorization": "Bearer " + os.environ["IFSEEN_TOKEN"]} if os.environ.get("IFSEEN_TOKEN") else {}
+          u.urlopen(u.Request("http://127.0.0.1:8899/v1/health", headers=h), timeout=5)
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3

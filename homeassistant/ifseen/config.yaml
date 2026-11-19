@@ -3,6 +3,9 @@ version: "0.1.0"
 slug: ifseen
 description: Plain-English triggers for your cameras, as Home Assistant entities over MQTT.
 url: https://github.com/KrishJoshi/ifseen
+# Prebuilt per-arch images from .github/workflows/release.yml, so the Supervisor pulls instead of
+# building on the device. The tag is this file's `version`, so bump both together.
+image: "ghcr.io/krishjoshi/{arch}-addon-ifseen"
 # opencv-python-headless only ships glibc wheels for these (no armv7/i386, no musl).
 arch:
   - aarch64

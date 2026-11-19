@@ -9,7 +9,8 @@ There are two ways to run it:
 
 - **The add-on** (Home Assistant OS / Supervised): install it from this repository, drop rules
   files in its config folder, done. MQTT is configured for you. See [The add-on](#the-add-on).
-- **Anywhere else** (a server, a Pi, Docker, your laptop): `pip install 'ifseen[mqtt]'`, add an
+- **Anywhere else** (a server, a Pi, Docker, your laptop): `pip install 'ifseen[mqtt]'`, a
+  [standalone binary](../README.md#install) or `ghcr.io/krishjoshi/ifseen`, add an
   `mqtt:` section to a rules file and run `ifseen watch`. See [MQTT setup](#mqtt-setup).
 
 Both need an MQTT broker that Home Assistant uses. If you don't have one, install the
@@ -342,10 +343,15 @@ actions:
 The repository is also a Home Assistant add-on repository (`repository.yaml` at the root, the
 add-on in `homeassistant/ifseen/`).
 
-1. Settings > Add-ons > Add-on store > ⋮ > **Repositories**, add
+1. Add the repository with this button:
+
+   [![Add the ifseen add-on repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FKrishJoshi%2Fifseen)
+
+   or by hand: Settings > Add-ons > Add-on store > ⋮ > **Repositories**, add
    `https://github.com/KrishJoshi/ifseen`.
-2. Install **ifseen**. It's built on your device (a few minutes; amd64 and aarch64 only, because
-   OpenCV has no wheels for other platforms).
+2. Install **ifseen**. The Supervisor pulls a prebuilt image
+   (`ghcr.io/krishjoshi/{arch}-addon-ifseen`), so it takes seconds, not a build on your device.
+   amd64 and aarch64 only, because OpenCV has no wheels for other platforms.
 3. Install the **Mosquitto broker** add-on if you don't have a broker. ifseen picks it up
    automatically through the Supervisor, no MQTT settings needed.
 4. In the add-on's **Configuration** tab, choose a provider and paste its API key (stored as a

@@ -613,13 +613,64 @@ fieldset legend { margin-bottom: 6px; padding: 0; font: 600 10px/1 var(--mono); 
 .warn { font: 500 11px/1.5 var(--mono); color: #9A3A1E; background: rgba(255,140,105,0.14); border-left: 3px solid var(--coral); padding: 8px 10px; margin: 0; }
 .warn[hidden] { display: none; }
 
-.install {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line-strong);
-  border: 1px solid var(--line-strong); max-width: 960px; margin: 56px auto 0; text-align: left;
+
+/* ---------- get started + setup picker (shared tab box) ---------- */
+.start-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 40px; }
+.start-step { display: grid; gap: 14px; min-width: 0; }
+.start-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 16px; }
+.start-head .label { font-size: 12px; }
+.rel-link { text-decoration: none; color: var(--forest); }
+.rel-link:hover { text-decoration: underline; }
+.tabbox { border: 1px solid var(--line-strong); background: var(--paper); min-width: 0; }
+.os-tabs { display: flex; flex-wrap: wrap; margin: 14px 22px 0; border-bottom: 1px solid var(--line-strong); }
+.os-tab {
+  border: 1px solid transparent; border-bottom: 0; margin-bottom: -1px; background: transparent; cursor: pointer;
+  font: 600 11px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+  padding: 12px 14px; border-radius: 2px 2px 0 0;
 }
-.install > div { background: var(--paper); padding: 22px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; align-content: start; }
-.install .run code::before { content: "$ "; }
-.install p { margin: 0; font-size: 13.5px; color: var(--muted); }
+.os-tab:hover { color: var(--forest); background: rgba(158, 255, 191, 0.35); }
+.os-tab[aria-selected="true"] { color: var(--forest); background: var(--white); border-color: var(--line-strong); box-shadow: inset 0 3px 0 var(--mint); }
+.os-panel { padding: 22px; display: grid; gap: 12px; align-content: start; }
+.os-panel:focus-visible { outline-offset: -2px; }
+.os-panel p, .start-step p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.55; }
+.os-panel p a, .start-step p a { color: var(--forest); }
+.os-panel p b, .start-step p b { color: var(--ink); font-weight: 600; }
+.os-panel p code, .start-step p code { color: var(--forest); overflow-wrap: anywhere; }
+.os-panel .mock { margin-top: 0; }
+.os-panel .alt { max-width: 90ch; }
+.os-panel .upkeep { font: 500 11.5px/1.6 var(--mono); color: var(--muted); border-top: 1px dashed var(--line-strong); padding-top: 10px; }
+.os-panel .upkeep b { font-weight: 600; color: var(--forest); text-transform: uppercase; letter-spacing: 0.08em; font-size: 10.5px; margin-right: 4px; }
+.run.ps code::before { content: "PS> "; }
+.key-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line-strong); border: 1px solid var(--line-strong); }
+.key-opts > div { background: var(--paper); padding: 20px 22px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.key-opts .chip { justify-self: start; }
+.key-opts p code { white-space: nowrap; }
+.key-opts strong { font: 700 17px/1.2 var(--head); color: var(--forest); }
+.key-opts .run { margin-top: 4px; }
+.win-note { font-family: var(--mono); font-size: 11.5px !important; }
+.how-steps { list-style: none; counter-reset: how; margin: 0; padding: 0; display: grid; gap: 12px; }
+.how-steps > li { counter-increment: how; display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; row-gap: 6px; align-items: start; }
+.how-steps > li::before {
+  content: counter(how); grid-row: 1 / span 2; width: 28px; height: 28px; display: grid; place-items: center;
+  background: var(--forest); color: var(--mint); font: 700 12px/1 var(--mono);
+}
+.how-steps > li > * { grid-column: 2; min-width: 0; }
+.how-steps .how-text { padding-top: 4px; font-size: 14px; color: var(--ink); }
+.start .how-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+.setup-panel { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 32px; padding: 28px; }
+.setup-guide { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.setup-guide .needs, .setup-guide .you-get-p { font-size: 14px; }
+.setup-guide .needs .label, .setup-guide .you-get-p .label, .you-get .label { display: block; margin-bottom: 4px; color: var(--forest); }
+.you-get { display: grid; gap: 4px; }
+.full-guide { color: var(--forest); text-decoration: none; justify-self: start; border-bottom: 1px solid var(--forest); padding-bottom: 2px; }
+.full-guide:hover { background: var(--mint); }
+.keys-more { margin-top: 96px; }
+.keys-more > summary { list-style: none; cursor: pointer; margin-top: 0; }
+.keys-more > summary::-webkit-details-marker { display: none; }
+.keys-more > summary h3::after { content: " +"; color: var(--coral); }
+.keys-more[open] > summary h3::after { content: " −"; }
+.keys-more > summary:hover h3 { color: var(--forest-2); }
+.builder-next { margin: 40px 0 0; }
 
 /* ---------- footer ---------- */
 footer { padding: 48px 0 64px; }
@@ -655,7 +706,7 @@ footer .wrap { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-
   .nav-menu .nav-cta { display: flex; margin-top: 16px; justify-content: flex-start; }
   .section-head { grid-template-columns: 1fr; gap: 20px; }
   .bench, .bento { grid-template-columns: minmax(0, 1fr); }
-  .prov-notes, .install { grid-template-columns: minmax(0, 1fr); }
+  .prov-notes, .key-opts, .setup-panel, .start .how-steps { grid-template-columns: minmax(0, 1fr); }
 }
 @media (min-width: 901px) {
   .nav-menu { display: contents; }
@@ -663,6 +714,9 @@ footer .wrap { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-
 }
 @media (max-width: 640px) {
   .wrap { padding: 0 20px; }
+  .os-tabs { margin: 10px 12px 0; }
+  .os-tab { padding: 11px 10px; }
+  .os-panel, .setup-panel { padding: 18px 14px; }
   .section { padding: 72px 0; }
   .hero { padding: 40px 0 64px; }
   .hero .wrap { gap: 48px; }

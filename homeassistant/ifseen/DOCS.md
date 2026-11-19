@@ -8,6 +8,14 @@ and publishes the answers to Home Assistant over MQTT. Each rules file becomes a
 - a **trigger event**, a **last trigger** camera with the frame that fired, a **watching**
   switch to pause it (no captures, no cost) and status / cost diagnostics.
 
+## Install
+
+[![Add the ifseen add-on repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FKrishJoshi%2Fifseen)
+
+Or Settings > Add-ons > Add-on store > ⋮ > Repositories, add
+`https://github.com/KrishJoshi/ifseen`, then install **ifseen**. The Supervisor pulls a
+prebuilt image (`ghcr.io/krishjoshi/{arch}-addon-ifseen`), so it installs in seconds.
+
 ## Setup
 
 1. Install the **Mosquitto broker** add-on (and the MQTT integration) if you don't have a
@@ -76,8 +84,9 @@ Rules without `then:` only update their entities: build automations in Home Assi
 - The triggering frame is published to MQTT (retained) for the camera entity. Set
   `mqtt: {host: core-mosquitto, fire_image: false}` in a file to turn that off for a private
   camera. Frames are only sent to the provider you choose.
-- The add-on is built on your device from the ifseen source. Only amd64 and aarch64 are
-  supported (OpenCV has no wheels for other platforms).
+- The add-on runs a prebuilt image with ifseen at the add-on's version, pulled from GitHub
+  Container Registry. Only amd64 and aarch64 are supported (OpenCV has no wheels for other
+  platforms).
 
 Full guide, including automation examples:
 <https://github.com/KrishJoshi/ifseen/blob/main/docs/homeassistant.md>

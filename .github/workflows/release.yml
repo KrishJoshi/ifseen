@@ -1,0 +1,356 @@
+name: release
+
+# Push a v* tag to release. Or run it by hand (Actions > release > Run workflow): with
+# "publish" off it builds and smoke-tests everything and uploads the files as workflow
+# artifacts, but pushes nothing. With "publish" on it releases the version in pyproject.toml.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish to PyPI, npm, ghcr.io and GitHub Releases (off = dry run)"
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  check:
+    name: check versions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      publish: ${{ steps.v.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - id: v
+        env:
+          IS_TAG: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          PUBLISH_INPUT: ${{ inputs.publish == true }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$IS_TAG" = true ]; then
+            version="$(python packaging/check_versions.py "$REF")"
+          else
+            version="$(python packaging/check_versions.py)"
+          fi
+          publish=false
+          if [ "$IS_TAG" = true ] || [ "$PUBLISH_INPUT" = true ]; then publish=true; fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "### ifseen $version (publish: $publish)" >> "$GITHUB_STEP_SUMMARY"
+
+  python-dist:
+    name: sdist + wheel
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pipx run build
+      - run: pipx run twine check --strict dist/*
+      - name: wheel installs and runs
+        run: |
+          python -m venv /tmp/v
+          /tmp/v/bin/pip install dist/*.whl
+          /tmp/v/bin/ifseen --version | grep -F "${{ needs.check.outputs.version }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+          if-no-files-found: error
+
+  binaries:
+    name: binary ${{ matrix.target }}
+    needs: check
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 22.04 (glibc 2.35) so the binaries also run on Debian 12 / Ubuntu 22.04 / RHEL 9.
+          - { os: ubuntu-22.04, target: linux-x86_64 }
+          - { os: ubuntu-22.04-arm, target: linux-arm64 }
+          - { os: macos-14, target: macos-arm64 }
+          # macos-13 is retired; macos-15-intel is GitHub's last Intel image (until ~Aug 2027).
+          - { os: macos-15-intel, target: macos-x86_64 }
+          - { os: windows-latest, target: windows-x86_64, exe: .exe }
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: PortAudio (Linux build host, for the sounddevice import)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libportaudio2
+      - run: python -m pip install ".[all]" "pyinstaller>=6.11,<7"
+      - run: pyinstaller packaging/ifseen.spec --noconfirm --clean
+      - name: smoke test
+        run: bash packaging/smoke.sh "dist/ifseen${{ matrix.exe }}" js/test/fixtures/red.jpg
+      - name: package
+        run: |
+          name="ifseen-${VERSION}-${{ matrix.target }}"
+          mkdir -p out stage
+          cp "dist/ifseen${{ matrix.exe }}" "out/${name}${{ matrix.exe }}"
+          cp "dist/ifseen${{ matrix.exe }}" LICENSE stage/
+          if [ "${{ runner.os }}" = Windows ]; then
+            (cd stage && 7z a -tzip "../out/${name}.zip" . >/dev/null)
+          else
+            tar -C stage -czf "out/${name}.tar.gz" .
+          fi
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bin-${{ matrix.target }}
+          path: out/
+          if-no-files-found: error
+
+  npm:
+    name: npm package
+    needs: [check, python-dist, binaries]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      VERSION: ${{ needs.check.outputs.version }}
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      # the integration tests drive a real `ifseen serve` from ../.venv
+      - run: python -m venv ../.venv && ../.venv/bin/pip install -e "..[dev]"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+      - run: npm pack --dry-run
+      - name: publish
+        if: needs.check.outputs.publish == 'true'
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::notice title=npm skipped::NPM_TOKEN secret not set - publish ifseen@$VERSION by hand (cd js && npm publish --access public)"
+            exit 0
+          fi
+          if [ "$(npm view "ifseen@$VERSION" version 2>/dev/null)" = "$VERSION" ]; then
+            echo "::notice title=npm skipped::ifseen@$VERSION is already on npm"
+            exit 0
+          fi
+          npm publish --provenance --access public
+
+  pypi:
+    name: publish to PyPI
+    needs: [check, python-dist, binaries]
+    if: needs.check.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/ifseen/${{ needs.check.outputs.version }}/
+    permissions:
+      id-token: write # Trusted Publishing, no token
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
+
+  docker:
+    name: docker image (amd64 + arm64)
+    needs: [check, python-dist, binaries]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/krishjoshi/ifseen
+      VERSION: ${{ needs.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: build amd64 and smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: ifseen:smoke
+          cache-from: type=gha,scope=cli
+          cache-to: type=gha,scope=cli,mode=max
+      - run: |
+          docker run --rm ifseen:smoke --version | grep -F "$VERSION"
+          docker run --rm ifseen:smoke recipes | grep -q doorbell
+          docker run --rm --entrypoint python ifseen:smoke -c "import cv2, paho.mqtt.client"
+      - if: needs.check.outputs.publish == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: build amd64 + arm64${{ needs.check.outputs.publish == 'true' && ' and push' || '' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ needs.check.outputs.publish == 'true' }}
+          tags: |
+            ${{ env.IMAGE }}:${{ env.VERSION }}
+            ${{ env.IMAGE }}:latest
+          labels: |
+            org.opencontainers.image.version=${{ env.VERSION }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=cli
+          cache-to: type=gha,scope=cli,mode=max
+
+  ha-addon:
+    name: HA add-on image ${{ matrix.arch }}
+    needs: [check, python-dist, binaries]
+    # Native runner per arch (no QEMU). Plain buildx rather than home-assistant/builder: one
+    # Dockerfile, two arches, and we install the wheel built above via a named build context.
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: amd64, platform: linux/amd64, os: ubuntu-latest }
+          - { arch: aarch64, platform: linux/arm64, os: ubuntu-24.04-arm }
+    env:
+      IMAGE: ghcr.io/krishjoshi/${{ matrix.arch }}-addon-ifseen
+      VERSION: ${{ needs.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+      - name: base image from build.yaml
+        id: base
+        run: |
+          from="$(sed -n "s/^  ${{ matrix.arch }}:[[:space:]]*\(.*\)$/\1/p" homeassistant/ifseen/build.yaml)"
+          test -n "$from" || { echo "no build_from for ${{ matrix.arch }}" >&2; exit 1; }
+          echo "from=$from" >> "$GITHUB_OUTPUT"
+          rm -f dist/*.tar.gz  # only the wheel goes into the image
+      - uses: docker/setup-buildx-action@v3
+      - name: build
+        uses: docker/build-push-action@v6
+        with:
+          context: homeassistant/ifseen
+          build-contexts: wheels=dist
+          platforms: ${{ matrix.platform }}
+          load: true
+          build-args: |
+            BUILD_FROM=${{ steps.base.outputs.from }}
+            BUILD_ARCH=${{ matrix.arch }}
+            BUILD_VERSION=${{ env.VERSION }}
+          labels: |
+            io.hass.name=ifseen
+            io.hass.description=Plain-English triggers for your cameras, as Home Assistant entities over MQTT.
+            io.hass.type=addon
+            io.hass.arch=${{ matrix.arch }}
+            io.hass.version=${{ env.VERSION }}
+            org.opencontainers.image.title=ifseen Home Assistant add-on
+            org.opencontainers.image.source=https://github.com/KrishJoshi/ifseen
+            org.opencontainers.image.version=${{ env.VERSION }}
+          tags: |
+            ${{ env.IMAGE }}:${{ env.VERSION }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha,scope=addon-${{ matrix.arch }}
+          cache-to: type=gha,scope=addon-${{ matrix.arch }},mode=max
+      - name: smoke test
+        run: |
+          docker run --rm --entrypoint ifseen "$IMAGE:$VERSION" --version | grep -F "$VERSION"
+          docker run --rm --entrypoint /opt/ifseen/bin/python "$IMAGE:$VERSION" -c "import cv2, paho.mqtt.client"
+      - if: needs.check.outputs.publish == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - if: needs.check.outputs.publish == 'true'
+        run: |
+          docker push "$IMAGE:$VERSION"
+          docker push "$IMAGE:latest"
+
+  github-release:
+    name: GitHub release
+    needs: [check, python-dist, binaries, npm, docker, ha-addon]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: bin-*
+          path: release/
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: release/
+      - name: SHA256SUMS, Homebrew formula, Scoop manifest, notes
+        run: |
+          (cd release && sha256sum -- * > SHA256SUMS && cat SHA256SUMS)
+          python packaging/make_release_files.py --version "$VERSION" --sums release/SHA256SUMS --out manifests
+          cp manifests/ifseen.rb manifests/ifseen.json release/
+          cat manifests/release-notes.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: |
+            release/
+            manifests/
+      - if: needs.check.outputs.publish == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: ifseen ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
+          body_path: manifests/release-notes.md
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: release/*

@@ -1,0 +1,26 @@
+# One file = one watcher. Values like ${DOORBELL_SNAPSHOT_URL} come from .env.
+source:
+  url: ${DOORBELL_SNAPSHOT_URL}
+  # An RTSP stream instead:
+  # camera: rtsp://user:pass@192.168.1.40:554/stream1
+  # A Home Assistant camera (needs HA_TOKEN in .env):
+  # url:
+  #   url: http://homeassistant.local:8123/api/camera_proxy/camera.front_door
+  #   headers: {Authorization: "Bearer ${HA_TOKEN}"}
+every: 3s
+rules:
+  - name: person-at-door
+    when: A person is standing at or walking up to the front door.
+    false_means: Empty doorstep, passing cars, animals, or people only on the street in the distance.
+    threshold: 0.8
+    for: 2
+    cooldown: 2m
+    then:
+      - ntfy: ${NTFY_TOPIC}
+  - name: parcel-left
+    when: A parcel, box or delivery bag has been left on the doorstep.
+    threshold: 0.85
+    for: 3
+    cooldown: 30m
+    then:
+      - ntfy: ${NTFY_TOPIC}

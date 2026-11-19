@@ -83,11 +83,26 @@ real `ifseen test` output (rule true / near-identical frame where it's false) on
 
 ## Install
 
-```bash
-pipx install "ifseen[all]"        # or: uv tool install "ifseen[all]"
-```
+| platform | install |
+|---|---|
+| **macOS** | `brew install krishjoshi/tap/ifseen` or `curl -fsSL https://krishj.com/ifseen/install.sh \| sh` |
+| **Windows** | `irm https://krishj.com/ifseen/install.ps1 \| iex`, or `scoop bucket add krishjoshi https://github.com/KrishJoshi/scoop-bucket` then `scoop install ifseen`, or download the `.exe` from [Releases](https://github.com/KrishJoshi/ifseen/releases/latest) |
+| **Linux** | `curl -fsSL https://krishj.com/ifseen/install.sh \| sh` (x86_64 / arm64), or `brew` / `pipx` |
+| **Python** (any OS) | `pipx install "ifseen[all]"` or `uv tool install "ifseen[all]"` |
+| **Docker** | Docker Compose quick start in [Docker](#run-it-headless--in-docker), or `docker run --rm -e GEMINI_API_KEY ghcr.io/krishjoshi/ifseen ...` (amd64 / arm64) |
+| **Home Assistant** | [![Add the ifseen add-on repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FKrishJoshi%2Fifseen) then install the **ifseen** add-on (see [Home Assistant](#home-assistant)) |
+| **JS / TS** | `npm install ifseen` (a client for `ifseen serve`; see [below](#use-it-from-javascript--typescript)) |
 
-Extras if you want to keep it lean: `ifseen[screen]` (mss), `ifseen[camera]` (OpenCV, also
+The Homebrew, Scoop, install-script and `.exe` options are standalone binaries: no Python
+needed, with screen, camera, mic and MQTT built in. They don't include the `local` (SigLIP)
+provider, which needs torch: use `pipx` / `uv` for that. The install script verifies the
+SHA-256 against the release's `SHA256SUMS`, installs to `~/.local/bin` without sudo
+(`IFSEEN_INSTALL_DIR` and `IFSEEN_VERSION` change the folder and version) and clears the macOS
+quarantine flag. The binaries aren't signed yet: if you download one by hand on macOS, run
+`xattr -d com.apple.quarantine ./ifseen`; on Windows, SmartScreen may need **More info → Run
+anyway**. On Linux the mic needs the system PortAudio library (`sudo apt install libportaudio2`).
+
+With pip, pipx or uv, pick extras to keep it lean: `ifseen[screen]` (mss), `ifseen[camera]` (OpenCV, also
 used for video files and RTSP), `ifseen[mic]` (sounddevice), `ifseen[mqtt]` (paho-mqtt, for
 [Home Assistant](#home-assistant)). Snapshot URLs, images and WAV files need no extras. `ifseen[local]` (torch + transformers) adds the free offline provider;
 it's big, so it isn't part of `all`.
@@ -418,9 +433,12 @@ rules:
     ha_device_class: occupancy
 ```
 
-`pip install 'ifseen[mqtt]'` and `ifseen watch front-door.yaml`. On Home Assistant OS, this
-repo is also an **add-on repository**: add it in the add-on store, drop rules files in the
-add-on's folder, and MQTT is configured for you. Full guide, with automation examples:
+`pip install 'ifseen[mqtt]'` (or any of the binaries above) and `ifseen watch front-door.yaml`.
+On Home Assistant OS, this repo is also an **add-on repository**:
+[add it](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FKrishJoshi%2Fifseen)
+(or paste `https://github.com/KrishJoshi/ifseen` under Settings > Add-ons > Add-on store > ⋮ >
+Repositories), install the add-on (prebuilt images for amd64 and aarch64), drop rules files in
+the add-on's folder, and MQTT is configured for you. Full guide, with automation examples:
 [docs/homeassistant.md](docs/homeassistant.md).
 
 ## Run it headless / in Docker
@@ -429,10 +447,30 @@ add-on's folder, and MQTT is configured for you. Full guide, with automation exa
 is handy for piping into `jq` or a log shipper (for Home Assistant, use [MQTT](#home-assistant)). `--plain` gives readable log
 lines. Both are used automatically when stdout isn't a terminal.
 
+For an always-on watcher (a home server, NAS or Raspberry Pi 4/5), use Docker Compose:
+
 ```bash
-docker build -t ifseen .
-docker run --rm -e GEMINI_API_KEY -e NTFY_TOPIC -e DOORBELL_SNAPSHOT_URL ifseen watch doorbell
+mkdir ifseen && cd ifseen
+curl -fsSLO https://raw.githubusercontent.com/KrishJoshi/ifseen/main/docker/compose.yaml
+curl -fsSL https://raw.githubusercontent.com/KrishJoshi/ifseen/main/docker/.env.example -o .env   # set GEMINI_API_KEY and DOORBELL_SNAPSHOT_URL
+mkdir rules && curl -fsSL https://raw.githubusercontent.com/KrishJoshi/ifseen/main/docker/rules/doorbell.yaml -o rules/doorbell.yaml
+docker compose up -d && docker compose logs -f
 ```
+
+Every `rules/*.yaml` becomes a watcher (`ifseen serve` over all of them). Upgrade with
+`docker compose pull && docker compose up -d`. Full guide: [docs/docker.md](docs/docker.md).
+
+One-off, without Compose:
+
+```bash
+docker run --rm -e GEMINI_API_KEY -e NTFY_TOPIC -e DOORBELL_SNAPSHOT_URL \
+  ghcr.io/krishjoshi/ifseen watch doorbell
+```
+
+The image (`ghcr.io/krishjoshi/ifseen:latest` or `:<version>`, linux/amd64 and linux/arm64)
+has the camera and MQTT extras. Cameras work through RTSP or a snapshot URL (e.g. Home
+Assistant's `camera_proxy`), and mounted files work too, but there's no screen or mic inside a
+container. To build it from source instead: `docker build -t ifseen .`
 
 ## Privacy
 
