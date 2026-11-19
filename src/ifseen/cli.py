@@ -32,7 +32,8 @@ from .sources import SourceError, build_source
 from .ui import Dashboard, JsonLines, PlainLog
 
 SUBCOMMANDS = {"watch", "test", "recipes", "init", "doctor", "serve"}
-err = Console(stderr=True, highlight=False)
+# soft_wrap: never hard-wrap errors, so long paths stay copy-pasteable in narrow CI logs
+err = Console(stderr=True, highlight=False, soft_wrap=True)
 
 
 def main(argv: list[str] | None = None) -> int:

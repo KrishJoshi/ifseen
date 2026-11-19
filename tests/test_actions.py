@@ -4,7 +4,7 @@ import json
 import time
 
 import httpx
-from conftest import solid_jpeg
+from conftest import py_shell, solid_jpeg
 
 from ifseen.actions import ActionRunner, FireEvent, render
 from ifseen.config import load_config
@@ -26,7 +26,11 @@ def test_shell_commands_are_never_templated(tmp_path):
     e = event(when="it's $(touch pwned) time")
     out = tmp_path / "out.txt"
     runner = ActionRunner(log=lambda *a: None, background=False)
-    runner.run([{"shell": {"cmd": f'echo "{{when}}|$IFSEEN_WHEN" > {out}', "wait": True}}], e)
+    code = (
+        "import os, sys, pathlib\n"
+        f"pathlib.Path({str(out)!r}).write_text(sys.argv[1] + '|' + os.environ['IFSEEN_WHEN'])\n"
+    )
+    runner.run([{"shell": {"cmd": py_shell(tmp_path, code, "{when}"), "wait": True}}], e)
     assert out.read_text().strip() == "{when}|it's $(touch pwned) time"
     assert not (tmp_path / "pwned").exists()
 
@@ -35,9 +39,12 @@ def test_shell_action_gets_env_and_runs(tmp_path):
     out = tmp_path / "out.txt"
     logs = []
     runner = ActionRunner(log=lambda *a: logs.append(a), background=False)
-    stop = runner.run(
-        [{"shell": {"cmd": f'echo "$IFSEEN_RULE $IFSEEN_PERCENT" > {out}', "wait": True}}], event()
+    code = (
+        "import os, pathlib\n"
+        f"pathlib.Path({str(out)!r}).write_text("
+        "os.environ['IFSEEN_RULE'] + ' ' + os.environ['IFSEEN_PERCENT'])\n"
     )
+    stop = runner.run([{"shell": {"cmd": py_shell(tmp_path, code), "wait": True}}], event())
     assert not stop
     assert out.read_text().strip() == "door 93%"
     assert not logs
@@ -143,7 +150,12 @@ def test_close_removes_temp_frames_after_shell_finishes(tmp_path):
     copy = tmp_path / "copy.jpg"
     runner = ActionRunner(log=lambda *a: None)
     e = event()
-    runner.run([{"shell": f'sleep 0.3; cp "$IFSEEN_SNAPSHOT" {copy}'}], e)
+    code = (
+        "import os, shutil, time\n"
+        "time.sleep(0.3)\n"
+        f"shutil.copy(os.environ['IFSEEN_SNAPSHOT'], {str(copy)!r})\n"
+    )
+    runner.run([{"shell": py_shell(tmp_path, code)}], e)
     runner.close()  # must wait for the shell before deleting the frame it is reading
     assert copy.exists() and copy.read_bytes()[:2] == b"\xff\xd8"
     assert e.snapshot is not None and not e.snapshot.parent.exists()

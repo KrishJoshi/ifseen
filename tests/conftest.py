@@ -12,6 +12,14 @@ sys.path.insert(0, str(Path(__file__).parent))
 from fake_server import FakeDecisionServer  # noqa: E402
 
 
+def py_shell(tmp_path: Path, code: str, *args: str) -> str:
+    """A `shell` action command that runs Python, so it behaves the same under sh and cmd.exe."""
+    script = tmp_path / f"action_{abs(hash(code))}.py"
+    script.write_text(code)
+    extra = "".join(f" {a}" for a in args)
+    return f'"{sys.executable}" "{script}"{extra}'
+
+
 def solid_jpeg(colour: tuple[int, int, int], size=(640, 480)) -> bytes:
     buf = io.BytesIO()
     Image.new("RGB", size, colour).save(buf, format="JPEG")

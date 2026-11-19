@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import pytest
+from conftest import py_shell
 
 from ifseen.cli import main
 
@@ -42,6 +43,13 @@ def test_oneliner_watch_video_fires_when_red_appears(
     fake_server, env, blue_then_red_video, tmp_path
 ):
     marker = tmp_path / "fired.txt"
+    action = py_shell(
+        tmp_path,
+        "import os, pathlib\n"
+        f"p = pathlib.Path({str(marker)!r})\n"
+        "p.write_text(p.read_text() + os.environ['IFSEEN_RULE'] if p.exists() "
+        "else os.environ['IFSEEN_RULE'])\n",
+    )
     rules = tmp_path / "rules.yaml"
     rules.write_text(f"""
 source:
@@ -55,7 +63,7 @@ rules:
     when: The frame is mostly red.
     for: 2
     then:
-      - shell: {{cmd: 'echo "$IFSEEN_RULE" >> {marker}', wait: true}}
+      - shell: {{cmd: {json.dumps(action)}, wait: true}}
       - exit
 """)
     proc = run_cli(["watch", str(rules), "--json"], env)
@@ -356,6 +364,9 @@ rules:
     assert "prefilter provider openai can't handle audio" in proc.stderr
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="os.kill(SIGTERM) terminates the process outright on Windows"
+)
 def test_sigterm_is_treated_like_ctrl_c():
     import os
     import signal

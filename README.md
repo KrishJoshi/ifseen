@@ -203,7 +203,8 @@ rules:
 `{prob}`, `{percent}`, `{time}`, `{source}`, `{snapshot}`. **Shell commands are never
 templated**, so nothing from a file name, URL or rule can inject shell syntax. Instead they
 get the same values as environment variables: `$IFSEEN_RULE`, `$IFSEEN_PERCENT`,
-`$IFSEEN_SNAPSHOT` (path to the triggering frame), etc.
+`$IFSEEN_SNAPSHOT` (path to the triggering frame), etc. On Windows, shell actions run in
+`cmd`, so use `%IFSEEN_RULE%`.
 
 **Writing good rules.** Decision models work best with narrow, positive statements about
 what's visible or audible. Prefer "A parcel is on the doorstep" over "Is there anything
