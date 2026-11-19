@@ -97,7 +97,8 @@ class Provider(ABC):
                     except ValueError as e:
                         raise ProviderError(f"{self.name}: response was not JSON") from e
                 last = ProviderError(f"{self.name}: HTTP {r.status_code}: {_error_text(r)}")
-                if r.status_code in (401, 403):
+                # Google reports a bad key as 400 + API_KEY_INVALID rather than 401
+                if r.status_code in (401, 403) or "API_KEY_INVALID" in r.text:
                     raise ProviderConfigError(
                         f"{self.name}: authentication failed "
                         f"(HTTP {r.status_code}) - check your API key"

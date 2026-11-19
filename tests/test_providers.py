@@ -278,3 +278,18 @@ def test_out_of_credits_is_fatal_not_retried():
     with pytest.raises(ProviderConfigError, match="credits are depleted"):
         p.decide(red_sample(), Q)
     assert len(calls) == 1
+
+
+def test_google_invalid_key_400_is_auth_error():
+    body = {
+        "error": {
+            "code": 400,
+            "message": "API key not valid. Please pass a valid API key.",
+            "status": "INVALID_ARGUMENT",
+            "details": [{"reason": "API_KEY_INVALID", "domain": "googleapis.com"}],
+        }
+    }
+    client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(400, json=body)))
+    p = build_provider(ProviderConfig(name="gemini"), client=client, env={"GEMINI_API_KEY": "k"})
+    with pytest.raises(ProviderConfigError, match="authentication failed"):
+        p.decide(red_sample(), Q)
