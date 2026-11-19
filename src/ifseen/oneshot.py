@@ -13,7 +13,7 @@ from PIL import Image
 from .config import ConfigError, ProviderConfig, Rule, pretty_error
 from .constants import MAX_QUESTIONS
 from .media import Sample, image_to_sample, wav_bytes_to_sample, wav_file_to_sample
-from .providers import Provider, build_provider
+from .providers import Provider, build_provider, env_with_key
 from .runtime import questions_for, slugify
 
 MediaInput = str | Path | bytes | Image.Image
@@ -42,6 +42,7 @@ def check(
     provider: ProviderSpec = "auto",
     model: str | None = None,
     context: str | None = None,
+    api_key: str | None = None,
 ) -> dict[str, float]:
     """Ask a decision model how likely each statement is for one image and/or audio clip.
 
@@ -56,6 +57,8 @@ def check(
             :class:`~ifseen.providers.Provider` instance (not closed afterwards).
         model: override the provider's model.
         context: extra text sent with the capture.
+        api_key: the provider's API key. Defaults to its env var (e.g. ``GEMINI_API_KEY``).
+            Needs an explicit ``provider``.
 
     Returns:
         ``{name: probability}`` in the order the statements were given.
@@ -66,7 +69,13 @@ def check(
         ProviderError: the provider call failed.
     """
     return check_detailed(
-        media, statements, audio=audio, provider=provider, model=model, context=context
+        media,
+        statements,
+        audio=audio,
+        provider=provider,
+        model=model,
+        context=context,
+        api_key=api_key,
     ).probs
 
 
@@ -78,12 +87,17 @@ def check_detailed(
     provider: ProviderSpec = "auto",
     model: str | None = None,
     context: str | None = None,
+    api_key: str | None = None,
 ) -> CheckResult:
     """Like :func:`check`, but also returns tokens, latency, cost and the provider used."""
     rules = statement_rules(statements)
     sample = make_sample(media, audio)
     owns = not isinstance(provider, Provider)
-    prov = build_provider(provider_config(provider, model)) if owns else provider  # type: ignore[arg-type]
+    if owns:
+        cfg = provider_config(provider, model)
+        prov = build_provider(cfg, env=env_with_key(cfg, api_key))
+    else:
+        prov = provider  # type: ignore[assignment]
     try:
         prov.check_sample(sample)
         decision = prov.decide(sample, questions_for(rules), context)

@@ -66,6 +66,15 @@ PRICE_PER_M_INPUT = {
     "local": 0.0,
 }
 
+# Env var each provider reads its key from; `api_key=` in the Python API fills these in.
+PROVIDER_KEY_ENVS = {
+    "gemini": "GEMINI_API_KEY",
+    "jev": "TYPESAFE_API_KEY",
+    "systemone": "TYPESAFE_API_KEY",
+    "azure": "AZURE_DECISION_KEY",
+    "openai": "OPENAI_API_KEY",
+}
+
 PROVIDER_NAMES = ("gemini", "jev", "azure", "systemone", "openai", "ollama", "local", "mock")
 
 # Free offline zero-shot provider (`pip install 'ifseen[local]'`).

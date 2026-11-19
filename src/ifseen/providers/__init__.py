@@ -24,6 +24,7 @@ from ..constants import (
     OPENAI_DEFAULT_BASE,
     OPENAI_KEY_ENV,
     PRICE_PER_M_INPUT,
+    PROVIDER_KEY_ENVS,
 )
 from .base import Decision, Provider, ProviderConfigError, ProviderError, Question
 from .gemini import GeminiProvider
@@ -85,6 +86,20 @@ def _key(
     if required:
         raise ProviderConfigError(f"provider '{cfg.name}' needs ${' or $'.join(names)} set")
     return None
+
+
+def env_with_key(cfg: ProviderConfig, api_key: str | None) -> dict[str, str] | None:
+    """Environment for `build_provider` with an explicit key injected (None = use os.environ)."""
+    if api_key is None:
+        return None
+    if cfg.name == "auto":
+        raise ProviderConfigError(
+            "api_key needs an explicit provider, e.g. provider='gemini' or provider='jev'"
+        )
+    var = cfg.api_key_env or PROVIDER_KEY_ENVS.get(cfg.name)
+    if var is None:
+        return None  # local / ollama / mock don't use a key
+    return {**os.environ, var: api_key}
 
 
 def build_provider(
@@ -200,4 +215,5 @@ __all__ = [
     "available_providers",
     "build_provider",
     "detect_provider_name",
+    "env_with_key",
 ]

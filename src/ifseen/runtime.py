@@ -10,7 +10,7 @@ from typing import Any
 import yaml
 
 from .config import ConfigError, Rule, WatchConfig
-from .providers import Provider, ProviderConfigError, Question, build_provider
+from .providers import Provider, ProviderConfigError, Question, build_provider, env_with_key
 from .recipes import recipe_data, recipe_names
 from .sources import Source, build_source
 
@@ -76,13 +76,19 @@ class Runtime:
             self.prefilter.close()
 
 
-def build_runtime(cfg: WatchConfig, provider: Provider | None = None) -> Runtime:
+def build_runtime(
+    cfg: WatchConfig, provider: Provider | None = None, api_key: str | None = None
+) -> Runtime:
     """Build source and providers for a config, checking the provider can handle the input.
 
     Pass `provider` to use an existing instance instead of `cfg.provider`; it is not closed.
     """
     owns = provider is None
-    main = build_provider(cfg.provider) if provider is None else provider
+    main = (
+        build_provider(cfg.provider, env=env_with_key(cfg.provider, api_key))
+        if provider is None
+        else provider
+    )
     try:
         source = build_source(cfg.source, every=cfg.every)
         missing = source.provides - main.supports

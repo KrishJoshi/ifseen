@@ -219,6 +219,7 @@ class Watcher:
         dry_run: bool = False,
         name: str | None = None,
         mqtt: str | Mapping[str, Any] | None = None,
+        api_key: str | None = None,
     ):
         """
         Args:
@@ -236,6 +237,8 @@ class Watcher:
             name: optional label, included in :meth:`state` (and the default MQTT device id).
             mqtt: publish to an MQTT broker with Home Assistant discovery, as the YAML
                 ``mqtt:`` section (needs ``pip install 'ifseen[mqtt]'``).
+            api_key: the provider's API key, instead of its env var (e.g. ``GEMINI_API_KEY``).
+                Needs an explicit ``provider``. Kept in memory only, never in :meth:`state`.
         """
         data: dict[str, Any] = {"source": source}
         provider_instance = provider if isinstance(provider, Provider) else None
@@ -257,6 +260,7 @@ class Watcher:
         data.update({k: v for k, v in optional.items() if v is not None})
         data["rules"] = [dict(r) for r in rules or []]
         self._setup(data, provider_instance, dry_run, name, expand=True)
+        self._api_key = api_key
 
     @classmethod
     def from_config(
@@ -268,6 +272,7 @@ class Watcher:
         expand_env: bool = True,
         name: str | None = None,
         notify_by_default: bool = True,
+        api_key: str | None = None,
     ) -> Watcher:
         """Build a watcher from a config dict shaped exactly like a YAML rules file.
 
@@ -279,6 +284,7 @@ class Watcher:
         obj = cls.__new__(cls)
         obj._setup(dict(data), provider, dry_run, name, expand=expand_env)
         obj._notify_by_default = notify_by_default
+        obj._api_key = api_key
         return obj
 
     @classmethod
@@ -289,13 +295,14 @@ class Watcher:
         provider: Provider | None = None,
         dry_run: bool = False,
         name: str | None = None,
+        api_key: str | None = None,
     ) -> Watcher:
         """Build a watcher from a YAML rules file (``${VAR}`` references are expanded)."""
         import yaml
 
         load_config_file(path)  # same errors as `ifseen watch`
         data = yaml.safe_load(Path(path).expanduser().read_text())
-        obj = cls.from_config(data, provider=provider, dry_run=dry_run, name=name)
+        obj = cls.from_config(data, provider=provider, dry_run=dry_run, name=name, api_key=api_key)
         obj._mqtt_fallback = Path(path).stem
         return obj
 
@@ -326,6 +333,7 @@ class Watcher:
         self._provider = provider
         self._dry_run = dry_run
         self._notify_by_default = True
+        self._api_key: str | None = None
         self._mqtt_fallback: str | None = None
         self._callbacks: dict[str, list[RuleCallback]] = {}
         self._subscribers: list[_Subscriber] = []
@@ -636,7 +644,9 @@ class Watcher:
         bridge = None
         reason = "error"
         try:
-            rt = build_runtime(cfg, provider=self._provider)
+            rt = build_runtime(
+                cfg, provider=self._provider, api_key=None if self._dry_run else self._api_key
+            )
             self._recorder = _RecordingSource(rt.source)
             runner = _CallbackRunner(
                 self._callbacks,
