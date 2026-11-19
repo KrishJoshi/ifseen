@@ -138,6 +138,8 @@ jobs:
       id-token: write # npm provenance
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # setup-node writes a placeholder token when the secret is missing, so test the secret itself
+      HAS_NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
       VERSION: ${{ needs.check.outputs.version }}
     defaults:
       run:
@@ -161,7 +163,7 @@ jobs:
       - name: publish
         if: needs.check.outputs.publish == 'true'
         run: |
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
+          if [ "$HAS_NPM_TOKEN" != "true" ]; then
             echo "::notice title=npm skipped::NPM_TOKEN secret not set - publish ifseen@$VERSION by hand (cd js && npm publish --access public)"
             exit 0
           fi
