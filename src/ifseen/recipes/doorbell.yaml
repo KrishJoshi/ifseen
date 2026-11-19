@@ -3,6 +3,8 @@
 source:
   url: ${DOORBELL_SNAPSHOT_URL:-http://192.168.1.50/snapshot.jpg}
 every: 2s
+provider:
+  resolution: low  # gemini: ~2.5x fewer tokens; ignored by other providers
 rules:
   - name: person-at-door
     when: A person is standing at or walking up to the front door.

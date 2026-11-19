@@ -18,8 +18,8 @@ ifseen "a person is at the front door" --camera 0 --ntfy my-phone
 ---
 
 Decision models are a new kind of AI model. Instead of writing text, they read an input and
-return a **calibrated probability** for each yes/no question you ask, in ~150-250 ms, with
-**zero output tokens**. Gemini Decision 1 answers up to **1,000 questions about the same
+return a **calibrated probability** for each yes/no question you ask, typically in under a
+second, with **zero output tokens**. Gemini Decision 1 answers up to **1,000 questions about the same
 image or audio clip in a single call**, billed once.
 
 That makes something possible that used to be too slow and too expensive: *continuously*
@@ -211,11 +211,12 @@ image doorstep.jpg → gemini (gemini-decision-1)
 
 With no `provider` set, ifseen picks the first one it finds a key for, in that order.
 
-**What does it cost?** It depends on image size and how often the scene changes. A changing
-scene checked every 2 s with Gemini at default resolution is on the order of tens of cents
-per hour. With `resolution: low`, a longer `every`, and `skip_unchanged` doing its job on a
-mostly static scene, it's typically a few cents per hour or less. The dashboard shows the
-real number live.
+**What does it cost?** Measured with Gemini Decision 1: a 1280×800 frame is about 1,350
+input tokens ($0.000135), or about 520 tokens ($0.00005) with `resolution: low`, which was
+just as accurate in testing, even for reading text on a CI page. A 5-second audio clip is
+about 400 tokens. So a scene that changes on *every* 2-second check costs roughly $0.24/hour
+(about $0.09/hour at low resolution). Unchanged frames and silent audio are skipped, so a mostly
+static camera or screen costs a small fraction of that. The dashboard shows the real number.
 
 ## Run it headless / in Docker
 

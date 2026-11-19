@@ -2,6 +2,8 @@
 source:
   camera: ${PRINTER_CAMERA:-0}
 every: 10s
+provider:
+  resolution: low  # gemini: ~2.5x fewer tokens; ignored by other providers
 context: Camera pointed at an FDM 3D printer bed.
 rules:
   - name: spaghetti

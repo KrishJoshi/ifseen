@@ -4,7 +4,9 @@ source:
   mic:
     seconds: 5
 every: 4s
-provider: gemini
+provider:
+  name: gemini
+  resolution: low  # ~2.5x fewer tokens; plenty for camera scenes
 rules:
   - name: crying
     when: A baby or toddler is crying or screaming in the audio.

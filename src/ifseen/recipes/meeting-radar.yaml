@@ -13,7 +13,7 @@ rules:
       - notify: "👀 Someone said your name"
       - say: heads up
   - name: question-for-me
-    when: A speaker asks "${MY_NAME:-Alex}" a direct question and is waiting for an answer.
+    when: A speaker addresses "${MY_NAME:-Alex}" directly with a question or a request.
     threshold: 0.75
     cooldown: 30s
     then:

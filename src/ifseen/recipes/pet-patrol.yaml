@@ -2,6 +2,8 @@
 source:
   camera: ${PET_CAMERA:-0}
 every: 3s
+provider:
+  resolution: low  # gemini: ~2.5x fewer tokens; ignored by other providers
 rules:
   - name: dog-on-sofa
     when: A dog is on the sofa or couch.

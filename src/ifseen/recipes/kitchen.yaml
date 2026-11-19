@@ -2,6 +2,8 @@
 source:
   camera: ${KITCHEN_CAMERA:-0}
 every: 4s
+provider:
+  resolution: low  # gemini: ~2.5x fewer tokens; ignored by other providers
 rules:
   - name: boiling
     when: A pot or pan of water is at a rolling boil (lots of bubbles or steam).
