@@ -38,8 +38,8 @@
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Open menu"><span></span><span></span><span></span></button>
     <nav class="nav-menu" id="nav-menu" aria-label="Primary">
       <ul class="nav-links">
-        <li><a href="#usecases"><span>01.</span> Use cases</a></li>
-        <li><a href="#how"><span>02.</span> How it works</a></li>
+        <li><a href="#demo"><span>01.</span> How it works</a></li>
+        <li><a href="#usecases"><span>02.</span> Use cases</a></li>
         <li><a href="#integrate"><span>03.</span> Integrate</a></li>
         <li><a href="#recipes"><span>04.</span> Recipes</a></li>
         <li><a href="#providers"><span>05.</span> Providers</a></li>
@@ -134,271 +134,11 @@
     </div>
   </section>
 
-  <!-- ================= USE CASES ================= -->
-  <section class="section" id="usecases" aria-labelledby="uc-title">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="idx"><b>01.</b> Use cases</div>
-        <div>
-          <h2 id="uc-title">No API? No training?<br><em>Doesn't matter.</em></h2>
-          <p class="lede">If a person can see it or hear it, ifseen can turn it into an event. Old appliances, existing CCTV, legacy software with no integration story. Every number below is a real <code>ifseen test</code> output from both decision models.</p>
-        </div>
-      </div>
-      <p class="demo-disclose"><span class="chip gold">AI-generated scenes</span><span class="chip mint">real ifseen outputs</span><span class="label">Gemini Decision 1 · TypeSafe Jev · threshold 80% · <a href="https://github.com/KrishJoshi/ifseen/blob/main/docs/media/README.md">prompts, rules &amp; raw numbers</a></span></p>
-
-      <div class="uc-head" aria-hidden="true"><span class="label">Scene · rule true vs false</span><span class="label">Old way</span><span class="label">With ifseen</span></div>
-      <div class="uc">
-        <article class="uc-row">
-          <div class="demo-shots">
-            <a class="demo-shot" href="media/stills/hob-unattended.webp"><img src="media/stills/hob-unattended.webp" alt="Kitchen camera: a pan cooking on a lit gas hob and nobody in the kitchen, with ifseen's real probabilities from both providers" width="1000" height="1139" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 94.4%</span></a>
-            <a class="demo-shot" href="media/stills/hob-cooking.webp"><img src="media/stills/hob-cooking.webp" alt="Same kitchen with someone standing at the hob cooking, with ifseen's real probabilities" width="1000" height="1139" loading="lazy" decoding="async"><span class="demo-tag">— 3.2%</span></a>
-          </div>
-          <div class="uc-old">
-            <span class="cell-label">Home safety · hob left on</span>
-            <ul><li>Heat or flame sensor over the hob</li><li>Presence sensor in the kitchen</li><li>Glue logic: "hot AND nobody here for N minutes"</li></ul>
-          </div>
-          <div class="uc-new">
-            <p class="demo-rule"><code>hob-unattended</code> “A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen.”</p>
-            <dl class="uc-nums">
-              <div class="hit"><dt>Hob on, nobody there</dt><dd>Gemini 94.4% · Jev 96%</dd></div>
-              <div><dt>Someone cooking</dt><dd>Gemini 3.2% · Jev 2%</dd></div>
-              <div><dt>Hob off</dt><dd>Gemini 21.4% · Jev 26%</dd></div>
-            </dl>
-          </div>
-        </article>
-
-        <article class="uc-row">
-          <div class="demo-shots">
-            <a class="demo-shot" href="media/stills/washer-done.webp"><img src="media/stills/washer-done.webp" alt="Webcam on a washing machine whose display reads End, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 95.7%</span></a>
-            <a class="demo-shot" href="media/stills/washer-running.webp"><img src="media/stills/washer-running.webp" alt="Same washing machine mid-cycle, display reading 0:42, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 5.8%</span></a>
-          </div>
-          <div class="uc-old">
-            <span class="cell-label gold">Home · dumb appliance done</span>
-            <ul><li>Replace a working machine with a "smart" one</li><li>Or a smart plug + power-draw thresholds that guess</li></ul>
-          </div>
-          <div class="uc-new">
-            <p class="demo-rule"><code>cycle-finished</code> “The washing machine's display shows the cycle has finished, such as "End", "0:00" or a done light.”</p>
-            <dl class="uc-nums">
-              <div class="hit"><dt>Display shows End</dt><dd>Gemini 95.7% · Jev 98%</dd></div>
-              <div><dt>Display shows 0:42</dt><dd>Gemini 5.8% · Jev 2%</dd></div>
-            </dl>
-          </div>
-        </article>
-
-        <article class="uc-row">
-          <div class="demo-shots three">
-            <a class="demo-shot" href="media/stills/bay-nohivis.webp"><img src="media/stills/bay-nohivis.webp" alt="Warehouse CCTV: a worker in a grey hoodie with no hi-vis vest in the loading bay, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 91.9%</span></a>
-            <a class="demo-shot" href="media/stills/bay-hivis.webp"><img src="media/stills/bay-hivis.webp" alt="Same loading bay, worker wearing a yellow hi-vis vest, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 4.7%</span></a>
-            <a class="demo-shot" href="media/stills/bay-empty.webp"><img src="media/stills/bay-empty.webp" alt="Same loading bay, empty, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 9.2%</span></a>
-          </div>
-          <div class="uc-old">
-            <span class="cell-label mint">Workplace safety · PPE</span>
-            <ul><li>Collect and label thousands of images</li><li>Train a custom detector</li><li>Retrain for every site, camera and uniform</li></ul>
-          </div>
-          <div class="uc-new">
-            <p class="demo-rule"><code>no-hivis</code> “A person in the loading bay is wearing ordinary clothes with no high-visibility vest.”</p>
-            <dl class="uc-nums">
-              <div class="hit"><dt>No vest</dt><dd>Gemini 91.9% · Jev 98%</dd></div>
-              <div><dt>Hi-vis worn</dt><dd>Gemini 4.7% · Jev 4%</dd></div>
-              <div><dt>Empty bay</dt><dd>Gemini 9.2% · Jev 7%</dd></div>
-            </dl>
-          </div>
-        </article>
-
-        <article class="uc-row">
-          <div class="demo-shots">
-            <a class="demo-shot" href="media/stills/shelf-gap.webp"><img src="media/stills/shelf-gap.webp" alt="Supermarket shelf camera: shelves with a large empty gap, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 94.3%</span></a>
-            <a class="demo-shot" href="media/stills/shelf-full.webp"><img src="media/stills/shelf-full.webp" alt="Same shelving fully stocked, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 26.6%</span></a>
-          </div>
-          <div class="uc-old">
-            <span class="cell-label forest">Retail · restock needed</span>
-            <ul><li>Shelf-scanning robots</li><li>Or a custom vision model per planogram</li><li>Or staff walking the aisles</li></ul>
-          </div>
-          <div class="uc-new">
-            <p class="demo-rule"><code>shelf-gap</code> “Part of a shelf is empty, with a visible gap where products should be.”</p>
-            <dl class="uc-nums">
-              <div class="hit"><dt>Gap on the shelf</dt><dd>Gemini 94.3% · Jev 97%</dd></div>
-              <div><dt>Fully stocked</dt><dd>Gemini 26.6% · Jev 33%</dd></div>
-            </dl>
-          </div>
-        </article>
-
-        <article class="uc-row">
-          <div class="demo-shots">
-            <a class="demo-shot" href="media/stills/hmi-alarm.webp"><img src="media/stills/hmi-alarm.webp" alt="Legacy HMI in a remote-desktop window showing a red high-pressure alarm banner, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 97.0%</span></a>
-            <a class="demo-shot" href="media/stills/hmi-normal.webp"><img src="media/stills/hmi-normal.webp" alt="Same HMI showing normal operation with no active alarms, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 1.4%</span></a>
-          </div>
-          <div class="uc-old">
-            <span class="cell-label">Legacy screen · no API</span>
-            <ul><li>Screen-scraping or RPA bots that break on every UI change</li><li>OPC / vendor connectors, if they exist</li><li>Or someone watching the screen all night</li></ul>
-          </div>
-          <div class="uc-new">
-            <p class="demo-rule"><code>alarm-active</code> “The control screen shows an active alarm, such as a red alarm banner or a tripped pump.”</p>
-            <dl class="uc-nums">
-              <div class="hit"><dt>Red alarm banner</dt><dd>Gemini 97.0% · Jev 99%</dd></div>
-              <div><dt>Normal operation</dt><dd>Gemini 1.4% · Jev 3%</dd></div>
-            </dl>
-          </div>
-        </article>
-      </div>
-      <p class="foot-note uc-foot">Opposite rules for contrast (true image → false image): <code>person-cooking</code> 94.3% / 95% → 6.6% / 32% · <code>cycle-running</code> 93.5% / 96% · <code>hivis-worn</code> 92.3% / 97% · <code>normal-operation</code> 95.5% / 98%. Two were weak: <code>hob-off</code> scored only 52.5% / 8% on the hob-off frame (food is still in the pan) and <code>shelf-full</code> 56.1% / 25% on the stocked shelf; neither fired. HMI screens are drawn with PIL, not generated.</p>
-    </div>
-  </section>
-
-  <!-- ================= HOW ================= -->
-  <section class="section" id="how" aria-labelledby="how-title">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="idx"><b>02.</b> How it works</div>
-        <div>
-          <h2 id="how-title">One frame. One call.<br><em>Every</em> rule.</h2>
-          <p class="lede">Decision models don't write text. They read an image or audio clip and return a calibrated probability for each yes/no question, with zero output tokens. ifseen is the glue around them.</p>
-        </div>
-      </div>
-
-      <ol class="steps">
-        <li><span class="sw"></span><span class="n">01 / CAPTURE</span>
-          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><rect x="3" y="5" width="18" height="13"/><path d="M8 21h8"/></svg></div>
-          <h3>Grab a frame</h3><p>Screen, webcam, RTSP, snapshot URL, file, and/or the last few seconds of mic audio.</p></li>
-        <li><span class="sw"></span><span class="n">02 / SKIP</span>
-          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><path d="M5 5l14 14M5 12h6M13 12h6"/></svg></div>
-          <h3>Unchanged? Skip</h3><p>Static frames and silence never hit the API. A quiet scene costs almost nothing.</p></li>
-        <li><span class="sw"></span><span class="n">03 / ONE CALL</span>
-          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><path d="M4 6h10M4 12h10M4 18h10M14 6l6 6-6 6"/></svg></div>
-          <h3>Ask all rules</h3><p>3 rules or 300, it's one request per frame. The image is billed once.</p></li>
-        <li><span class="sw"></span><span class="n">04 / DEBOUNCE</span>
-          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><path d="M3 18h4V9h4v9h4V5h4v13h2"/></svg></div>
-          <h3>Stay calm</h3><p>Thresholds, <code>for: N</code> consecutive hits, cooldowns and hysteresis. One alert per event.</p></li>
-        <li><span class="sw"></span><span class="n">05 / ACTION</span>
-          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></div>
-          <h3>Do the thing</h3><p>Notify, speak, run a shell command, hit a webhook, push a photo to your phone, save the frame, exit.</p></li>
-      </ol>
-
-      <div class="sim" id="sim">
-        <div>
-          <div class="sim-top">
-            <span class="label"><b>LIVE SIMULATION</b> · doorbell.yaml · gemini-decision-1 · resolution: low</span>
-            <div class="sim-frame"><span class="chip ghost" id="sim-frame">frame #0000</span><span class="chip gold" id="sim-state">capturing</span></div>
-          </div>
-          <ul class="probs" id="probs" aria-live="off"></ul>
-          <div class="sim-legend" aria-hidden="true">
-            <span><i style="background:var(--white)"></i>below threshold</span>
-            <span><i style="background:var(--mint)"></i>hit (counting)</span>
-            <span><i style="background:var(--coral)"></i>fired</span>
-            <span><i style="border-style:dashed"></i>threshold</span>
-          </div>
-        </div>
-        <div class="log">
-          <span class="label">EVENT LOG</span>
-          <ol id="sim-log" aria-label="Simulated event log"></ol>
-          <div class="cost"><span>Spent so far</span><b id="sim-cost">$0.000000</b></div>
-        </div>
-      </div>
-      <p class="foot-note" style="margin-top:12px">Simulation. Per-call cost uses the measured ≈520 input tokens per low-res Gemini Decision 1 frame at $0.10 / 1M tokens.</p>
-    </div>
-  </section>
-
-  <!-- ================= FEATURES ================= -->
-  <section class="section" id="features" aria-labelledby="feat-title">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="idx"><b>++</b> Why it's nice</div>
-        <div><h2 id="feat-title">No training.<br>No bounding boxes.<br><em>Just English.</em></h2></div>
-      </div>
-
-      <div class="bento">
-        <article class="cell">
-          <span class="cell-label">Plain-English rules</span>
-          <h3>Ask what you'd ask a person.</h3>
-          <p>"The washing machine shows End." "Someone in the loading bay has no hi-vis vest." Use <code>false_means</code> to say what "no" looks like.</p>
-          <div class="mock">
-            <div class="mock-bar"><span class="dots"><i style="background:var(--coral)"></i><i style="background:var(--gold)"></i><i style="background:var(--mint)"></i></span><span>ifseen.yaml</span></div>
-<pre><span class="y-k">source</span>: {<span class="y-k">camera</span>: <span class="y-n">0</span>}
-<span class="y-k">every</span>: <span class="y-n">30s</span>
-<span class="y-k">rules</span>:
-  - <span class="y-k">name</span>: <span class="y-a">cycle-finished</span>
-    <span class="y-k">when</span>: <span class="y-s">The washing machine's display shows the cycle has finished.</span>
-    <span class="y-k">false_means</span>: <span class="y-s">The display shows time remaining.</span>
-    <span class="y-k">for</span>: <span class="y-n">2</span>
-    <span class="y-k">then</span>:
-      - <span class="y-k">ntfy</span>: <span class="y-s">laundry-topic</span>
-      - <span class="y-k">say</span>: <span class="y-s">the washing is done</span></pre>
-          </div>
-        </article>
-
-        <article class="cell">
-          <span class="cell-label mint">Debounced &amp; calm</span>
-          <h3>One alert per event. Not one every two seconds.</h3>
-          <p>A rule must clear its threshold <code>for: N</code> frames in a row, then waits out its cooldown and re-arms only when the probability drops.</p>
-          <div class="mock">
-            <div class="mock-bar"><span>ifseen watch doorbell --plain</span><span class="chip mint">live</span></div>
-            <div class="evlog">
-              <div class="ok"><span class="t">14:02:06</span><span class="dim">skip  frame unchanged</span></div>
-              <div class="ok"><span class="t">14:02:08</span><span>parcel-left <b>61%</b></span><span class="dim">below 85%</span></div>
-              <div class="ok"><span class="t">14:02:10</span><span>parcel-left <b>93%</b></span><span class="dim">hit 1/3</span></div>
-              <div class="ok"><span class="t">14:02:12</span><span>parcel-left <b>95%</b></span><span class="dim">hit 2/3</span></div>
-              <div class="fire"><span class="t">14:02:14</span><strong>🔔 FIRED parcel-left 97%</strong></div>
-              <div class="ok"><span class="t">14:02:14</span><span class="dim">→ ntfy · snapshot saved</span></div>
-              <div class="ok"><span class="t">14:02:16</span><span class="dim">cooldown 30m</span></div>
-            </div>
-          </div>
-        </article>
-
-        <article class="cell">
-          <span class="cell-label gold">Cheap by default</span>
-          <h3>Pay for change, not for time.</h3>
-          <p>Unchanged frames and silent audio are skipped automatically, so a static scene costs almost nothing. The dashboard shows real spend as you go.</p>
-          <div class="chips"><span class="chip gold">1,350 tok / frame</span><span class="chip mint">520 tok · resolution: low</span><span class="chip coral">$0.000135 / frame</span><span class="chip">~$0.24/h busy scene</span><span class="chip forest">~$0.09/h low-res</span></div>
-          <div class="mock">
-            <div class="mock-bar"><span>cost meter</span><span>gemini-decision-1</span></div>
-            <div class="meter">
-              <div class="meter-big"><strong id="meter-cost">$0.0026</strong><span class="chip gold">spent</span></div>
-              <div class="ticks" id="ticks" aria-hidden="true"></div>
-              <div class="meter-row"><span><b style="color:#C9A62A">■</b> called (frame changed)</span><span><b style="color:var(--coral)">■</b> fired</span><span>□ skipped</span><span><b>50</b> calls × ≈520 tokens</span></div>
-            </div>
-          </div>
-        </article>
-
-        <article class="cell">
-          <span class="cell-label forest">Does real things</span>
-          <h3>Push the photo to your phone.</h3>
-          <p>ntfy sends the triggering frame along with the alert. Or chain anything else: shell commands get <code>$IFSEEN_*</code> env vars, never string-templated.</p>
-          <div class="phone">
-            <div class="push">
-              <div class="push-head"><span class="app"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/></svg></span>ntfy · ifseen-doorbell<span class="when">now</span></div>
-              <div class="push-title">📦 Parcel delivered</div>
-              <div class="push-body">parcel-left · 97% · priority high</div>
-              <div class="push-img">
-                <svg viewBox="0 0 320 150" aria-label="Wireframe of a doorstep with a parcel" role="img">
-                  <rect width="320" height="150" fill="#2C5A43"/>
-                  <rect x="0" y="112" width="320" height="38" fill="#C9B79C"/>
-                  <rect x="110" y="14" width="96" height="98" fill="#FF8C69"/>
-                  <rect x="118" y="22" width="80" height="40" fill="none" stroke="#1A3C2B" stroke-width="2"/>
-                  <rect x="118" y="68" width="80" height="38" fill="none" stroke="#1A3C2B" stroke-width="2"/>
-                  <rect x="186" y="62" width="6" height="6" fill="#F4D35E"/>
-                  <rect x="88" y="110" width="140" height="8" fill="#F7F7F5"/>
-                  <rect x="216" y="88" width="46" height="34" fill="#F4D35E" stroke="#1A3C2B" stroke-width="2"/>
-                  <path d="M216 100h46M239 88v34" stroke="#1A3C2B" stroke-width="2"/>
-                  <rect x="210" y="82" width="58" height="46" fill="none" stroke="#9EFFBF" stroke-width="2" stroke-dasharray="5 4"/>
-                  <rect x="210" y="70" width="58" height="12" fill="#9EFFBF"/>
-                  <text x="214" y="79" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#1A3C2B">0.97</text>
-                </svg>
-              </div>
-            </div>
-            <div class="actions-list" aria-label="Available actions">
-              <span class="chip coral">notify</span><span class="chip gold">say</span><span class="chip mint">shell</span><span class="chip">webhook</span><span class="chip forest">ntfy</span><span class="chip mint">snapshot</span><span class="chip coral">exit</span>
-            </div>
-          </div>
-        </article>
-      </div>
-    </div>
-  </section>
-
   <!-- ================= DEMO ================= -->
   <section class="section" id="demo" aria-labelledby="demo-title">
     <div class="wrap">
       <div class="section-head">
-        <div class="idx"><b>++</b> See it work</div>
+        <div class="idx"><b>01.</b> How it works</div>
         <div>
           <h2 id="demo-title">Real frames.<br><em>Real</em> numbers.</h2>
           <p class="lede">Clips run through <code>ifseen watch</code>, plus everyday home and office pairs: one frame where the rule is true, a near-identical one where it isn't. Every probability is a real <code>ifseen</code> output, one call per frame. Nothing tuned or retouched.</p>
@@ -606,6 +346,266 @@
             <span class="cell-label forest">Reception</span>
             <p class="demo-rule"><code>visitor-waiting</code> “A visitor is waiting at the reception desk.” <span>threshold 80%</span></p>
             <p class="foot-note">Opposite rule <code>reception-empty</code>: 4.4% → 95.0%</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOW ================= -->
+  <section class="section" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>↳</b> Under the hood</div>
+        <div>
+          <h2 id="how-title">One frame. One call.<br><em>Every</em> rule.</h2>
+          <p class="lede">Decision models don't write text. They read an image or audio clip and return a calibrated probability for each yes/no question, with zero output tokens. ifseen is the glue around them.</p>
+        </div>
+      </div>
+
+      <ol class="steps">
+        <li><span class="sw"></span><span class="n">01 / CAPTURE</span>
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><rect x="3" y="5" width="18" height="13"/><path d="M8 21h8"/></svg></div>
+          <h3>Grab a frame</h3><p>Screen, webcam, RTSP, snapshot URL, file, and/or the last few seconds of mic audio.</p></li>
+        <li><span class="sw"></span><span class="n">02 / SKIP</span>
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><path d="M5 5l14 14M5 12h6M13 12h6"/></svg></div>
+          <h3>Unchanged? Skip</h3><p>Static frames and silence never hit the API. A quiet scene costs almost nothing.</p></li>
+        <li><span class="sw"></span><span class="n">03 / ONE CALL</span>
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><path d="M4 6h10M4 12h10M4 18h10M14 6l6 6-6 6"/></svg></div>
+          <h3>Ask all rules</h3><p>3 rules or 300, it's one request per frame. The image is billed once.</p></li>
+        <li><span class="sw"></span><span class="n">04 / DEBOUNCE</span>
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><path d="M3 18h4V9h4v9h4V5h4v13h2"/></svg></div>
+          <h3>Stay calm</h3><p>Thresholds, <code>for: N</code> consecutive hits, cooldowns and hysteresis. One alert per event.</p></li>
+        <li><span class="sw"></span><span class="n">05 / ACTION</span>
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></div>
+          <h3>Do the thing</h3><p>Notify, speak, run a shell command, hit a webhook, push a photo to your phone, save the frame, exit.</p></li>
+      </ol>
+
+      <div class="sim" id="sim">
+        <div>
+          <div class="sim-top">
+            <span class="label"><b>LIVE SIMULATION</b> · doorbell.yaml · gemini-decision-1 · resolution: low</span>
+            <div class="sim-frame"><span class="chip ghost" id="sim-frame">frame #0000</span><span class="chip gold" id="sim-state">capturing</span></div>
+          </div>
+          <ul class="probs" id="probs" aria-live="off"></ul>
+          <div class="sim-legend" aria-hidden="true">
+            <span><i style="background:var(--white)"></i>below threshold</span>
+            <span><i style="background:var(--mint)"></i>hit (counting)</span>
+            <span><i style="background:var(--coral)"></i>fired</span>
+            <span><i style="border-style:dashed"></i>threshold</span>
+          </div>
+        </div>
+        <div class="log">
+          <span class="label">EVENT LOG</span>
+          <ol id="sim-log" aria-label="Simulated event log"></ol>
+          <div class="cost"><span>Spent so far</span><b id="sim-cost">$0.000000</b></div>
+        </div>
+      </div>
+      <p class="foot-note" style="margin-top:12px">Simulation. Per-call cost uses the measured ≈520 input tokens per low-res Gemini Decision 1 frame at $0.10 / 1M tokens.</p>
+    </div>
+  </section>
+
+  <!-- ================= USE CASES ================= -->
+  <section class="section" id="usecases" aria-labelledby="uc-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>02.</b> Use cases</div>
+        <div>
+          <h2 id="uc-title">No API? No training?<br><em>Doesn't matter.</em></h2>
+          <p class="lede">If a person can see it or hear it, ifseen can turn it into an event. Old appliances, existing CCTV, legacy software with no integration story. Every number below is a real <code>ifseen test</code> output from both decision models.</p>
+        </div>
+      </div>
+      <p class="demo-disclose"><span class="chip gold">AI-generated scenes</span><span class="chip mint">real ifseen outputs</span><span class="label">Gemini Decision 1 · TypeSafe Jev · threshold 80% · <a href="https://github.com/KrishJoshi/ifseen/blob/main/docs/media/README.md">prompts, rules &amp; raw numbers</a></span></p>
+
+      <div class="uc-head" aria-hidden="true"><span class="label">Scene · rule true vs false</span><span class="label">Old way</span><span class="label">With ifseen</span></div>
+      <div class="uc">
+        <article class="uc-row">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/hob-unattended.webp"><img src="media/stills/hob-unattended.webp" alt="Kitchen camera: a pan cooking on a lit gas hob and nobody in the kitchen, with ifseen's real probabilities from both providers" width="1000" height="1139" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 94.4%</span></a>
+            <a class="demo-shot" href="media/stills/hob-cooking.webp"><img src="media/stills/hob-cooking.webp" alt="Same kitchen with someone standing at the hob cooking, with ifseen's real probabilities" width="1000" height="1139" loading="lazy" decoding="async"><span class="demo-tag">— 3.2%</span></a>
+          </div>
+          <div class="uc-old">
+            <span class="cell-label">Home safety · hob left on</span>
+            <ul><li>Heat or flame sensor over the hob</li><li>Presence sensor in the kitchen</li><li>Glue logic: "hot AND nobody here for N minutes"</li></ul>
+          </div>
+          <div class="uc-new">
+            <p class="demo-rule"><code>hob-unattended</code> “A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen.”</p>
+            <dl class="uc-nums">
+              <div class="hit"><dt>Hob on, nobody there</dt><dd>Gemini 94.4% · Jev 96%</dd></div>
+              <div><dt>Someone cooking</dt><dd>Gemini 3.2% · Jev 2%</dd></div>
+              <div><dt>Hob off</dt><dd>Gemini 21.4% · Jev 26%</dd></div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="uc-row">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/washer-done.webp"><img src="media/stills/washer-done.webp" alt="Webcam on a washing machine whose display reads End, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 95.7%</span></a>
+            <a class="demo-shot" href="media/stills/washer-running.webp"><img src="media/stills/washer-running.webp" alt="Same washing machine mid-cycle, display reading 0:42, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 5.8%</span></a>
+          </div>
+          <div class="uc-old">
+            <span class="cell-label gold">Home · dumb appliance done</span>
+            <ul><li>Replace a working machine with a "smart" one</li><li>Or a smart plug + power-draw thresholds that guess</li></ul>
+          </div>
+          <div class="uc-new">
+            <p class="demo-rule"><code>cycle-finished</code> “The washing machine's display shows the cycle has finished, such as "End", "0:00" or a done light.”</p>
+            <dl class="uc-nums">
+              <div class="hit"><dt>Display shows End</dt><dd>Gemini 95.7% · Jev 98%</dd></div>
+              <div><dt>Display shows 0:42</dt><dd>Gemini 5.8% · Jev 2%</dd></div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="uc-row">
+          <div class="demo-shots three">
+            <a class="demo-shot" href="media/stills/bay-nohivis.webp"><img src="media/stills/bay-nohivis.webp" alt="Warehouse CCTV: a worker in a grey hoodie with no hi-vis vest in the loading bay, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 91.9%</span></a>
+            <a class="demo-shot" href="media/stills/bay-hivis.webp"><img src="media/stills/bay-hivis.webp" alt="Same loading bay, worker wearing a yellow hi-vis vest, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 4.7%</span></a>
+            <a class="demo-shot" href="media/stills/bay-empty.webp"><img src="media/stills/bay-empty.webp" alt="Same loading bay, empty, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 9.2%</span></a>
+          </div>
+          <div class="uc-old">
+            <span class="cell-label mint">Workplace safety · PPE</span>
+            <ul><li>Collect and label thousands of images</li><li>Train a custom detector</li><li>Retrain for every site, camera and uniform</li></ul>
+          </div>
+          <div class="uc-new">
+            <p class="demo-rule"><code>no-hivis</code> “A person in the loading bay is wearing ordinary clothes with no high-visibility vest.”</p>
+            <dl class="uc-nums">
+              <div class="hit"><dt>No vest</dt><dd>Gemini 91.9% · Jev 98%</dd></div>
+              <div><dt>Hi-vis worn</dt><dd>Gemini 4.7% · Jev 4%</dd></div>
+              <div><dt>Empty bay</dt><dd>Gemini 9.2% · Jev 7%</dd></div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="uc-row">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/shelf-gap.webp"><img src="media/stills/shelf-gap.webp" alt="Supermarket shelf camera: shelves with a large empty gap, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 94.3%</span></a>
+            <a class="demo-shot" href="media/stills/shelf-full.webp"><img src="media/stills/shelf-full.webp" alt="Same shelving fully stocked, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 26.6%</span></a>
+          </div>
+          <div class="uc-old">
+            <span class="cell-label forest">Retail · restock needed</span>
+            <ul><li>Shelf-scanning robots</li><li>Or a custom vision model per planogram</li><li>Or staff walking the aisles</li></ul>
+          </div>
+          <div class="uc-new">
+            <p class="demo-rule"><code>shelf-gap</code> “Part of a shelf is empty, with a visible gap where products should be.”</p>
+            <dl class="uc-nums">
+              <div class="hit"><dt>Gap on the shelf</dt><dd>Gemini 94.3% · Jev 97%</dd></div>
+              <div><dt>Fully stocked</dt><dd>Gemini 26.6% · Jev 33%</dd></div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="uc-row">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/hmi-alarm.webp"><img src="media/stills/hmi-alarm.webp" alt="Legacy HMI in a remote-desktop window showing a red high-pressure alarm banner, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 97.0%</span></a>
+            <a class="demo-shot" href="media/stills/hmi-normal.webp"><img src="media/stills/hmi-normal.webp" alt="Same HMI showing normal operation with no active alarms, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 1.4%</span></a>
+          </div>
+          <div class="uc-old">
+            <span class="cell-label">Legacy screen · no API</span>
+            <ul><li>Screen-scraping or RPA bots that break on every UI change</li><li>OPC / vendor connectors, if they exist</li><li>Or someone watching the screen all night</li></ul>
+          </div>
+          <div class="uc-new">
+            <p class="demo-rule"><code>alarm-active</code> “The control screen shows an active alarm, such as a red alarm banner or a tripped pump.”</p>
+            <dl class="uc-nums">
+              <div class="hit"><dt>Red alarm banner</dt><dd>Gemini 97.0% · Jev 99%</dd></div>
+              <div><dt>Normal operation</dt><dd>Gemini 1.4% · Jev 3%</dd></div>
+            </dl>
+          </div>
+        </article>
+      </div>
+      <p class="foot-note uc-foot">Opposite rules for contrast (true image → false image): <code>person-cooking</code> 94.3% / 95% → 6.6% / 32% · <code>cycle-running</code> 93.5% / 96% · <code>hivis-worn</code> 92.3% / 97% · <code>normal-operation</code> 95.5% / 98%. Two were weak: <code>hob-off</code> scored only 52.5% / 8% on the hob-off frame (food is still in the pan) and <code>shelf-full</code> 56.1% / 25% on the stocked shelf; neither fired. HMI screens are drawn with PIL, not generated.</p>
+    </div>
+  </section>
+
+  <!-- ================= FEATURES ================= -->
+  <section class="section" id="features" aria-labelledby="feat-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>++</b> Why it's nice</div>
+        <div><h2 id="feat-title">No training.<br>No bounding boxes.<br><em>Just English.</em></h2></div>
+      </div>
+
+      <div class="bento">
+        <article class="cell">
+          <span class="cell-label">Plain-English rules</span>
+          <h3>Ask what you'd ask a person.</h3>
+          <p>"The washing machine shows End." "Someone in the loading bay has no hi-vis vest." Use <code>false_means</code> to say what "no" looks like.</p>
+          <div class="mock">
+            <div class="mock-bar"><span class="dots"><i style="background:var(--coral)"></i><i style="background:var(--gold)"></i><i style="background:var(--mint)"></i></span><span>ifseen.yaml</span></div>
+<pre><span class="y-k">source</span>: {<span class="y-k">camera</span>: <span class="y-n">0</span>}
+<span class="y-k">every</span>: <span class="y-n">30s</span>
+<span class="y-k">rules</span>:
+  - <span class="y-k">name</span>: <span class="y-a">cycle-finished</span>
+    <span class="y-k">when</span>: <span class="y-s">The washing machine's display shows the cycle has finished.</span>
+    <span class="y-k">false_means</span>: <span class="y-s">The display shows time remaining.</span>
+    <span class="y-k">for</span>: <span class="y-n">2</span>
+    <span class="y-k">then</span>:
+      - <span class="y-k">ntfy</span>: <span class="y-s">laundry-topic</span>
+      - <span class="y-k">say</span>: <span class="y-s">the washing is done</span></pre>
+          </div>
+        </article>
+
+        <article class="cell">
+          <span class="cell-label mint">Debounced &amp; calm</span>
+          <h3>One alert per event. Not one every two seconds.</h3>
+          <p>A rule must clear its threshold <code>for: N</code> frames in a row, then waits out its cooldown and re-arms only when the probability drops.</p>
+          <div class="mock">
+            <div class="mock-bar"><span>ifseen watch doorbell --plain</span><span class="chip mint">live</span></div>
+            <div class="evlog">
+              <div class="ok"><span class="t">14:02:06</span><span class="dim">skip  frame unchanged</span></div>
+              <div class="ok"><span class="t">14:02:08</span><span>parcel-left <b>61%</b></span><span class="dim">below 85%</span></div>
+              <div class="ok"><span class="t">14:02:10</span><span>parcel-left <b>93%</b></span><span class="dim">hit 1/3</span></div>
+              <div class="ok"><span class="t">14:02:12</span><span>parcel-left <b>95%</b></span><span class="dim">hit 2/3</span></div>
+              <div class="fire"><span class="t">14:02:14</span><strong>🔔 FIRED parcel-left 97%</strong></div>
+              <div class="ok"><span class="t">14:02:14</span><span class="dim">→ ntfy · snapshot saved</span></div>
+              <div class="ok"><span class="t">14:02:16</span><span class="dim">cooldown 30m</span></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="cell">
+          <span class="cell-label gold">Cheap by default</span>
+          <h3>Pay for change, not for time.</h3>
+          <p>Unchanged frames and silent audio are skipped automatically, so a static scene costs almost nothing. The dashboard shows real spend as you go.</p>
+          <div class="chips"><span class="chip gold">1,350 tok / frame</span><span class="chip mint">520 tok · resolution: low</span><span class="chip coral">$0.000135 / frame</span><span class="chip">~$0.24/h busy scene</span><span class="chip forest">~$0.09/h low-res</span></div>
+          <div class="mock">
+            <div class="mock-bar"><span>cost meter</span><span>gemini-decision-1</span></div>
+            <div class="meter">
+              <div class="meter-big"><strong id="meter-cost">$0.0026</strong><span class="chip gold">spent</span></div>
+              <div class="ticks" id="ticks" aria-hidden="true"></div>
+              <div class="meter-row"><span><b style="color:#C9A62A">■</b> called (frame changed)</span><span><b style="color:var(--coral)">■</b> fired</span><span>□ skipped</span><span><b>50</b> calls × ≈520 tokens</span></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="cell">
+          <span class="cell-label forest">Does real things</span>
+          <h3>Push the photo to your phone.</h3>
+          <p>ntfy sends the triggering frame along with the alert. Or chain anything else: shell commands get <code>$IFSEEN_*</code> env vars, never string-templated.</p>
+          <div class="phone">
+            <div class="push">
+              <div class="push-head"><span class="app"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/></svg></span>ntfy · ifseen-doorbell<span class="when">now</span></div>
+              <div class="push-title">📦 Parcel delivered</div>
+              <div class="push-body">parcel-left · 97% · priority high</div>
+              <div class="push-img">
+                <svg viewBox="0 0 320 150" aria-label="Wireframe of a doorstep with a parcel" role="img">
+                  <rect width="320" height="150" fill="#2C5A43"/>
+                  <rect x="0" y="112" width="320" height="38" fill="#C9B79C"/>
+                  <rect x="110" y="14" width="96" height="98" fill="#FF8C69"/>
+                  <rect x="118" y="22" width="80" height="40" fill="none" stroke="#1A3C2B" stroke-width="2"/>
+                  <rect x="118" y="68" width="80" height="38" fill="none" stroke="#1A3C2B" stroke-width="2"/>
+                  <rect x="186" y="62" width="6" height="6" fill="#F4D35E"/>
+                  <rect x="88" y="110" width="140" height="8" fill="#F7F7F5"/>
+                  <rect x="216" y="88" width="46" height="34" fill="#F4D35E" stroke="#1A3C2B" stroke-width="2"/>
+                  <path d="M216 100h46M239 88v34" stroke="#1A3C2B" stroke-width="2"/>
+                  <rect x="210" y="82" width="58" height="46" fill="none" stroke="#9EFFBF" stroke-width="2" stroke-dasharray="5 4"/>
+                  <rect x="210" y="70" width="58" height="12" fill="#9EFFBF"/>
+                  <text x="214" y="79" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#1A3C2B">0.97</text>
+                </svg>
+              </div>
+            </div>
+            <div class="actions-list" aria-label="Available actions">
+              <span class="chip coral">notify</span><span class="chip gold">say</span><span class="chip mint">shell</span><span class="chip">webhook</span><span class="chip forest">ntfy</span><span class="chip mint">snapshot</span><span class="chip coral">exit</span>
+            </div>
           </div>
         </article>
       </div>
