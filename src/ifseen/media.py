@@ -113,12 +113,15 @@ def pcm16_rms(pcm: bytes) -> float:
 
 
 def wav_file_to_sample(path: str) -> Sample:
-    with wave.open(path, "rb") as w:
+    with open(path, "rb") as f:
+        return wav_bytes_to_sample(f.read(), label=path)
+
+
+def wav_bytes_to_sample(raw: bytes, label: str = "") -> Sample:
+    with wave.open(io.BytesIO(raw), "rb") as w:
         pcm = w.readframes(w.getnframes())
         width = w.getsampwidth()
-    with open(path, "rb") as f:
-        raw = f.read()
     # Interleaved 16-bit samples give a fine loudness estimate regardless of channel count.
     # Other sample widths are rare here; treat them as "not silent".
     rms = pcm16_rms(pcm) if width == 2 else 1000.0
-    return Sample(wav=raw, audio_rms=rms, label=path)
+    return Sample(wav=raw, audio_rms=rms, label=label)

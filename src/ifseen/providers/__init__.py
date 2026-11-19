@@ -18,6 +18,7 @@ from ..constants import (
     JEV_IMAGE_HEADER,
     JEV_KEY_ENV,
     JEV_URL,
+    LOCAL_MODULES,
     OLLAMA_DEFAULT_BASE,
     OPENAI_BASE_ENV,
     OPENAI_DEFAULT_BASE,
@@ -48,6 +49,30 @@ def detect_provider_name(env: dict[str, str] | None = None) -> str:
         "AZURE_DECISION_KEY, or OPENAI_API_KEY. Or run free and offline with --provider local "
         "(pip install 'ifseen[local]'), or try it with --dry-run."
     )
+
+
+def available_providers(env: dict[str, str] | None = None) -> list[str]:
+    """Providers usable without extra setup: a key is set, or nothing is needed.
+
+    `ollama` and `systemone` are left out because they need a model or base_url; `local` is
+    listed only when torch and transformers are installed.
+    """
+    from importlib.util import find_spec
+
+    env = dict(os.environ) if env is None else env
+    out = []
+    if any(env.get(k) for k in GEMINI_KEY_ENVS):
+        out.append("gemini")
+    if env.get(JEV_KEY_ENV):
+        out.append("jev")
+    if env.get(AZURE_ENDPOINT_ENV) and env.get(AZURE_KEY_ENV):
+        out.append("azure")
+    if env.get(OPENAI_KEY_ENV):
+        out.append("openai")
+    if all(find_spec(m) is not None for m in LOCAL_MODULES):
+        out.append("local")
+    out.append("mock")
+    return out
 
 
 def _key(
@@ -172,6 +197,7 @@ __all__ = [
     "ProviderError",
     "Question",
     "SystemOneProvider",
+    "available_providers",
     "build_provider",
     "detect_provider_name",
 ]

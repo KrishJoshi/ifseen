@@ -98,3 +98,21 @@ PREFILTER_KEY = "__prefilter__"
 PREFILTER_SKIP_REASON = "prefilter"
 # Provider used by the one-liner's --prefilter flag: free, local and image-only.
 PREFILTER_DEFAULT_PROVIDER = "local"
+
+# Decision APIs accept at most this many questions per call.
+MAX_QUESTIONS = 1000
+
+# `ifseen serve` local HTTP API.
+SERVER_DEFAULT_HOST = "127.0.0.1"
+SERVER_DEFAULT_PORT = 8899
+SERVER_TOKEN_ENV = "IFSEEN_TOKEN"
+SERVER_MIN_TOKEN_LENGTH = 16
+SERVER_MAX_BODY_BYTES = 25 * 1024 * 1024
+SERVER_SSE_KEEPALIVE_SECONDS = 15.0
+# Events buffered per SSE client; a client that falls this far behind is disconnected.
+SERVER_SSE_QUEUE_SIZE = 1000
+SERVER_MAX_WATCHERS = 32
+SERVER_LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+WATCHER_ID_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
+# How long stop()/DELETE waits for a watcher thread (it may be mid provider call).
+WATCHER_STOP_TIMEOUT_SECONDS = 10.0

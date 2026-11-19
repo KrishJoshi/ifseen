@@ -31,12 +31,24 @@ _SHELL_GRACE_SECONDS = 10.0
 
 @dataclass
 class FireEvent:
+    """A rule firing: what actions and Python callbacks receive."""
+
     rule: Rule
     probability: float
     fired_at: float
     sample: Sample
     source: str
     snapshot: Path | None = None
+
+    @property
+    def name(self) -> str:
+        """The rule's name."""
+        return self.rule.name
+
+    @property
+    def jpeg(self) -> bytes | None:
+        """The triggering frame as JPEG bytes (None for audio-only sources)."""
+        return self.sample.jpeg
 
     def fields(self) -> dict[str, str]:
         return {
@@ -100,7 +112,7 @@ class ActionRunner:
         if event.sample.jpeg is not None and event.snapshot is None:
             event.snapshot = self._temp_snapshot(event)
         if not actions:
-            actions = [{"notify": True}]
+            actions = self.default_actions(event)
         stop = False
         for action in actions:
             ((kind, opts),) = action.items()
@@ -115,6 +127,10 @@ class ActionRunner:
             else:
                 self._pool.submit(self._safe, kind, opts, event)
         return stop
+
+    def default_actions(self, event: FireEvent) -> list[Action]:
+        """What a rule with no `then:` does."""
+        return [{"notify": True}]
 
     def _temp_snapshot(self, event: FireEvent) -> Path | None:
         try:

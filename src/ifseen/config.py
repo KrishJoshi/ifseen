@@ -22,6 +22,7 @@ from .constants import (
     DEFAULT_PREFILTER_THRESHOLD,
     DEFAULT_SILENCE_RMS,
     DEFAULT_THRESHOLD,
+    MAX_QUESTIONS,
 )
 
 _DURATION = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*(ms|s|m|h)?\s*$")
@@ -268,8 +269,8 @@ class WatchConfig(_Strict):
     def _unique(self) -> WatchConfig:
         if not self.rules:
             raise ValueError("at least one rule is required")
-        if len(self.rules) > 1000:
-            raise ValueError("decision APIs accept at most 1000 questions per call")
+        if len(self.rules) > MAX_QUESTIONS:
+            raise ValueError(f"decision APIs accept at most {MAX_QUESTIONS} questions per call")
         names = [r.name for r in self.rules]
         dupes = {n for n in names if names.count(n) > 1}
         if dupes:
@@ -303,12 +304,14 @@ def expand_env(value: Any, env: dict[str, str] | None = None) -> Any:
     return value
 
 
-def load_config(data: dict[str, Any]) -> WatchConfig:
-    data = expand_env(data)
+def load_config(data: dict[str, Any], expand: bool = True) -> WatchConfig:
+    """Validate a config dict. `expand=False` leaves ${VAR} references as literal text."""
+    if expand:
+        data = expand_env(data)
     try:
         return WatchConfig.model_validate(data)
     except Exception as e:  # pydantic.ValidationError, ConfigError
-        raise ConfigError(_pretty(e)) from e
+        raise ConfigError(pretty_error(e)) from e
 
 
 def load_config_file(path: str | Path) -> WatchConfig:
@@ -324,7 +327,7 @@ def load_config_file(path: str | Path) -> WatchConfig:
     return load_config(data)
 
 
-def _pretty(e: Exception) -> str:
+def pretty_error(e: Exception) -> str:
     errors = getattr(e, "errors", None)
     if not callable(errors):
         return str(e)

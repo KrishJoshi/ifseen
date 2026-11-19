@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import re
 import sys
 import wave
 from dataclasses import replace
@@ -26,11 +25,12 @@ from .config import ConfigError, WatchConfig, load_config, load_config_file
 from .constants import PREFILTER_DEFAULT_PROVIDER, PREFILTER_KEY, VERSION
 from .engine import Engine
 from .providers import Provider, ProviderConfigError, ProviderError, Question, build_provider
-from .recipes import recipe_data, recipe_names, recipe_summary, recipe_text
+from .recipes import recipe_names, recipe_summary, recipe_text
+from .runtime import build_prefilter, build_runtime, load_target, questions_for, slugify
 from .sources import SourceError, build_source
 from .ui import Dashboard, JsonLines, PlainLog
 
-SUBCOMMANDS = {"watch", "test", "recipes", "init", "doctor"}
+SUBCOMMANDS = {"watch", "test", "recipes", "init", "doctor", "serve"}
 err = Console(stderr=True, highlight=False)
 
 
@@ -58,6 +58,7 @@ def main(argv: list[str] | None = None) -> int:
                 "recipes": cmd_recipes,
                 "init": cmd_init,
                 "doctor": cmd_doctor,
+                "serve": cmd_serve,
             }[cmd](rest)
         return cmd_oneliner(argv)
     except (ConfigError, ProviderConfigError, SourceError) as e:
@@ -119,57 +120,16 @@ def _apply_overrides(data: dict[str, Any], args: argparse.Namespace) -> dict[str
     return data
 
 
-def _load(target: str) -> dict[str, Any]:
-    """A path to a YAML file, or the name of a built-in recipe."""
-    import yaml
-
-    path = Path(target).expanduser()
-    if path.exists():
-        try:
-            data = yaml.safe_load(path.read_text())
-        except yaml.YAMLError as e:
-            raise ConfigError(f"{path}: invalid YAML: {e}") from e
-        if not isinstance(data, dict):
-            raise ConfigError(f"{path}: expected a mapping at the top level")
-        return data
-    if target in recipe_names():
-        return recipe_data(target)
-    raise ConfigError(f"no such file or recipe: {target} (see `ifseen recipes`)")
-
-
-def _build_prefilter(cfg: WatchConfig, provides: frozenset[str]) -> Provider | None:
-    if cfg.prefilter is None:
-        return None
-    prefilter = build_provider(cfg.prefilter.provider)
-    # An image-only prefilter just ignores the audio of a camera + mic source, but it has
-    # nothing to look at with a mic-only source.
-    if not provides & prefilter.supports:
-        prefilter.close()
-        raise ProviderConfigError(
-            f"prefilter provider {prefilter.name} can't handle {', '.join(sorted(provides))} input"
-        )
-    return prefilter
-
-
 def run_config(cfg: WatchConfig, args: argparse.Namespace) -> int:
-    provider = build_provider(cfg.provider)
-    source = build_source(cfg.source, every=cfg.every)
-    missing = source.provides - provider.supports
-    if missing:
-        raise ProviderConfigError(
-            f"{provider.name} can't handle {', '.join(sorted(missing))} input"
-            + ("; use --provider gemini for mic sources" if "audio" in missing else "")
-        )
-    prefilter = _build_prefilter(cfg, source.provides)
-
+    rt = build_runtime(cfg)
     interactive = sys.stdout.isatty() and not (args.json or args.plain)
     view: Any = JsonLines() if args.json else Dashboard() if interactive else PlainLog()
     actions = ActionRunner(log=view.add, dry_run=args.dry_run)
-    engine = Engine(cfg, source, provider, actions, listener=view, prefilter=prefilter)
+    engine = Engine(cfg, rt.source, rt.provider, actions, listener=view, prefilter=rt.prefilter)
     if args.dry_run:
         view.add("dry", "dry run: probabilities are random and actions are only printed")
     try:
-        with source:
+        with rt.source:
             if isinstance(view, Dashboard):
                 view.attach(engine)
                 with view:
@@ -178,9 +138,7 @@ def run_config(cfg: WatchConfig, args: argparse.Namespace) -> int:
                 reason = engine.run(max_ticks=args.max_ticks)
     finally:
         actions.close()
-        provider.close()
-        if prefilter is not None:
-            prefilter.close()
+        rt.close()
     return 130 if reason == "interrupted" else 0
 
 
@@ -192,18 +150,8 @@ def cmd_watch(argv: list[str]) -> int:
     p.add_argument("target", help="rules.yaml or a recipe name (see `ifseen recipes`)")
     _add_run_options(p)
     args = p.parse_args(argv)
-    cfg = load_config(_apply_overrides(_load(args.target), args))
+    cfg = load_config(_apply_overrides(load_target(args.target), args))
     return run_config(cfg, args)
-
-
-def _slug(text: str, taken: set[str]) -> str:
-    base = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:40].strip("-") or "rule"
-    name, n = base, 2
-    while name in taken:
-        name = f"{base[:36]}-{n}"
-        n += 1
-    taken.add(name)
-    return name
 
 
 def build_oneliner_config(args: argparse.Namespace) -> dict[str, Any]:
@@ -241,7 +189,7 @@ def build_oneliner_config(args: argparse.Namespace) -> dict[str, Any]:
     taken: set[str] = set()
     rules = []
     for cond in args.conditions:
-        rule: dict[str, Any] = {"name": _slug(cond, taken), "when": cond, "then": then}
+        rule: dict[str, Any] = {"name": slugify(cond, taken), "when": cond, "then": then}
         if args.threshold is not None:
             rule["threshold"] = args.threshold
         if args.consecutive is not None:
@@ -315,7 +263,7 @@ def cmd_test(argv: list[str]) -> int:
     p.add_argument("--base-url")
     p.add_argument("--json", action="store_true")
     args = p.parse_args(argv)
-    data = _load(args.target)
+    data = load_target(args.target)
     if args.image or args.audio:
         src: dict[str, Any] = {}
         if args.image:
@@ -342,9 +290,9 @@ def cmd_test(argv: list[str]) -> int:
             except (OSError, EOFError, wave.Error) as e:
                 raise SourceError(f"could not read {args.audio} as PCM WAV") from e
             sample.wav, sample.audio_rms = a.wav, a.audio_rms
-        questions = [Question(r.name, r.when, r.true_means, r.false_means) for r in cfg.rules]
+        questions = questions_for(cfg.rules)
         try:
-            prefilter = _build_prefilter(cfg, source.provides)
+            prefilter = build_prefilter(cfg, source.provides)
             if prefilter is not None and cfg.prefilter is not None:
                 pf = cfg.prefilter
                 pre_sample = sample
@@ -511,6 +459,84 @@ def cmd_doctor(argv: list[str]) -> int:
     return 0
 
 
+def cmd_serve(argv: list[str]) -> int:
+    from .constants import SERVER_DEFAULT_HOST, SERVER_DEFAULT_PORT, SERVER_TOKEN_ENV
+    from .server import serve
+
+    p = argparse.ArgumentParser(
+        prog="ifseen serve",
+        description="Local HTTP API: one-shot checks, watchers and a live event stream. "
+        "See docs/api.md.",
+    )
+    p.add_argument(
+        "targets", nargs="*", metavar="FILE|RECIPE", help="rules files or recipes to start"
+    )
+    p.add_argument("--host", default=SERVER_DEFAULT_HOST, help="default: %(default)s")
+    p.add_argument("--port", type=int, default=SERVER_DEFAULT_PORT, help="default: %(default)s")
+    p.add_argument(
+        "--token",
+        help=f"require 'Authorization: Bearer TOKEN' (or set ${SERVER_TOKEN_ENV}); "
+        "required for non-loopback hosts",
+    )
+    p.add_argument(
+        "--allow-shell",
+        action="store_true",
+        help="accept shell actions in configs sent over HTTP (remote code execution!)",
+    )
+    p.add_argument(
+        "--allow-custom-endpoints",
+        action="store_true",
+        help="accept provider base_url / api_key_env in configs sent over HTTP",
+    )
+    p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="mock provider for everything; actions are printed instead of run",
+    )
+    args = p.parse_args(argv)
+    token = args.token or os.environ.get(SERVER_TOKEN_ENV) or None
+
+    preload: list[tuple[str, dict[str, Any]]] = []
+    taken: set[str] = set()
+    for target in args.targets:
+        data = load_target(target)
+        if args.dry_run:
+            data = _apply_overrides(
+                data,
+                argparse.Namespace(
+                    provider=None, model=None, base_url=None, every=None, dry_run=True
+                ),
+            )
+        load_config(data)
+        preload.append((slugify(Path(target).stem, taken), data))
+
+    import logging
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
+
+    def ready(server: Any) -> None:
+        auth = "bearer token" if server.token else "none (loopback only)"
+        err.print(f"[bold]ifseen serve[/] on [cyan]{server.url}[/]  auth: {auth}")
+        for wid, _ in preload:
+            err.print(f"  started watcher [cyan]{escape(wid)}[/]")
+        if args.allow_shell:
+            err.print("[yellow]warning:[/] shell actions are accepted over HTTP")
+
+    try:
+        return serve(
+            args.host,
+            args.port,
+            token=token,
+            allow_shell=args.allow_shell,
+            allow_custom_endpoints=args.allow_custom_endpoints,
+            dry_run=args.dry_run,
+            preload=preload,
+            on_ready=ready,
+        )
+    except OSError as e:
+        raise ConfigError(f"could not listen on {args.host}:{args.port}: {e.strerror}") from e
+
+
 def _print_help() -> None:
     out = Console(highlight=False)
     out.print(f"""[bold]ifseen {VERSION}[/] - if seen (or heard), then do.
@@ -527,6 +553,7 @@ def _print_help() -> None:
   ifseen recipes [NAME]           list built-in recipes, or print one
   ifseen init [RECIPE]            write a starter ifseen.yaml
   ifseen doctor                   check keys, dependencies and permissions
+  ifseen serve [FILE|RECIPE...]   local HTTP API + event stream (see docs/api.md)
 
 [bold]providers[/] (auto-detected from env)
   GEMINI_API_KEY      Gemini Decision 1 - images [italic]and audio[/], free tier

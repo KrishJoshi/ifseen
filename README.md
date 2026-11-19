@@ -286,6 +286,73 @@ about 400 tokens. So a scene that changes on *every* 2-second check costs roughl
 (about $0.09/hour at low resolution). Unchanged frames and silent audio are skipped, so a mostly
 static camera or screen costs a small fraction of that. The dashboard shows the real number.
 
+## Use it from Python
+
+```python
+from ifseen import Watcher, check, FireEvent
+
+# One-shot: an image path, bytes or PIL image (and/or audio=... WAV)
+probs = check("door.jpg", ["A parcel is on the doorstep.", "A person is visible."], provider="gemini")
+# {"a-parcel-is-on-the-doorstep": 0.96, "a-person-is-visible": 0.03}
+probs = check("door.jpg", {"parcel": "A parcel is on the doorstep."})   # your own names
+
+# Long-running: same shapes as the YAML file
+w = Watcher(source={"camera": 0}, provider="gemini", every="2s")
+
+@w.when("A person is at the front door.", threshold=0.85, for_=2, cooldown="1m", name="person")
+def person(event: FireEvent) -> None:          # async def works too
+    print(event.name, event.probability, len(event.jpeg or b""))
+
+w.add_rule("A parcel is on the doorstep.", then=[{"ntfy": "my-topic"}])  # YAML actions still work
+w.on_decision(lambda e: print(e["probs"]))      # the event stream: start/decision/fire/error/stop/log
+w.on_error(lambda e: print("error:", e["message"]))
+
+w.run()                     # blocks; Ctrl+C stops cleanly
+# await w.run_async()       # from asyncio: async callbacks run on your event loop
+# w.start(); ...; w.state(); w.snapshot(); w.stop()   # background thread
+```
+
+`Watcher.from_yaml("rules.yaml")` and `Watcher.from_config({...})` load existing rule files;
+attach a callback to one of their rules with `@w.on("rule-name")`. A rule with a callback and
+no `then:` runs only the callback (no desktop notification). Callback exceptions are logged
+and reported as `error` events, never stopping the watcher. `w.state()` returns each rule's
+probability, streak, armed flag and fire count plus call/skip/cost stats. Pass
+`dry_run=True` to use the mock provider without a key.
+
+## HTTP API (`ifseen serve`)
+
+A small local server for other languages and home-automation hubs: one-shot checks,
+watchers you create over HTTP, a live Server-Sent Events stream and the latest frame as a
+JPEG. Standard library only, no extra dependencies.
+
+```bash
+ifseen serve                        # http://127.0.0.1:8899
+ifseen serve doorbell               # also start a recipe / rules file
+
+curl -s localhost:8899/v1/check -H 'Content-Type: application/json' \
+  -d "{\"image_base64\": \"$(base64 < door.jpg | tr -d '\n')\", \"rules\": [\"A parcel is on the doorstep.\"]}"
+curl -N localhost:8899/v1/events    # start / decision / fire / error / stop, per watcher
+```
+
+| endpoint | |
+|---|---|
+| `GET /v1/health` | version, usable providers |
+| `POST /v1/check` | one-shot probabilities for an image / audio clip |
+| `GET` / `POST /v1/watchers` | list / create (body = the rules-file config as JSON) |
+| `GET` / `DELETE /v1/watchers/{id}` | state / remove |
+| `POST /v1/watchers/{id}/start` · `/stop` | |
+| `GET /v1/watchers/{id}/snapshot` | latest frame (JPEG) |
+| `GET /v1/events[?watcher=id&types=fire,error]` | SSE event stream |
+
+**Security.** It listens on 127.0.0.1 only and checks the `Host` header, so web pages can't
+reach it. To listen on your LAN you must set a token (`--token` or `IFSEEN_TOKEN`, sent as
+`Authorization: Bearer ...`); it refuses to start otherwise. Configs sent over HTTP can't use
+`shell` actions (that would be remote code execution) unless you pass `--allow-shell`, can't
+point a provider at another `base_url` or `api_key_env` (that could leak your API keys) unless
+you pass `--allow-custom-endpoints`, and don't get `${VAR}` expansion. Rule files passed on
+the command line are trusted as usual. Bodies are capped at 25 MB. Full reference, including
+request/response and event schemas: [docs/api.md](docs/api.md).
+
 ## Run it headless / in Docker
 
 `--json` prints one JSON event per line (`start`, `decision`, `fire`, `error`, `stop`), which
