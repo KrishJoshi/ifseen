@@ -11,7 +11,11 @@ Powered by the new *decision models*: Gemini Decision 1, Jev, Microsoft-Decision
 ifseen "a person is at the front door" --camera 0 --ntfy my-phone
 ```
 
-<img src="docs/dashboard.svg" alt="ifseen dashboard watching a doorbell camera" width="900">
+<img src="docs/media/hero.gif" alt="ifseen watching a pet camera: the dog-on-sofa rule fires at 93% when the dog jumps on the couch" width="900">
+
+<sub>AI-generated scene · real ifseen output (Gemini Decision 1) · <a href="https://krishjoshi.github.io/ifseen/">website</a></sub>
+
+<img src="docs/dashboard.svg" alt="ifseen live dashboard" width="900">
 
 </div>
 
