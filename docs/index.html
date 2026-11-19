@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=14">
+  <link rel="stylesheet" href="assets/style.css?v=15">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -303,6 +303,64 @@
         <figcaption><span class="label"><b>ifseen watch</b> · every: 500ms · realtime: false · then: [log]</span><span class="label">Bars ease between decisions for smoothness; every number and FIRED moment is from the real run</span></figcaption>
       </figure>
       <div class="cards-head demo-head">
+        <h3>Clips</h3>
+        <span class="label"><b>00</b> · <code>ifseen watch</code> on each 6s clip · every 500ms · fire times from the real run</span>
+      </div>
+      <div class="demo-clips">
+        <article class="demo-clip">
+          <div class="demo-clip-video">
+            <video class="demo-clip-v" muted loop playsinline preload="none" poster="media/clips/dog-poster.webp" width="1280" height="540" aria-label="Pet camera clip: the dog gets up from the rug and jumps onto the sofa; ifseen's dog-on-sofa rule fires at 4.5 seconds">
+              <source src="media/clips/dog.mp4" type="video/mp4">
+              <source src="media/clips/dog.webm" type="video/webm">
+            </video>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label">Pet cam · dog.mp4</span>
+            <p class="demo-rule"><code>dog-on-sofa</code> “A dog is lying or sitting on the sofa.” <span>threshold 80%</span></p>
+            <ol class="demo-timeline">
+              <li><b>0.0s</b><span>dog-on-floor fires · 93.0%</span></li>
+              <li><b>3.5s</b><span>dog-on-sofa 28%</span></li>
+              <li><b>4.0s</b><span>dog-on-sofa 61%</span></li>
+              <li class="fire"><b>4.5s</b><span>🔔 dog-on-sofa fires · 92.8%</span></li>
+            </ol>
+          </div>
+        </article>
+        <article class="demo-clip">
+          <div class="demo-clip-video">
+            <video class="demo-clip-v" muted loop playsinline preload="none" poster="media/clips/parcel-poster.webp" width="1280" height="540" aria-label="Doorbell clip: a courier leaves a parcel and walks away; ifseen's parcel-left rule fires as he leaves">
+              <source src="media/clips/parcel.mp4" type="video/mp4">
+              <source src="media/clips/parcel.webm" type="video/webm">
+            </video>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label mint">Doorbell · parcel.mp4</span>
+            <p class="demo-rule"><code>parcel-left</code> “A parcel or package has been left on the doorstep and nobody is with it.” <span>threshold 85%</span></p>
+            <ol class="demo-timeline">
+              <li><b>1.5s</b><span>person-at-door fires · 83.6%</span></li>
+              <li><b>4.0s</b><span>parcel-left 77% (courier still there)</span></li>
+              <li class="fire"><b>4.5s</b><span>🔔 parcel-left fires · 94.5%</span></li>
+            </ol>
+          </div>
+        </article>
+        <article class="demo-clip">
+          <div class="demo-clip-video">
+            <video class="demo-clip-v" muted loop playsinline preload="none" poster="media/clips/desk-poster.webp" width="1280" height="540" aria-label="Office clip: a worker stands up and walks away leaving the laptop unlocked; ifseen fires at 3 seconds">
+              <source src="media/clips/desk.mp4" type="video/mp4">
+              <source src="media/clips/desk.webm" type="video/webm">
+            </video>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label gold">Hot desk · desk.mp4</span>
+            <p class="demo-rule"><code>laptop-unlocked-unattended</code> “A laptop at an empty desk is unlocked and showing apps or documents, with nobody sitting there.” <span>threshold 80%</span></p>
+            <ol class="demo-timeline">
+              <li><b>0.0s</b><span>person-at-desk fires · 90.0%</span></li>
+              <li><b>2.0s</b><span>person-at-desk 47.5%</span></li>
+              <li class="fire"><b>3.0s</b><span>🔔 laptop-unlocked-unattended fires · 82.0%</span></li>
+            </ol>
+          </div>
+        </article>
+      </div>
+      <div class="cards-head demo-head">
         <h3>Home</h3>
         <span class="label"><b>01</b> · rule true (left) vs false (right) · click for the full annotated frame</span>
       </div>
@@ -358,14 +416,15 @@
       </div>
       <div class="demo-grid">
         <article class="demo-pair">
-          <div class="demo-shots">
+          <div class="demo-shots three">
             <a class="demo-shot" href="media/stills/laptop-unlocked.webp"><img src="media/stills/laptop-unlocked.webp" alt="Office camera: unlocked laptop showing a spreadsheet at an empty desk, with ifseen's real rule probabilities" width="1000" height="1049" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 94.4%</span></a>
+            <a class="demo-shot" href="media/stills/laptop-person.webp"><img src="media/stills/laptop-person.webp" alt="Same desk with a worker typing at the laptop, with ifseen's real rule probabilities" width="1000" height="1049" loading="lazy" decoding="async"><span class="demo-tag">— 15.2%</span></a>
             <a class="demo-shot" href="media/stills/laptop-locked.webp"><img src="media/stills/laptop-locked.webp" alt="Same desk with the laptop on its lock screen, with ifseen's real rule probabilities" width="1000" height="1049" loading="lazy" decoding="async"><span class="demo-tag">— 9.1%</span></a>
           </div>
           <div class="demo-body">
             <span class="cell-label">Hot desk</span>
             <p class="demo-rule"><code>laptop-unlocked-unattended</code> “A laptop at an empty desk is unlocked and showing apps or documents, with nobody sitting there.” <span>threshold 80%</span></p>
-            <p class="foot-note">Opposite rule <code>screen-locked</code>: 6.2% → 92.1%</p>
+            <p class="foot-note">Middle: someone at the desk, so it stays quiet (15.2%; <code>person-at-desk</code> 92.9%). Opposite rule <code>screen-locked</code>: 6.2% → 92.1%</p>
           </div>
         </article>
         <article class="demo-pair">
@@ -636,6 +695,6 @@
   </div>
 </footer>
 
-<script src="assets/app.js?v=14" defer></script>
+<script src="assets/app.js?v=15" defer></script>
 </body>
 </html>

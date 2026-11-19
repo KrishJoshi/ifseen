@@ -389,3 +389,21 @@
     });
   }, { threshold: 0.25 }).observe(v);
 })();
+
+/* ---------- per-clip videos: lazy, play only while on screen ---------- */
+(function () {
+  var vids = document.querySelectorAll(".demo-clip-v");
+  if (!vids.length) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
+    vids.forEach(function (v) { v.controls = true; });
+    return;
+  }
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      var v = e.target;
+      if (e.isIntersecting) { var p = v.play(); if (p && p.catch) p.catch(function () { v.controls = true; }); }
+      else v.pause();
+    });
+  }, { threshold: 0.4 });
+  vids.forEach(function (v) { obs.observe(v); });
+})();
