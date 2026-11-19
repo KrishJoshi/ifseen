@@ -1,0 +1,18 @@
+# Restock alerts from a camera facing the shelf: a visible gap where products should be.
+# No shelf-scanning robot, no planogram model - one sentence per check.
+source:
+  url: ${SHELF_SNAPSHOT_URL:-http://192.168.1.60/snapshot.jpg}
+every: 5m
+provider:
+  resolution: low  # gemini: ~2.5x fewer tokens; ignored by other providers
+context: Fixed camera facing one bay of supermarket shelving.
+rules:
+  - name: shelf-gap
+    when: Part of a shelf is empty, with a visible gap where products should be.
+    false_means: Every shelf is fully stocked with products right across.
+    threshold: 0.85
+    for: 2
+    cooldown: 1h
+    then:
+      - webhook: {url: "${RESTOCK_WEBHOOK_URL:-http://localhost:8080/restock}", image: true}
+      - snapshot: ~/ifseen-captures/shelf

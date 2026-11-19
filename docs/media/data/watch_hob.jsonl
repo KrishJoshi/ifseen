@@ -1,0 +1,19 @@
+{"event": "start", "time": 1795099225.822, "source": "video hob.mp4", "provider": "gemini (gemini-decision-1)", "rules": ["hob-unattended", "person-in-kitchen"]}
+{"event": "decision", "time": 1795099229.917, "probs": {"hob-unattended": 0.0497, "person-in-kitchen": 0.9384}, "latency_ms": 4013.4, "tokens": 1309}
+{"event": "fire", "time": 1795099229.917, "rule": "person-in-kitchen", "when": "A person is in the kitchen.", "probability": 0.9384}
+{"event": "log", "level": "info", "message": "[person-in-kitchen] person-in-kitchen 94%", "time": 1795099229.919}
+{"event": "decision", "time": 1795099231.121, "probs": {"hob-unattended": 0.0471, "person-in-kitchen": 0.9532}, "latency_ms": 1180.7, "tokens": 1309}
+{"event": "decision", "time": 1795099231.806, "probs": {"hob-unattended": 0.0977, "person-in-kitchen": 0.9556}, "latency_ms": 659.3, "tokens": 1309}
+{"event": "decision", "time": 1795099232.808, "probs": {"hob-unattended": 0.3103, "person-in-kitchen": 0.9588}, "latency_ms": 976.7, "tokens": 1309}
+{"event": "decision", "time": 1795099233.894, "probs": {"hob-unattended": 0.4052, "person-in-kitchen": 0.9513}, "latency_ms": 1055.2, "tokens": 1309}
+{"event": "decision", "time": 1795099234.827, "probs": {"hob-unattended": 0.5568, "person-in-kitchen": 0.9453}, "latency_ms": 886.9, "tokens": 1309}
+{"event": "decision", "time": 1795099236.598, "probs": {"hob-unattended": 0.7308, "person-in-kitchen": 0.9408}, "latency_ms": 1726.5, "tokens": 1309}
+{"event": "decision", "time": 1795099237.384, "probs": {"hob-unattended": 0.6721, "person-in-kitchen": 0.8972}, "latency_ms": 740.6, "tokens": 1309}
+{"event": "decision", "time": 1795099238.845, "probs": {"hob-unattended": 0.894, "person-in-kitchen": 0.4705}, "latency_ms": 1412.2, "tokens": 1309}
+{"event": "fire", "time": 1795099238.845, "rule": "hob-unattended", "when": "A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen.", "probability": 0.894}
+{"event": "clear", "time": 1795099238.847, "rule": "person-in-kitchen", "probability": 0.4705}
+{"event": "log", "level": "info", "message": "[hob-unattended] hob-unattended 89%", "time": 1795099238.847}
+{"event": "decision", "time": 1795099239.479, "probs": {"hob-unattended": 0.9374, "person-in-kitchen": 0.0914}, "latency_ms": 581.0, "tokens": 1309}
+{"event": "decision", "time": 1795099240.362, "probs": {"hob-unattended": 0.9073, "person-in-kitchen": 0.0775}, "latency_ms": 831.9, "tokens": 1309}
+{"event": "decision", "time": 1795099241.099, "probs": {"hob-unattended": 0.8948, "person-in-kitchen": 0.1531}, "latency_ms": 685.4, "tokens": 1309}
+{"event": "stop", "time": 1795099241.099, "reason": "finished hob.mp4"}

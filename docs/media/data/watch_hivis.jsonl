@@ -1,0 +1,19 @@
+{"event": "start", "time": 1795099225.823, "source": "video hivis.mp4", "provider": "gemini (gemini-decision-1)", "rules": ["no-hivis", "bay-empty"]}
+{"event": "decision", "time": 1795099230.143, "probs": {"no-hivis": 0.1566, "bay-empty": 0.8906}, "latency_ms": 4237.9, "tokens": 1311}
+{"event": "fire", "time": 1795099230.143, "rule": "bay-empty", "when": "The loading bay is empty, with nobody in it.", "probability": 0.8906}
+{"event": "log", "level": "info", "message": "[bay-empty] bay-empty 89%", "time": 1795099230.148}
+{"event": "decision", "time": 1795099231.132, "probs": {"no-hivis": 0.9158, "bay-empty": 0.0778}, "latency_ms": 956.9, "tokens": 1311}
+{"event": "fire", "time": 1795099231.132, "rule": "no-hivis", "when": "A person in the loading bay is wearing ordinary clothes with no high-visibility vest.", "probability": 0.9158}
+{"event": "clear", "time": 1795099231.133, "rule": "bay-empty", "probability": 0.0778}
+{"event": "log", "level": "info", "message": "[no-hivis] no-hivis 92%", "time": 1795099231.133}
+{"event": "decision", "time": 1795099231.678, "probs": {"no-hivis": 0.9196, "bay-empty": 0.0709}, "latency_ms": 520.4, "tokens": 1311}
+{"event": "decision", "time": 1795099232.236, "probs": {"no-hivis": 0.9291, "bay-empty": 0.0937}, "latency_ms": 526.9, "tokens": 1311}
+{"event": "decision", "time": 1795099233.26, "probs": {"no-hivis": 0.928, "bay-empty": 0.0759}, "latency_ms": 984.1, "tokens": 1311}
+{"event": "decision", "time": 1795099234.809, "probs": {"no-hivis": 0.9265, "bay-empty": 0.0865}, "latency_ms": 1505.6, "tokens": 1311}
+{"event": "decision", "time": 1795099235.55, "probs": {"no-hivis": 0.9117, "bay-empty": 0.1024}, "latency_ms": 690.7, "tokens": 1311}
+{"event": "decision", "time": 1795099236.12, "probs": {"no-hivis": 0.9315, "bay-empty": 0.0903}, "latency_ms": 534.7, "tokens": 1311}
+{"event": "decision", "time": 1795099236.685, "probs": {"no-hivis": 0.9152, "bay-empty": 0.0695}, "latency_ms": 529.5, "tokens": 1311}
+{"event": "decision", "time": 1795099237.789, "probs": {"no-hivis": 0.9356, "bay-empty": 0.0712}, "latency_ms": 1065.7, "tokens": 1311}
+{"event": "decision", "time": 1795099238.588, "probs": {"no-hivis": 0.9312, "bay-empty": 0.0796}, "latency_ms": 757.0, "tokens": 1311}
+{"event": "decision", "time": 1795099239.246, "probs": {"no-hivis": 0.9299, "bay-empty": 0.0606}, "latency_ms": 604.3, "tokens": 1311}
+{"event": "stop", "time": 1795099239.246, "reason": "finished hivis.mp4"}

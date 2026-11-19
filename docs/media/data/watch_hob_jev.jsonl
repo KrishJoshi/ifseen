@@ -1,0 +1,19 @@
+{"event": "start", "time": 1795099225.822, "source": "video hob.mp4", "provider": "jev (jev-latest)", "rules": ["hob-unattended", "person-in-kitchen"]}
+{"event": "decision", "time": 1795099226.273, "probs": {"hob-unattended": 0.02, "person-in-kitchen": 0.97}, "latency_ms": 368.3, "tokens": 2766}
+{"event": "fire", "time": 1795099226.273, "rule": "person-in-kitchen", "when": "A person is in the kitchen.", "probability": 0.97}
+{"event": "log", "level": "info", "message": "[person-in-kitchen] person-in-kitchen 97%", "time": 1795099226.279}
+{"event": "decision", "time": 1795099226.621, "probs": {"hob-unattended": 0.02, "person-in-kitchen": 0.97}, "latency_ms": 260.3, "tokens": 2769}
+{"event": "decision", "time": 1795099227.028, "probs": {"hob-unattended": 0.02, "person-in-kitchen": 0.96}, "latency_ms": 156.6, "tokens": 2767}
+{"event": "decision", "time": 1795099227.591, "probs": {"hob-unattended": 0.03, "person-in-kitchen": 0.96}, "latency_ms": 211.0, "tokens": 2766}
+{"event": "decision", "time": 1795099228.037, "probs": {"hob-unattended": 0.03, "person-in-kitchen": 0.96}, "latency_ms": 153.9, "tokens": 2767}
+{"event": "decision", "time": 1795099228.561, "probs": {"hob-unattended": 0.04, "person-in-kitchen": 0.95}, "latency_ms": 174.3, "tokens": 2766}
+{"event": "decision", "time": 1795099229.075, "probs": {"hob-unattended": 0.11, "person-in-kitchen": 0.9}, "latency_ms": 184.9, "tokens": 2768}
+{"event": "decision", "time": 1795099229.64, "probs": {"hob-unattended": 0.17, "person-in-kitchen": 0.78}, "latency_ms": 232.7, "tokens": 2766}
+{"event": "decision", "time": 1795099230.074, "probs": {"hob-unattended": 0.51, "person-in-kitchen": 0.63}, "latency_ms": 157.9, "tokens": 2767}
+{"event": "clear", "time": 1795099230.074, "rule": "person-in-kitchen", "probability": 0.63}
+{"event": "decision", "time": 1795099230.641, "probs": {"hob-unattended": 0.95, "person-in-kitchen": 0.2}, "latency_ms": 214.9, "tokens": 2769}
+{"event": "fire", "time": 1795099230.641, "rule": "hob-unattended", "when": "A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen.", "probability": 0.95}
+{"event": "log", "level": "info", "message": "[hob-unattended] hob-unattended 95%", "time": 1795099230.646}
+{"event": "decision", "time": 1795099231.091, "probs": {"hob-unattended": 0.95, "person-in-kitchen": 0.16}, "latency_ms": 160.8, "tokens": 2767}
+{"event": "decision", "time": 1795099231.585, "probs": {"hob-unattended": 0.95, "person-in-kitchen": 0.23}, "latency_ms": 172.3, "tokens": 2769}
+{"event": "stop", "time": 1795099231.863, "reason": "finished hob.mp4"}

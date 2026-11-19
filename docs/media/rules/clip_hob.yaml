@@ -1,0 +1,18 @@
+source:
+  file:
+    path: /tmp/ifseen-uc/vid/hob.mp4
+    realtime: false
+every: 500ms
+skip_unchanged: false
+rules:
+- name: hob-unattended
+  when: A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen.
+  false_means: Someone is in the kitchen, or the hob is off and nothing is cooking.
+  threshold: 0.8
+  then:
+  - log: '{rule} {percent}'
+- name: person-in-kitchen
+  when: A person is in the kitchen.
+  threshold: 0.8
+  then:
+  - log: '{rule} {percent}'

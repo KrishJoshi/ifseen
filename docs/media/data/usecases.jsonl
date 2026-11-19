@@ -1,0 +1,24 @@
+{"provider":"gemini","rules":"appliance","image":"washer_done","result":{"probs": {"cycle-finished": 0.9574781437362841, "cycle-running": 0.04840282150258596}, "tokens": 1326, "latency_ms": 936.7}}
+{"provider":"gemini","rules":"appliance","image":"washer_running","result":{"probs": {"cycle-finished": 0.057542918792623736, "cycle-running": 0.9354039870730734}, "tokens": 1326, "latency_ms": 918.6}}
+{"provider":"gemini","rules":"hob","image":"hob_unattended","result":{"probs": {"hob-unattended": 0.9442884768240135, "person-cooking": 0.06624870387914485, "hob-off": 0.03632157890364617}, "tokens": 1359, "latency_ms": 1031.2}}
+{"provider":"gemini","rules":"hob","image":"hob_cooking","result":{"probs": {"hob-unattended": 0.03214076914206796, "person-cooking": 0.9430933217745797, "hob-off": 0.055501344665703875}, "tokens": 1358, "latency_ms": 922.6}}
+{"provider":"gemini","rules":"hivis","image":"bay_nohivis","result":{"probs": {"no-hivis": 0.9188741891499282, "hivis-worn": 0.051471311499507524}, "tokens": 1311, "latency_ms": 913.4}}
+{"provider":"gemini","rules":"hivis","image":"bay_hivis","result":{"probs": {"no-hivis": 0.04741908529560175, "hivis-worn": 0.9233927387873156}, "tokens": 1311, "latency_ms": 1187.1}}
+{"provider":"gemini","rules":"hivis","image":"bay_empty","result":{"probs": {"no-hivis": 0.09225379637155992, "hivis-worn": 0.09705610761696129}, "tokens": 1310, "latency_ms": 829.3}}
+{"provider":"gemini","rules":"hmi","image":"hmi_alarm","result":{"probs": {"alarm-active": 0.9698509551517794, "normal-operation": 0.024934596299447567}, "tokens": 1302, "latency_ms": 852.4}}
+{"provider":"gemini","rules":"hmi","image":"hmi_normal","result":{"probs": {"alarm-active": 0.014213977421161355, "normal-operation": 0.9552537686633957}, "tokens": 1302, "latency_ms": 729.8}}
+{"provider":"gemini","rules":"hob","image":"hob_off","result":{"probs": {"hob-unattended": 0.2136306806192664, "person-cooking": 0.1081922552714509, "hob-off": 0.5248668242965547}, "tokens": 1358, "latency_ms": 872.2}}
+{"provider":"gemini","rules":"shelf","image":"shelf_gap","result":{"probs": {"shelf-gap": 0.9431194986014931, "shelf-full": 0.05867489149979861}, "tokens": 1296, "latency_ms": 1076.2}}
+{"provider":"gemini","rules":"shelf","image":"shelf_full","result":{"probs": {"shelf-gap": 0.26584021929929924, "shelf-full": 0.5608010114176265}, "tokens": 1296, "latency_ms": 776.3}}
+{"provider":"jev","rules":"appliance","image":"washer_done","result":{"probs": {"cycle-finished": 0.98, "cycle-running": 0.02}, "tokens": 3077, "latency_ms": 350.6}}
+{"provider":"jev","rules":"appliance","image":"washer_running","result":{"probs": {"cycle-finished": 0.02, "cycle-running": 0.96}, "tokens": 3076, "latency_ms": 245.5}}
+{"provider":"jev","rules":"hob","image":"hob_unattended","result":{"probs": {"hob-unattended": 0.96, "person-cooking": 0.32, "hob-off": 0.01}, "tokens": 3082, "latency_ms": 289.5}}
+{"provider":"jev","rules":"hob","image":"hob_cooking","result":{"probs": {"hob-unattended": 0.02, "person-cooking": 0.95, "hob-off": 0.02}, "tokens": 3082, "latency_ms": 353.3}}
+{"provider":"jev","rules":"hivis","image":"bay_nohivis","result":{"probs": {"no-hivis": 0.98, "hivis-worn": 0.02}, "tokens": 3067, "latency_ms": 261.8}}
+{"provider":"jev","rules":"hivis","image":"bay_hivis","result":{"probs": {"no-hivis": 0.04, "hivis-worn": 0.97}, "tokens": 3069, "latency_ms": 250.9}}
+{"provider":"jev","rules":"hivis","image":"bay_empty","result":{"probs": {"no-hivis": 0.07, "hivis-worn": 0.03}, "tokens": 3068, "latency_ms": 270.4}}
+{"provider":"jev","rules":"hmi","image":"hmi_alarm","result":{"probs": {"alarm-active": 0.99, "normal-operation": 0.01}, "tokens": 3058, "latency_ms": 301.1}}
+{"provider":"jev","rules":"hmi","image":"hmi_normal","result":{"probs": {"alarm-active": 0.03, "normal-operation": 0.98}, "tokens": 3057, "latency_ms": 311.7}}
+{"provider":"jev","rules":"hob","image":"hob_off","result":{"probs": {"hob-unattended": 0.26, "person-cooking": 0.12, "hob-off": 0.08}, "tokens": 3078, "latency_ms": 310.7}}
+{"provider":"jev","rules":"shelf","image":"shelf_gap","result":{"probs": {"shelf-gap": 0.97, "shelf-full": 0.01}, "tokens": 3050, "latency_ms": 334.7}}
+{"provider":"jev","rules":"shelf","image":"shelf_full","result":{"probs": {"shelf-gap": 0.33, "shelf-full": 0.25}, "tokens": 3050, "latency_ms": 726.9}}

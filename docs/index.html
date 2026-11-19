@@ -4,24 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ifseen: if seen (or heard), then do</title>
-  <meta name="description" content="Plain-English triggers for your screen, camera and microphone. ifseen asks decision models every rule in one call per frame and runs your actions when one comes true. Open-source Python CLI, MIT.">
+  <meta name="description" content="Turn anything you can see or hear into an event. No API, no integration, no model training: write a plain-English rule and ifseen watches your screen, camera or mic with decision models and acts when it's true. Open-source, MIT.">
   <meta name="theme-color" content="#1A3C2B">
   <link rel="canonical" href="https://krishjoshi.github.io/ifseen/">
   <meta property="og:type" content="website">
   <meta property="og:title" content="ifseen: if seen (or heard), then do">
-  <meta property="og:description" content="Plain-English triggers for your screen, camera and mic, powered by decision models. One call per frame, every rule at once, zero output tokens.">
+  <meta property="og:description" content="Turn anything you can see or hear into an event. No API, no integration, no model training. One plain-English rule, one decision-model call per frame.">
   <meta property="og:url" content="https://krishjoshi.github.io/ifseen/">
   <meta property="og:image" content="https://krishjoshi.github.io/ifseen/dashboard.svg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="ifseen: if seen (or heard), then do">
-  <meta name="twitter:description" content="Plain-English triggers for your screen, camera and mic, powered by decision models.">
+  <meta name="twitter:description" content="Turn anything you can see or hear into an event. No API, no integration, no model training.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231A3C2B'/%3E%3Cpath d='M5 16s4-7 11-7 11 7 11 7-4 7-11 7S5 16 5 16z' fill='none' stroke='%23fff' stroke-width='2'/%3E%3Crect x='13' y='13' width='6' height='6' fill='%239EFFBF'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=15">
+  <link rel="stylesheet" href="assets/style.css?v=16">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -38,11 +38,12 @@
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Open menu"><span></span><span></span><span></span></button>
     <nav class="nav-menu" id="nav-menu" aria-label="Primary">
       <ul class="nav-links">
-        <li><a href="#how"><span>01.</span> How it works</a></li>
-        <li><a href="#recipes"><span>02.</span> Recipes</a></li>
-        <li><a href="#providers"><span>03.</span> Providers</a></li>
-        <li><a href="#benchmarks"><span>04.</span> Benchmarks</a></li>
-        <li><a href="https://github.com/KrishJoshi/ifseen#readme"><span>05.</span> Docs</a></li>
+        <li><a href="#usecases"><span>01.</span> Use cases</a></li>
+        <li><a href="#how"><span>02.</span> How it works</a></li>
+        <li><a href="#integrate"><span>03.</span> Integrate</a></li>
+        <li><a href="#recipes"><span>04.</span> Recipes</a></li>
+        <li><a href="#providers"><span>05.</span> Providers</a></li>
+        <li><a href="#benchmarks"><span>06.</span> Benchmarks</a></li>
       </ul>
       <div class="nav-cta">
         <a class="btn btn-ghost" href="https://github.com/KrishJoshi/ifseen">Star on GitHub</a>
@@ -67,18 +68,25 @@
         <span class="badge"><span class="dot live" aria-hidden="true"></span>v0.1 · decision models · MIT</span>
         <h1 id="hero-title">If seen,<br>then <span class="hl">do.</span></h1>
         <p class="hero-sub">
-          Plain-English triggers for your <mark>screen</mark>, <mark class="m2">camera</mark> and <mark>microphone</mark>.
-          Write a sentence. ifseen watches, asks a decision model, and acts the moment it's true.
+          Turn anything your <mark>screen</mark>, <mark class="m2">camera</mark> or <mark>mic</mark> can pick up into an event.
+          No API, no integration, no model training. Write one sentence; ifseen acts the moment it's true.
         </p>
         <div class="cmd">
           <span class="prompt" aria-hidden="true">$</span>
-          <code id="hero-cmd">ifseen <span class="s">"a person is at the front door"</span> <span class="f">--camera</span> 0 <span class="f">--ntfy</span> my-phone</code>
+          <code id="hero-cmd">ifseen <span class="s">"a pan is cooking on a lit hob and nobody is in the kitchen"</span> <span class="f">--camera</span> 0 <span class="f">--ntfy</span> my-phone</code>
           <button class="copy" type="button" data-copy-target="hero-cmd">Copy</button>
         </div>
         <div class="hero-actions">
           <a class="btn btn-solid btn-lg" href="#install">pipx install "ifseen[all]"</a>
-          <a class="btn btn-ghost btn-lg" href="#builder">Build a rule →</a>
+          <a class="btn btn-ghost btn-lg" href="#usecases">See the use cases →</a>
         </div>
+        <ul class="hero-integrations" aria-label="Integrations">
+          <li><a class="chip mint" href="#integrate">Home Assistant</a></li>
+          <li><a class="chip gold" href="#integrate">Python</a></li>
+          <li><a class="chip coral" href="#integrate">JS / TS</a></li>
+          <li><a class="chip" href="#integrate">HTTP + SSE</a></li>
+          <li><a class="chip forest" href="#integrate">Docker</a></li>
+        </ul>
         <div class="hero-stats">
           <div><strong>1 call</strong><span>per frame, every rule</span></div>
           <div><strong>0</strong><span>output tokens</span></div>
@@ -94,16 +102,16 @@
         <div class="fig-cross" aria-hidden="true"></div>
 
         <div class="readout r1" aria-hidden="true">
-          <div class="row"><span>person-at-door</span><span>3.1%</span></div>
-          <div class="bar"><i style="width:3.1%;background:var(--grid)"></i></div>
-          <div class="row"><span>parcel-left</span><span>96.4%</span></div>
-          <div class="bar"><i style="width:96.4%;background:var(--coral)"></i></div>
+          <div class="row"><span>hob-unattended</span><span>94.4%</span></div>
+          <div class="bar"><i style="width:94.4%;background:var(--coral)"></i></div>
+          <div class="row"><span>cycle-finished</span><span>95.7%</span></div>
+          <div class="bar"><i style="width:95.7%;background:var(--gold)"></i></div>
         </div>
         <div class="readout r2" aria-hidden="true">
-          <div class="row"><span>name-called</span><span>94%</span></div>
-          <div class="bar"><i style="width:94%;background:var(--mint)"></i></div>
-          <div class="row"><span>build-failed</span><span>98%</span></div>
-          <div class="bar"><i style="width:98%;background:var(--gold)"></i></div>
+          <div class="row"><span>alarm-active</span><span>97.0%</span></div>
+          <div class="bar"><i style="width:97%;background:var(--mint)"></i></div>
+          <div class="row"><span>no-hivis</span><span>91.9%</span></div>
+          <div class="bar"><i style="width:91.9%;background:var(--coral)"></i></div>
         </div>
 
         <div class="topo">
@@ -126,11 +134,122 @@
     </div>
   </section>
 
+  <!-- ================= USE CASES ================= -->
+  <section class="section" id="usecases" aria-labelledby="uc-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>01.</b> Use cases</div>
+        <div>
+          <h2 id="uc-title">No API? No training?<br><em>Doesn't matter.</em></h2>
+          <p class="lede">If a person can see it or hear it, ifseen can turn it into an event. Old appliances, existing CCTV, legacy software with no integration story. Every number below is a real <code>ifseen test</code> output from both decision models.</p>
+        </div>
+      </div>
+      <p class="demo-disclose"><span class="chip gold">AI-generated scenes</span><span class="chip mint">real ifseen outputs</span><span class="label">Gemini Decision 1 · TypeSafe Jev · threshold 80% · <a href="https://github.com/KrishJoshi/ifseen/blob/main/docs/media/README.md">prompts, rules &amp; raw numbers</a></span></p>
+
+      <div class="uc-head" aria-hidden="true"><span class="label">Scene · rule true vs false</span><span class="label">Old way</span><span class="label">With ifseen</span></div>
+      <div class="uc">
+        <article class="uc-row">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/hob-unattended.webp"><img src="media/stills/hob-unattended.webp" alt="Kitchen camera: a pan cooking on a lit gas hob and nobody in the kitchen, with ifseen's real probabilities from both providers" width="1000" height="1139" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 94.4%</span></a>
+            <a class="demo-shot" href="media/stills/hob-cooking.webp"><img src="media/stills/hob-cooking.webp" alt="Same kitchen with someone standing at the hob cooking, with ifseen's real probabilities" width="1000" height="1139" loading="lazy" decoding="async"><span class="demo-tag">— 3.2%</span></a>
+          </div>
+          <div class="uc-old">
+            <span class="cell-label">Home safety · hob left on</span>
+            <ul><li>Heat or flame sensor over the hob</li><li>Presence sensor in the kitchen</li><li>Glue logic: "hot AND nobody here for N minutes"</li></ul>
+          </div>
+          <div class="uc-new">
+            <p class="demo-rule"><code>hob-unattended</code> “A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen.”</p>
+            <dl class="uc-nums">
+              <div class="hit"><dt>Hob on, nobody there</dt><dd>Gemini 94.4% · Jev 96%</dd></div>
+              <div><dt>Someone cooking</dt><dd>Gemini 3.2% · Jev 2%</dd></div>
+              <div><dt>Hob off</dt><dd>Gemini 21.4% · Jev 26%</dd></div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="uc-row">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/washer-done.webp"><img src="media/stills/washer-done.webp" alt="Webcam on a washing machine whose display reads End, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 95.7%</span></a>
+            <a class="demo-shot" href="media/stills/washer-running.webp"><img src="media/stills/washer-running.webp" alt="Same washing machine mid-cycle, display reading 0:42, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 5.8%</span></a>
+          </div>
+          <div class="uc-old">
+            <span class="cell-label gold">Home · dumb appliance done</span>
+            <ul><li>Replace a working machine with a "smart" one</li><li>Or a smart plug + power-draw thresholds that guess</li></ul>
+          </div>
+          <div class="uc-new">
+            <p class="demo-rule"><code>cycle-finished</code> “The washing machine's display shows the cycle has finished, such as "End", "0:00" or a done light.”</p>
+            <dl class="uc-nums">
+              <div class="hit"><dt>Display shows End</dt><dd>Gemini 95.7% · Jev 98%</dd></div>
+              <div><dt>Display shows 0:42</dt><dd>Gemini 5.8% · Jev 2%</dd></div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="uc-row">
+          <div class="demo-shots three">
+            <a class="demo-shot" href="media/stills/bay-nohivis.webp"><img src="media/stills/bay-nohivis.webp" alt="Warehouse CCTV: a worker in a grey hoodie with no hi-vis vest in the loading bay, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 91.9%</span></a>
+            <a class="demo-shot" href="media/stills/bay-hivis.webp"><img src="media/stills/bay-hivis.webp" alt="Same loading bay, worker wearing a yellow hi-vis vest, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 4.7%</span></a>
+            <a class="demo-shot" href="media/stills/bay-empty.webp"><img src="media/stills/bay-empty.webp" alt="Same loading bay, empty, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 9.2%</span></a>
+          </div>
+          <div class="uc-old">
+            <span class="cell-label mint">Workplace safety · PPE</span>
+            <ul><li>Collect and label thousands of images</li><li>Train a custom detector</li><li>Retrain for every site, camera and uniform</li></ul>
+          </div>
+          <div class="uc-new">
+            <p class="demo-rule"><code>no-hivis</code> “A person in the loading bay is wearing ordinary clothes with no high-visibility vest.”</p>
+            <dl class="uc-nums">
+              <div class="hit"><dt>No vest</dt><dd>Gemini 91.9% · Jev 98%</dd></div>
+              <div><dt>Hi-vis worn</dt><dd>Gemini 4.7% · Jev 4%</dd></div>
+              <div><dt>Empty bay</dt><dd>Gemini 9.2% · Jev 7%</dd></div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="uc-row">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/shelf-gap.webp"><img src="media/stills/shelf-gap.webp" alt="Supermarket shelf camera: shelves with a large empty gap, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 94.3%</span></a>
+            <a class="demo-shot" href="media/stills/shelf-full.webp"><img src="media/stills/shelf-full.webp" alt="Same shelving fully stocked, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 26.6%</span></a>
+          </div>
+          <div class="uc-old">
+            <span class="cell-label forest">Retail · restock needed</span>
+            <ul><li>Shelf-scanning robots</li><li>Or a custom vision model per planogram</li><li>Or staff walking the aisles</li></ul>
+          </div>
+          <div class="uc-new">
+            <p class="demo-rule"><code>shelf-gap</code> “Part of a shelf is empty, with a visible gap where products should be.”</p>
+            <dl class="uc-nums">
+              <div class="hit"><dt>Gap on the shelf</dt><dd>Gemini 94.3% · Jev 97%</dd></div>
+              <div><dt>Fully stocked</dt><dd>Gemini 26.6% · Jev 33%</dd></div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="uc-row">
+          <div class="demo-shots">
+            <a class="demo-shot" href="media/stills/hmi-alarm.webp"><img src="media/stills/hmi-alarm.webp" alt="Legacy HMI in a remote-desktop window showing a red high-pressure alarm banner, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag fire">FIRED 97.0%</span></a>
+            <a class="demo-shot" href="media/stills/hmi-normal.webp"><img src="media/stills/hmi-normal.webp" alt="Same HMI showing normal operation with no active alarms, with ifseen's real probabilities" width="1000" height="991" loading="lazy" decoding="async"><span class="demo-tag">— 1.4%</span></a>
+          </div>
+          <div class="uc-old">
+            <span class="cell-label">Legacy screen · no API</span>
+            <ul><li>Screen-scraping or RPA bots that break on every UI change</li><li>OPC / vendor connectors, if they exist</li><li>Or someone watching the screen all night</li></ul>
+          </div>
+          <div class="uc-new">
+            <p class="demo-rule"><code>alarm-active</code> “The control screen shows an active alarm, such as a red alarm banner or a tripped pump.”</p>
+            <dl class="uc-nums">
+              <div class="hit"><dt>Red alarm banner</dt><dd>Gemini 97.0% · Jev 99%</dd></div>
+              <div><dt>Normal operation</dt><dd>Gemini 1.4% · Jev 3%</dd></div>
+            </dl>
+          </div>
+        </article>
+      </div>
+      <p class="foot-note uc-foot">Opposite rules for contrast (true image → false image): <code>person-cooking</code> 94.3% / 95% → 6.6% / 32% · <code>cycle-running</code> 93.5% / 96% · <code>hivis-worn</code> 92.3% / 97% · <code>normal-operation</code> 95.5% / 98%. Two were weak: <code>hob-off</code> scored only 52.5% / 8% on the hob-off frame (food is still in the pan) and <code>shelf-full</code> 56.1% / 25% on the stocked shelf; neither fired. HMI screens are drawn with PIL, not generated.</p>
+    </div>
+  </section>
+
   <!-- ================= HOW ================= -->
   <section class="section" id="how" aria-labelledby="how-title">
     <div class="wrap">
       <div class="section-head">
-        <div class="idx"><b>01.</b> How it works</div>
+        <div class="idx"><b>02.</b> How it works</div>
         <div>
           <h2 id="how-title">One frame. One call.<br><em>Every</em> rule.</h2>
           <p class="lede">Decision models don't write text. They read an image or audio clip and return a calibrated probability for each yes/no question, with zero output tokens. ifseen is the glue around them.</p>
@@ -191,19 +310,19 @@
         <article class="cell">
           <span class="cell-label">Plain-English rules</span>
           <h3>Ask what you'd ask a person.</h3>
-          <p>"The 3D print has turned into spaghetti." "The pot is boiling over." Use <code>false_means</code> to rule out look-alikes.</p>
+          <p>"The washing machine shows End." "Someone in the loading bay has no hi-vis vest." Use <code>false_means</code> to say what "no" looks like.</p>
           <div class="mock">
             <div class="mock-bar"><span class="dots"><i style="background:var(--coral)"></i><i style="background:var(--gold)"></i><i style="background:var(--mint)"></i></span><span>ifseen.yaml</span></div>
-<pre><span class="y-k">source</span>: <span class="y-s">screen</span>
-<span class="y-k">every</span>: <span class="y-n">3s</span>
+<pre><span class="y-k">source</span>: {<span class="y-k">camera</span>: <span class="y-n">0</span>}
+<span class="y-k">every</span>: <span class="y-n">30s</span>
 <span class="y-k">rules</span>:
-  - <span class="y-k">name</span>: <span class="y-a">build-failed</span>
-    <span class="y-k">when</span>: <span class="y-s">A CI pipeline on screen has failed.</span>
-    <span class="y-k">threshold</span>: <span class="y-n">0.85</span>
+  - <span class="y-k">name</span>: <span class="y-a">cycle-finished</span>
+    <span class="y-k">when</span>: <span class="y-s">The washing machine's display shows the cycle has finished.</span>
+    <span class="y-k">false_means</span>: <span class="y-s">The display shows time remaining.</span>
     <span class="y-k">for</span>: <span class="y-n">2</span>
     <span class="y-k">then</span>:
-      - <span class="y-k">notify</span>: <span class="y-s">"Build failed ({percent})"</span>
-      - <span class="y-k">say</span>: <span class="y-s">build failed</span></pre>
+      - <span class="y-k">ntfy</span>: <span class="y-s">laundry-topic</span>
+      - <span class="y-k">say</span>: <span class="y-s">the washing is done</span></pre>
           </div>
         </article>
 
@@ -272,12 +391,6 @@
           </div>
         </article>
       </div>
-      <div class="strip">
-        <div><span class="chip mint">sees + hears</span><strong>Camera and mic, one rule set</strong><p>With Gemini, combine a camera and a microphone: "the baby is crying", "someone said my name".</p></div>
-        <div><span class="chip coral">any provider</span><strong>Bring your own model</strong><p>Gemini, Jev, Azure Microsoft-Decision, self-hosted, OpenAI-compatible or fully local Ollama.</p></div>
-        <div><span class="chip gold">tuning</span><strong><code>ifseen test</code></strong><p>Ask every rule once against a real image and pick thresholds from actual probabilities.</p></div>
-        <div><span class="chip">headless</span><strong><code>--json</code> &amp; Docker</strong><p>One JSON event per line for <code>jq</code>, log shippers or Home Assistant. Ships a Dockerfile.</p></div>
-      </div>
     </div>
   </section>
 
@@ -288,14 +401,14 @@
         <div class="idx"><b>++</b> See it work</div>
         <div>
           <h2 id="demo-title">Real frames.<br><em>Real</em> numbers.</h2>
-          <p class="lede">Each scene comes in a pair: one where the rule is true and a near-identical one where it isn't. Every probability below is a real <code>ifseen</code> output from Gemini Decision 1, one call per frame. Nothing tuned or retouched.</p>
+          <p class="lede">Clips run through <code>ifseen watch</code>, plus everyday home and office pairs: one frame where the rule is true, a near-identical one where it isn't. Every probability is a real <code>ifseen</code> output, one call per frame. Nothing tuned or retouched.</p>
         </div>
       </div>
       <p class="demo-disclose"><span class="chip gold">AI-generated scenes</span><span class="chip mint">real ifseen outputs</span><span class="label">Scenes: Gemini 2.5 Flash Image + Veo 3.1 Lite · <a href="https://github.com/KrishJoshi/ifseen/blob/main/docs/media/README.md">prompts, rules &amp; raw numbers</a></span></p>
 
       <figure class="demo-hero">
         <div class="demo-video">
-          <video id="demo-video" muted loop playsinline preload="metadata" poster="media/hero-poster.webp" width="1280" height="540" aria-label="Three clips with ifseen's live rule probabilities: a dog jumps onto the sofa, a courier leaves a parcel, an office worker walks away from an unlocked laptop">
+          <video id="demo-video" muted loop playsinline preload="metadata" poster="media/hero-poster.webp" width="1280" height="540" aria-label="Three clips with ifseen's live rule probabilities: a cook walks out leaving the hob on, a worker without a hi-vis vest enters a loading bay, a dog jumps onto the sofa">
             <source src="media/hero.mp4" type="video/mp4">
             <source src="media/hero.webm" type="video/webm">
           </video>
@@ -304,9 +417,44 @@
       </figure>
       <div class="cards-head demo-head">
         <h3>Clips</h3>
-        <span class="label"><b>00</b> · <code>ifseen watch</code> on each 6s clip · every 500ms · fire times from the real run</span>
+        <span class="label"><b>00</b> · <code>ifseen watch</code> on each 6s clip · every 500ms · fire times from the real run (Gemini; Jev where shown)</span>
       </div>
       <div class="demo-clips">
+        <article class="demo-clip">
+          <div class="demo-clip-video">
+            <video class="demo-clip-v" muted loop playsinline preload="none" poster="media/clips/hob-poster.webp" width="1280" height="540" aria-label="Kitchen clip: the cook walks out leaving a pan on the lit hob; ifseen's hob-unattended rule fires at 4 seconds">
+              <source src="media/clips/hob.mp4" type="video/mp4">
+              <source src="media/clips/hob.webm" type="video/webm">
+            </video>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label">Kitchen · hob.mp4</span>
+            <p class="demo-rule"><code>hob-unattended</code> “A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen.” <span>threshold 80%</span></p>
+            <ol class="demo-timeline">
+              <li><b>0.0s</b><span>person-in-kitchen fires · 93.8%</span></li>
+              <li><b>3.0s</b><span>hob-unattended 73% (cook in the doorway)</span></li>
+              <li class="fire"><b>4.0s</b><span>🔔 hob-unattended fires · 89.4%</span></li>
+              <li><b>4.5s</b><span>Jev fires too · 95%</span></li>
+            </ol>
+          </div>
+        </article>
+        <article class="demo-clip">
+          <div class="demo-clip-video">
+            <video class="demo-clip-v" muted loop playsinline preload="none" poster="media/clips/hivis-poster.webp" width="1280" height="540" aria-label="Loading bay clip: a worker in a hoodie with no hi-vis vest walks in; ifseen's no-hivis rule fires at 0.5 seconds">
+              <source src="media/clips/hivis.mp4" type="video/mp4">
+              <source src="media/clips/hivis.webm" type="video/webm">
+            </video>
+          </div>
+          <div class="demo-body">
+            <span class="cell-label mint">Loading bay · hivis.mp4</span>
+            <p class="demo-rule"><code>no-hivis</code> “A person in the loading bay is wearing ordinary clothes with no high-visibility vest.” <span>threshold 80%</span></p>
+            <ol class="demo-timeline">
+              <li><b>0.0s</b><span>bay-empty fires · 89.1% (worker still outside)</span></li>
+              <li class="fire"><b>0.5s</b><span>🔔 no-hivis fires · 91.6% · Jev 96%</span></li>
+              <li><b>5.5s</b><span>still 93% / Jev 97% as he reaches the pallet</span></li>
+            </ol>
+          </div>
+        </article>
         <article class="demo-clip">
           <div class="demo-clip-video">
             <video class="demo-clip-v" muted loop playsinline preload="none" poster="media/clips/dog-poster.webp" width="1280" height="540" aria-label="Pet camera clip: the dog gets up from the rug and jumps onto the sofa; ifseen's dog-on-sofa rule fires at 4.5 seconds">
@@ -464,13 +612,170 @@
     </div>
   </section>
 
+  <!-- ================= INTEGRATE ================= -->
+  <section class="section" id="integrate" aria-labelledby="int-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>03.</b> Integrate</div>
+        <div>
+          <h2 id="int-title">Plug it into<br><em>what you run.</em></h2>
+          <p class="lede">The CLI is one way in. Rules also become Home Assistant entities, Python callbacks, a typed JS client and a local HTTP + SSE API. Same rules file everywhere.</p>
+        </div>
+      </div>
+
+      <div class="bento">
+        <article class="cell wide">
+          <span class="cell-label mint">Home Assistant · MQTT discovery</span>
+          <h3>Every rule becomes an entity.</h3>
+          <div class="int-ha">
+            <div>
+              <p>Add an <code>mqtt:</code> section and each rules file shows up as a device. Each rule gets a <code>binary_sensor</code> (on when it fires, off when it re-arms) and a probability sensor, plus status, cost-per-hour and model-call sensors, a <b>Last trigger</b> camera, a pause switch and a trigger event. Shorthand: <code>mqtt: core-mosquitto</code>.</p>
+              <ul class="int-entities" aria-label="Entities for a rules file named kitchen">
+                <li><code>binary_sensor.kitchen_hob_unattended</code></li>
+                <li><code>sensor.kitchen_hob_unattended_probability</code></li>
+                <li><code>event.kitchen_trigger</code></li>
+                <li><code>camera.kitchen_last_trigger</code></li>
+                <li><code>switch.kitchen_watching</code></li>
+                <li><code>sensor.kitchen_status</code> · <code>_cost_per_hour</code> · <code>_model_calls</code></li>
+              </ul>
+              <p>Any HA camera works as the source through <code>camera_proxy</code>. On Home Assistant OS there's an add-on (add-on repository: <code>github.com/KrishJoshi/ifseen</code>) that configures MQTT from the Mosquitto add-on for you.</p>
+              <div class="chips"><span class="chip mint">tested against a real MQTT broker</span><span class="chip ghost">not yet verified in a live HA instance</span><span class="chip ghost">repo not published yet</span></div>
+            </div>
+            <div class="int-code">
+              <div class="mock">
+                <div class="mock-bar"><span>kitchen.yaml</span><button class="copy" type="button" data-copy-target="int-ha-yaml">Copy</button></div>
+<pre id="int-ha-yaml"><span class="y-k">source</span>:
+  <span class="y-k">url</span>:
+    <span class="y-k">url</span>: <span class="y-s">http://homeassistant.local:8123/api/camera_proxy/camera.kitchen</span>
+    <span class="y-k">headers</span>: {<span class="y-k">Authorization</span>: <span class="y-s">"Bearer ${HA_TOKEN}"</span>}
+<span class="y-k">every</span>: <span class="y-n">4s</span>
+<span class="y-k">mqtt</span>: {<span class="y-k">host</span>: <span class="y-s">homeassistant.local</span>, <span class="y-k">username</span>: <span class="y-s">ifseen</span>, <span class="y-k">password</span>: <span class="y-s">"${MQTT_PASSWORD}"</span>}
+<span class="y-k">rules</span>:
+  - <span class="y-k">name</span>: <span class="y-a">hob-unattended</span>
+    <span class="y-k">when</span>: <span class="y-s">A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen.</span>
+    <span class="y-k">for</span>: <span class="y-n">3</span>
+    <span class="y-k">ha_device_class</span>: <span class="y-s">safety</span></pre>
+              </div>
+              <div class="mock">
+                <div class="mock-bar"><span>automation</span><button class="copy" type="button" data-copy-target="int-ha-auto">Copy</button></div>
+<pre id="int-ha-auto"><span class="y-k">alias</span>: <span class="y-s">Hob left on</span>
+<span class="y-k">triggers</span>:
+  - <span class="y-k">trigger</span>: <span class="y-s">state</span>
+    <span class="y-k">entity_id</span>: <span class="y-s">binary_sensor.kitchen_hob_unattended</span>
+    <span class="y-k">to</span>: <span class="y-s">"on"</span>
+<span class="y-k">actions</span>:
+  - <span class="y-k">action</span>: <span class="y-s">notify.mobile_app_my_phone</span>
+    <span class="y-k">data</span>: {<span class="y-k">message</span>: <span class="y-s">"Hob is on and nobody's in the kitchen"</span>}</pre>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="cell">
+          <span class="cell-label gold">Python</span>
+          <h3>One-shot checks or a live watcher.</h3>
+          <p><code>check()</code> returns probabilities for an image. <code>Watcher</code> takes callbacks, sync or async; <code>run()</code>, <code>await run_async()</code> or <code>start()</code> in a thread.</p>
+          <div class="mock">
+            <div class="mock-bar"><span>dock.py</span><button class="copy" type="button" data-copy-target="int-py">Copy</button></div>
+<pre id="int-py"><span class="y-k">from</span> ifseen <span class="y-k">import</span> Watcher, check
+
+probs = check(<span class="y-s">"dock.jpg"</span>, [<span class="y-s">"A person has no hi-vis vest."</span>],
+              provider=<span class="y-s">"jev"</span>)
+
+w = Watcher(source={<span class="y-s">"camera"</span>: <span class="y-n">0</span>}, provider=<span class="y-s">"gemini"</span>, every=<span class="y-s">"2s"</span>)
+
+@w.when(<span class="y-s">"A person in the loading bay has no hi-vis vest."</span>,
+        threshold=<span class="y-n">0.8</span>, for_=<span class="y-n">2</span>, name=<span class="y-s">"no-hivis"</span>)
+<span class="y-k">async def</span> alert(event):
+    print(event.name, event.probability)
+
+w.run()</pre>
+          </div>
+        </article>
+
+        <article class="cell">
+          <span class="cell-label coral">JavaScript / TypeScript</span>
+          <h3><code>npm install ifseen</code></h3>
+          <p>Zero dependencies; Node 18+, Bun, Deno and browsers. <code>check()</code> calls a decision API directly (server-side). <code>IfseenClient</code> talks to <code>ifseen serve</code>: watchers, snapshots and a fetch-based SSE stream with an optional bearer token.</p>
+          <div class="mock">
+            <div class="mock-bar"><span>shelf.ts</span><button class="copy" type="button" data-copy-target="int-js">Copy</button></div>
+<pre id="int-js"><span class="y-k">import</span> { check, IfseenClient } <span class="y-k">from</span> <span class="y-s">"ifseen"</span>;
+
+<span class="y-k">const</span> probs = <span class="y-k">await</span> check(<span class="y-s">"shelf.jpg"</span>,
+  [<span class="y-s">"Part of a shelf is empty, with a visible gap."</span>],
+  { provider: <span class="y-s">"gemini"</span>, apiKey: process.env.GEMINI_API_KEY });
+
+<span class="y-k">const</span> client = <span class="y-k">new</span> IfseenClient({ token: process.env.IFSEEN_TOKEN });
+client.on(<span class="y-s">"fire"</span>, (e) =&gt; console.log(e.rule, e.probability));
+<span class="y-k">for await</span> (<span class="y-k">const</span> e <span class="y-k">of</span> client.events({ types: [<span class="y-s">"fire"</span>] })) { <span class="y-c">/* ... */</span> }</pre>
+          </div>
+        </article>
+
+        <article class="cell">
+          <span class="cell-label forest">HTTP API · <code>ifseen serve</code></span>
+          <h3>Local REST + Server-Sent Events.</h3>
+          <p>Loopback only by default; listening on your LAN requires a token. One-shot <code>/v1/check</code>, watcher CRUD, the latest frame as JPEG, and a live <code>/v1/events</code> stream.</p>
+          <div class="mock">
+            <div class="mock-bar"><span>terminal</span><button class="copy" type="button" data-copy-target="int-http">Copy</button></div>
+<pre id="int-http">ifseen serve legacy-screen-alarm        <span class="y-c"># http://127.0.0.1:8899</span>
+
+curl -N <span class="y-s">"localhost:8899/v1/events?types=fire"</span>
+curl -s localhost:8899/v1/watchers
+curl -s localhost:8899/v1/watchers/legacy-screen-alarm/snapshot -o frame.jpg</pre>
+          </div>
+          <div class="chips"><span class="chip">GET /v1/health</span><span class="chip">POST /v1/check</span><span class="chip">/v1/watchers</span><span class="chip">…/snapshot</span><span class="chip gold">SSE /v1/events</span></div>
+        </article>
+
+        <article class="cell">
+          <span class="cell-label">Cost &amp; outputs</span>
+          <h3>A free local model as the bouncer.</h3>
+          <p><code>--provider local</code> runs SigLIP on your machine: free, offline, ~20 ms. As a <code>prefilter</code> it gates the paid model, which is only called when the cheap check passes.</p>
+          <div class="mock">
+            <div class="mock-bar"><span>prefilter</span><button class="copy" type="button" data-copy-target="int-pre">Copy</button></div>
+<pre id="int-pre"><span class="y-k">provider</span>: <span class="y-s">gemini</span>
+<span class="y-k">prefilter</span>:
+  <span class="y-k">provider</span>: <span class="y-s">local</span>
+  <span class="y-k">when</span>: <span class="y-s">a photo of a person.</span>
+  <span class="y-k">threshold</span>: <span class="y-n">0.05</span></pre>
+          </div>
+          <div class="chips"><span class="chip coral">webhook + image</span><span class="chip mint">ntfy push with photo</span><span class="chip gold">shell · $IFSEEN_* env</span><span class="chip">--json lines</span><span class="chip forest">Docker</span></div>
+        </article>
+      </div>
+
+      <div class="cards-head" id="keys">
+        <h3>API keys</h3>
+        <span class="label">Never in rule files · there is no key field</span>
+      </div>
+      <div class="keys-get">
+        <div><span class="chip mint">gemini</span><strong>Gemini Decision 1</strong><p>Free tier at <a href="https://aistudio.google.com/apikey">aistudio.google.com/apikey</a>. Images and audio.</p></div>
+        <div><span class="chip coral">jev</span><strong>TypeSafe Jev</strong><p>Key from <a href="https://console.typesafe.ai">console.typesafe.ai</a>. Images only; fastest, ~180 ms.</p></div>
+        <div><span class="chip gold">azure</span><strong>Microsoft-Decision</strong><p>Deploy Microsoft-Decision-1.1 in Azure Foundry: endpoint, key and deployment name.</p></div>
+        <div><span class="chip">no key</span><strong>Local &amp; dry run</strong><p><code>--provider local</code> (SigLIP) and <code>--dry-run</code> need nothing. OpenAI-compatible and Ollama are optional.</p></div>
+      </div>
+      <div class="table-wrap">
+        <table class="keys-table">
+          <caption class="sr-only">How to pass a provider API key on each surface</caption>
+          <thead><tr><th scope="col">Surface</th><th scope="col">How the key gets in</th></tr></thead>
+          <tbody>
+            <tr><td><code>CLI / YAML</code></td><td>Auto-detected env vars: <code class="env">GEMINI_API_KEY</code> (or <code class="env">GOOGLE_API_KEY</code>), <code class="env">TYPESAFE_API_KEY</code>, <code class="env">AZURE_DECISION_ENDPOINT</code> + <code class="env">AZURE_DECISION_KEY</code> (+ <code class="env">AZURE_DECISION_DEPLOYMENT</code>), <code class="env">OPENAI_API_KEY</code>. Use another variable with <code>provider: {api_key_env: MY_VAR}</code>. <code>${VAR}</code> expansion is for other secrets (ntfy topics, tokens). <code>ifseen doctor</code> shows which keys are set.</td></tr>
+            <tr><td><code>Python</code></td><td>Env vars by default, or explicitly: <code>check(img, [...], provider="gemini", api_key=...)</code>, <code>check_detailed(..., api_key=...)</code>, <code>Watcher(..., provider="jev", api_key=...)</code>, <code>Watcher.from_yaml(path, api_key=...)</code>. Needs an explicit provider; kept in memory only, never in <code>state()</code>.</td></tr>
+            <tr><td><code>JS / TS</code></td><td><code>check(img, rules, { provider: "gemini", apiKey })</code>, or the same env vars in Node, Bun and Deno. Don't call providers from a browser: the key is visible to anyone. Use <code>ifseen serve</code> or your backend.</td></tr>
+            <tr><td><code>ifseen serve</code></td><td>Keys live only in the server's environment. HTTP clients never send provider keys, and custom endpoints are blocked by default so a client can't redirect your key elsewhere.</td></tr>
+            <tr><td><code>HA add-on</code></td><td>Password fields in the add-on options: <code>gemini_api_key</code>, <code>typesafe_api_key</code>, <code>openai_api_key</code>, <code>azure_decision_key</code> (+ endpoint and deployment).</td></tr>
+            <tr><td><code>Docker</code></td><td><code>docker run --rm -e GEMINI_API_KEY ifseen watch kitchen</code> passes the key through from your shell.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <!-- ================= RECIPES ================= -->
   <section class="section" id="recipes" aria-labelledby="recipes-title">
     <div class="wrap">
       <div class="section-head">
-        <div class="idx"><b>02.</b> Recipes</div>
+        <div class="idx"><b>04.</b> Recipes</div>
         <div>
-          <h2 id="recipes-title">Nine ready-made<br>rule files.</h2>
+          <h2 id="recipes-title">Eleven ready-made<br>rule files.</h2>
           <p class="lede">Run one directly, or <code>ifseen init &lt;name&gt;</code> to write an editable <code>ifseen.yaml</code>. Secrets come from env vars like <code>${NTFY_TOPIC}</code>, so rule files are safe to share.</p>
         </div>
       </div>
@@ -488,7 +793,7 @@
   <section class="section" id="providers" aria-labelledby="prov-title">
     <div class="wrap">
       <div class="section-head">
-        <div class="idx"><b>03.</b> Providers</div>
+        <div class="idx"><b>05.</b> Providers</div>
         <div>
           <h2 id="prov-title">Bring any<br><em>decision</em> model.</h2>
           <p class="lede">With no provider set, ifseen picks the first one it finds a key for. <code>--dry-run</code> uses the mock provider, so you can try everything with no key at all.</p>
@@ -522,7 +827,7 @@
   <section class="section" id="benchmarks" aria-labelledby="bench-title">
     <div class="wrap">
       <div class="section-head">
-        <div class="idx"><b>04.</b> Benchmarks</div>
+        <div class="idx"><b>06.</b> Benchmarks</div>
         <div>
           <h2 id="bench-title">Measured,<br><em>not</em> estimated.</h2>
           <p class="lede">Real numbers from real runs. Small samples, so treat them as directional.</p>
@@ -569,7 +874,7 @@
 
         <div class="wide">
           <span class="cell-label coral">Hard rules · 90 captures · accuracy at threshold 0.5</span>
-          <p class="foot-note" style="margin:0">Screen text (CI failed vs passed), spatial ("dog on the sofa"), scene state (door open, pot boiling) and audio. Hand-labelled; 2–6 positives per rule, so directional.</p>
+          <p class="foot-note" style="margin:0">Screen text (CI pages, error dialogs), spatial ("dog on the sofa"), scene state (door open, pot boiling) and audio. Hand-labelled; 2–6 positives per rule, so directional.</p>
           <div class="bars" data-bars>
             <span class="who" style="margin-top:6px"><b>Screen text</b></span>
             <div class="row"><span class="who"><b>Gemini Decision 1</b></span><span class="bt"><i style="--w:100%;background:var(--mint)"></i></span><span class="v">100%</span></div>
@@ -596,10 +901,10 @@
         </div>
 
         <div class="wide">
-          <span class="cell-label forest">Live tests · Gemini Decision 1</span>
+          <span class="cell-label forest">Live tests</span>
           <div class="live">
-            <div class="lt"><span class="ln">94–98%</span><div class="ld">"A CI pipeline on screen has failed", on a real failed-CI screenshot<small>screen · build-watcher · threshold 85%</small><div class="range" style="--t:85%"><i style="left:94%;width:4%"></i></div></div></div>
-            <div class="lt"><span class="ln">94%</span><div class="ld">"Someone said my name", from a microphone clip<small>mic · meeting-radar · threshold 75%</small><div class="range" style="--t:75%"><i style="left:93.5%;width:1%"></i></div></div></div>
+            <div class="lt"><span class="ln">94–96%</span><div class="ld">"A pan is cooking on a lit hob … and nobody is in the kitchen", on the unattended-hob frame (Gemini 94.4%, Jev 96%; 3.2% / 2% with someone cooking)<small>camera · kitchen · threshold 80%</small><div class="range" style="--t:80%"><i style="left:94.4%;width:1.6%"></i></div></div></div>
+            <div class="lt"><span class="ln">94%</span><div class="ld">"Someone said my name", from a microphone clip (Gemini; Jev can't hear)<small>mic · meeting-radar · threshold 75%</small><div class="range" style="--t:75%"><i style="left:93.5%;width:1%"></i></div></div></div>
           </div>
           <p class="foot-note">Full method, prices and caveats: <a href="https://github.com/KrishJoshi/ifseen/blob/main/benchmarks/birds-results.md">birds-results.md</a> · <a href="https://github.com/KrishJoshi/ifseen/blob/main/benchmarks/hard-rules-results.md">hard-rules-results.md</a>.</p>
         </div>
@@ -611,7 +916,7 @@
   <section class="section cta" id="builder" aria-labelledby="builder-title">
     <div class="wrap">
       <div class="section-head">
-        <div class="idx"><b>05.</b> Try it</div>
+        <div class="idx"><b>07.</b> Try it</div>
         <div><h2 id="builder-title">Write your<br>first <em>rule</em>.</h2></div>
       </div>
 
@@ -676,7 +981,7 @@
 
       <div class="install" id="install">
         <div><span class="label"><b>01</b> Install</span><div class="run"><code id="i1">pipx install "ifseen[all]"</code><button class="copy" type="button" data-copy-target="i1">Copy</button></div><p>Or <code>uv tool install "ifseen[all]"</code>. Lean extras: <code>[screen]</code>, <code>[camera]</code>, <code>[mic]</code>.</p></div>
-        <div><span class="label"><b>02</b> Get a key</span><div class="run"><code id="i2">export GEMINI_API_KEY=...</code><button class="copy" type="button" data-copy-target="i2">Copy</button></div><p>Free from <a href="https://aistudio.google.com/apikey">Google AI Studio</a>. <code>ifseen doctor</code> checks keys and capture permissions.</p></div>
+        <div><span class="label"><b>02</b> Get a key</span><div class="run"><code id="i2">export GEMINI_API_KEY=...</code><button class="copy" type="button" data-copy-target="i2">Copy</button></div><p>Gemini: free from <a href="https://aistudio.google.com/apikey">Google AI Studio</a>. Or <code>TYPESAFE_API_KEY</code> for Jev (images, fastest). <code>ifseen doctor</code> checks keys and permissions. <a href="#keys">All key options →</a></p></div>
         <div><span class="label"><b>03</b> Or no key at all</span><div class="run"><code id="i3">ifseen watch doorbell --dry-run</code><button class="copy" type="button" data-copy-target="i3">Copy</button></div><p>Random probabilities, actions printed instead of run. Or <code>--provider local</code> for free, offline SigLIP.</p></div>
       </div>
     </div>
@@ -699,6 +1004,6 @@
   </div>
 </footer>
 
-<script src="assets/app.js?v=15" defer></script>
+<script src="assets/app.js?v=16" defer></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-# Kitchen timer that actually looks: water boiling, pot boiling over, smoke, or the oven left on with nobody around.
+# Kitchen timer that actually looks: water boiling, pot boiling over, smoke, or the hob left on with nobody around.
 source:
   camera: ${KITCHEN_CAMERA:-0}
 every: 4s
@@ -28,4 +28,16 @@ rules:
       - say: smoke in the kitchen
       - ntfy:
           topic: ${NTFY_TOPIC:-ifseen-kitchen-change-me}
+          priority: urgent
+  - name: hob-unattended
+    when: A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen.
+    false_means: Someone is standing at the hob, or the hob is off and nothing is cooking.
+    threshold: 0.8
+    for: 3
+    cooldown: 5m
+    then:
+      - say: the hob is still on
+      - ntfy:
+          topic: ${NTFY_TOPIC:-ifseen-kitchen-change-me}
+          title: "🔥 Hob on, nobody in the kitchen"
           priority: urgent

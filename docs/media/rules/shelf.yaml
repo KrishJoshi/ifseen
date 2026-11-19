@@ -1,0 +1,14 @@
+source:
+  camera: 0
+rules:
+- name: shelf-gap
+  when: Part of a shelf is empty, with a visible gap where products should be.
+  false_means: Every shelf is fully stocked with products right across.
+  threshold: 0.8
+  then:
+  - log
+- name: shelf-full
+  when: Every shelf is fully stocked with no gaps.
+  threshold: 0.8
+  then:
+  - log

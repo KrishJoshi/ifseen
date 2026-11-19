@@ -1,0 +1,13 @@
+source: screen
+rules:
+- name: alarm-active
+  when: The control screen shows an active alarm, such as a red alarm banner or a tripped pump.
+  false_means: The screen shows normal operation with no active alarms.
+  threshold: 0.8
+  then:
+  - log
+- name: normal-operation
+  when: The control screen shows normal operation with no active alarms.
+  threshold: 0.8
+  then:
+  - log

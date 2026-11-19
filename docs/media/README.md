@@ -1,12 +1,93 @@
 # Demo media
 
 > **AI-generated scenes, real ifseen outputs.** Every photo and video here was generated with
-> Google models on Vertex AI. None of it is real footage. Every probability, token count,
-> latency and FIRED moment shown on top of it is a real, unedited output from
-> `ifseen` (`--provider gemini`, Gemini Decision 1), recorded on 2026-11-19. Raw outputs are in
-> [`data/`](data/), rule files in [`rules/`](rules/).
+> Google models on Vertex AI (the two HMI screens are drawn with PIL). None of it is real
+> footage. Every probability, token count, latency and FIRED moment shown on top of it is a
+> real, unedited output from `ifseen`, recorded on 2026-11-19: Gemini Decision 1
+> (`--provider gemini`) for everything, and TypeSafe Jev (`--provider jev`) as well for the
+> use-case set. Raw outputs are in [`data/`](data/), rule files in [`rules/`](rules/).
 
-## Models
+## Use cases: things with no API (`stills/{hob,washer,bay,shelf,hmi}-*.webp`, `clips/{hob,hivis}.*`)
+
+Generated with the same models and settings as below (`gemini-2.5-flash-image` on Vertex AI
+`global`, Application Default Credentials; Veo `veo-3.1-lite-generate-001`, `us-central1`).
+Each still was run once per provider with
+`ifseen test RULES --image X --json --provider gemini|jev`. The annotated stills show both:
+the big number and main bar are Gemini, the thin bar below is Jev. Raw output:
+[`data/usecases.jsonl`](data/usecases.jsonl). Rules: `rules/{hob,appliance,hivis,shelf,hmi}.yaml`
+(threshold 80%; the main rule of each set uses `false_means`).
+
+| file | prompt (short) | rules → Gemini / Jev |
+|---|---|---|
+| `hob-unattended.webp` | edit of `hob-cooking`: person removed, burner still lit, steam rising | **hob-unattended 94.4% / 96%** · person-cooking 6.6% / 32% · hob-off 3.6% / 1% |
+| `hob-cooking.webp` | high corner camera in a UK kitchen, person stirring a frying pan on a lit gas hob | hob-unattended 3.2% / 2% · **person-cooking 94.3% / 95%** · hob-off 5.6% / 2% |
+| `hob-off.webp` | edit of `hob-unattended`: burners off, no steam (second attempt, see below) | hob-unattended 21.4% / 26% · person-cooking 10.8% / 12% · hob-off 52.5% / 8% |
+| `washer-done.webp` | edit: display reads "End", drum still | **cycle-finished 95.7% / 98%** · cycle-running 4.8% / 2% |
+| `washer-running.webp` | webcam on a front-loader in a utility room, display "0:42", clothes in soapy water | cycle-finished 5.8% / 2% · **cycle-running 93.5% / 96%** |
+| `bay-nohivis.webp` | edit of `bay-hivis`: vest replaced by a grey hoodie | **no-hivis 91.9% / 98%** · hivis-worn 5.1% / 2% |
+| `bay-hivis.webp` | ceiling CCTV over a warehouse loading bay, worker in a yellow hi-vis vest scanning a pallet | no-hivis 4.7% / 4% · **hivis-worn 92.3% / 97%** |
+| `bay-empty.webp` | edit of `bay-hivis`: worker removed (also the hi-vis clip's start frame) | no-hivis 9.2% / 7% · hivis-worn 9.7% / 3% |
+| `shelf-gap.webp` | edit of `shelf-full`: products removed from the middle of a shelf (the model cleared more than asked) | **shelf-gap 94.3% / 97%** · shelf-full 5.9% / 1% |
+| `shelf-full.webp` | shelf camera facing one bay: tomatoes, beans, pasta sauce, pasta, fully stocked (second attempt) | shelf-gap 26.6% / 33% · shelf-full 56.1% / 25% |
+| `hmi-alarm.webp` | PIL: legacy "FILLMASTER HMI" in a remote-desktop window, red ALARM 2041 banner, pump tripped | **alarm-active 97.0% / 99%** · normal-operation 2.5% / 1% |
+| `hmi-normal.webp` | PIL: same screen, "No active alarms", pump running | alarm-active 1.4% / 3% · **normal-operation 95.5% / 98%** |
+
+Every headline rule separated cleanly on both providers. Two opposite rules were weak and are
+shown as such: `hob-off` (52.5% / 8% on the hob-off frame, food is still in the pan) and
+`shelf-full` (56.1% / 25% on the stocked shelf). Neither fired.
+
+**Regenerated, not hidden.** The first `hob-off` edit still had a lit blue flame and steam
+(both providers correctly scored hob-unattended 89.1% / 95% on it), and the first
+`shelf-full` base had visible gaps (shelf-full 22.5% / 15%). Both were mislabelled
+generations, so they were regenerated (with a new shelf-gap edit) and re-tested; the first
+attempts aren't published.
+
+Clips (`ifseen watch rules/clip_*.yaml --json`, `every: 500ms`, `realtime: false`,
+`skip_unchanged: false`, both providers; raw: `data/watch_hob*.jsonl`, `data/watch_hivis*.jsonl`).
+The panel's big numbers and FIRED banner are Gemini; "jev N%" and the event log show Jev's real
+run:
+
+| clip | start frame / prompt | real timeline |
+|---|---|---|
+| `hob` | `hob-cooking`; "the person rests the spatula, walks out through the doorway; burner stays lit, steam keeps rising" | Gemini: person-in-kitchen fires 93.8% at 0.0 s; hob-unattended 10% (1.0 s), 56% (2.5 s), 73% (3.0 s, cook in the doorway), **fires 89.4% at 4.0 s**. Jev: hob-unattended 2-17% until 3.5 s, 51% at 4.0 s, **fires 95% at 4.5 s** |
+| `hivis` | `bay-empty`; "a worker in a dark grey hoodie, no hi-vis, walks in from the dock door to the pallet" | Gemini: bay-empty fires 89.1% at 0.0 s (worker a speck in the doorway); **no-hivis fires 91.6% at 0.5 s**, 91-94% to the end. Jev: bay-empty 84% at 0.0 s, **no-hivis fires 96% at 0.5 s**, 96-98% after |
+
+`hero.mp4` / `hero.webm` are now the hob, hi-vis and dog clips back to back (21.75 s), and
+`hero.gif` is the hob clip (900 px, 12 fps, 1.9 MB) for the project README. Posters:
+`hero-poster.webp`, `clips/*-poster.webp`.
+
+Generation count for this set: 13 image generations (4 bases, 9 edits including 3 regenerations)
+and 2 Veo clips. Artefacts: a ceiling dome camera appears inside some kitchen and loading-bay
+frames; the shelf edit removed far more stock than asked and shifted the framing slightly;
+the hob-off edit re-framed the kitchen a little.
+
+<details><summary>Full prompts for the use-case set</summary>
+
+```text
+SUFFIX: Photoreal, natural and slightly imperfect: mild sensor noise, a little compression, uneven real-world lighting, unstaged clutter, not a glossy advert, no people looking at the camera.
+washer_running: A cheap webcam photo taken from about one metre away of the control panel of an ordinary white front-loading washing machine in a small UK utility room. The machine's small digital display clearly shows the remaining time '0:42' in bright segmented digits, with the 'Wash' indicator lit and the programme dial set to Cotton 40. The round drum door is visible in the lower part of the frame with clothes tumbling in soapy water. Slight glare on the display, laundry basket and detergent bottle nearby. Photoreal, natural and slightly imperfect: mild sensor noise, a little compression, uneven real-world lighting, unstaged clutter, not a glossy advert, no people looking at the camera.
+hob_cooking: A wide-angle home security camera mounted high in the corner of an ordinary UK domestic kitchen, looking down at a gas hob on the worktop. A frying pan sits on a lit front burner with a visible blue flame, and steam is rising from the pan. A person in a T-shirt stands at the hob stirring the pan with a wooden spatula, seen from behind and slightly to the side. An open doorway to the hall is visible on the right side of the frame. Small white CCTV timestamp overlay in the top-left corner. Photoreal, natural and slightly imperfect: mild sensor noise, a little compression, uneven real-world lighting, unstaged clutter, not a glossy advert, no people looking at the camera.
+bay_hivis: A ceiling-mounted CCTV camera in a warehouse loading bay, looking down at an open roller-shutter dock door, a pallet of shrink-wrapped boxes and a yellow-painted pedestrian walkway on a scuffed concrete floor. One warehouse worker stands next to the pallet scanning a box label with a handheld scanner; he wears a fluorescent yellow high-visibility vest with silver reflective stripes over a dark top, jeans and safety boots. Harsh mixed fluorescent and daylight lighting from the dock door. CCTV timestamp overlay in the top-left corner and the camera name 'DOCK 3' in the bottom-right. Photoreal, natural and slightly imperfect: mild sensor noise, a little compression, uneven real-world lighting, unstaged clutter, not a glossy advert, no people looking at the camera.
+shelf_full: A fixed shelf-monitoring camera in a UK supermarket aisle, looking straight at one section of shelving stocked with tins of soup on the upper shelves and jars of pasta sauce on the lower shelves, with small price labels on the shelf edges. Every facing is fully stocked, products pulled forward to the front edge, no gaps anywhere. Slight wide-angle distortion, flat fluorescent lighting. Photoreal, natural and slightly imperfect: mild sensor noise, a little compression, uneven real-world lighting, unstaged clutter, not a glossy advert, no people looking at the camera.
+EDIT SUFFIX: Keep the exact same camera angle, framing, lighting, grain, lens distortion and timestamp style; change only what is described. Photoreal.
+washer_done<-washer_running: Change only the washing machine's digital display: it now shows the word 'End' in the same segmented digits instead of the time, and the 'Wash' indicator is off. The cycle has finished: the drum is still, the clothes rest damp at the bottom of the drum and there is no soapy water. Keep the exact same camera angle, framing, lighting, grain, lens distortion and timestamp style; change only what is described. Photoreal.
+hob_unattended<-hob_cooking: Remove the person completely; the kitchen is now empty with nobody in it. The front gas burner is still lit under the frying pan and steam is still rising from the pan, spatula resting in the pan. Keep the exact same camera angle, framing, lighting, grain, lens distortion and timestamp style; change only what is described. Photoreal.
+bay_nohivis<-bay_hivis: Change only the worker's clothing: he is no longer wearing a high-visibility vest; he now wears a plain dark grey hoodie and jeans, with no fluorescent or reflective clothing anywhere on him. Same pose, same scanner. Keep the exact same camera angle, framing, lighting, grain, lens distortion and timestamp style; change only what is described. Photoreal.
+bay_empty<-bay_hivis: Remove the worker completely; the loading bay is empty with nobody in it. The pallet and everything else stays exactly where it is. Keep the exact same camera angle, framing, lighting, grain, lens distortion and timestamp style; change only what is described. Photoreal.
+shelf_gap<-shelf_full: Remove all the jars from the middle part of the second-lowest shelf, leaving a clear empty gap about a quarter of the shelf wide where the bare white shelf and back panel are visible; the price label for the missing product stays on the shelf edge. Everything else stays fully stocked. Keep the exact same camera angle, framing, lighting, grain, lens distortion and timestamp style; change only what is described. Photoreal.
+hob_off<-hob_unattended: Turn the hob off: no flame under any burner and no steam at all; the frying pan sits cold on the hob with the spatula in it. The kitchen stays empty. Keep the exact same camera angle, framing, lighting, grain, lens distortion and timestamp style; change only what is described. Photoreal.
+hob_off(v2)<-hob_unattended: Switch the gas hob off completely: there is no blue flame under any burner, all burner rings are dark and unlit, and there is no steam at all; the frying pan sits cold and still on the hob with the spatula in it. The kitchen stays empty. Keep the exact same camera angle, framing, lighting, grain, lens distortion and timestamp style; change only what is described. Photoreal.
+shelf_full(v2): A fixed shelf-monitoring camera in a UK supermarket, mounted opposite one bay of shelving about two metres away, looking straight at four shelves: tins of chopped tomatoes on the top shelf, tins of baked beans on the second, jars of pasta sauce on the third and bags of pasta on the bottom shelf, each with small yellow price labels on the shelf edge. Every shelf is completely and neatly fully stocked right across from edge to edge, products pulled forward, no gaps or missing items anywhere. Flat fluorescent lighting, slight wide-angle distortion. Photoreal, natural and slightly imperfect: mild sensor noise, a little compression, uneven real-world lighting, unstaged clutter, not a glossy advert, no people looking at the camera.
+shelf_gap(v2)<-shelf_full(v2): Remove the jars of pasta sauce from the middle third of the third shelf only, leaving one clear empty gap where the bare shelf and the back panel are visible; the yellow price label for the missing product stays on the shelf edge. Every other shelf and every other product stays exactly the same and fully stocked. Keep the exact same camera angle, framing, lighting, grain, lens distortion and timestamp style; change only what is described. Photoreal.
+VEO hob <- hob_cooking: The person stops stirring, rests the spatula in the pan, turns and walks out of the kitchen through the open doorway on the right and disappears down the hall. The gas burner stays lit under the frying pan and steam keeps rising from the pan. For the rest of the clip the kitchen is empty. Fixed static security camera, no camera movement, no cuts, realistic natural motion, slightly grainy CCTV footage, keep the timestamp overlay.
+VEO hivis <- bay_empty: A warehouse worker wearing a plain dark grey hoodie and jeans, with no high-visibility vest and no reflective clothing, walks in from the open dock door, crosses the loading bay floor and stops beside the pallet to look at a box label. Fixed static security camera, no camera movement, no cuts, realistic natural motion, slightly grainy CCTV footage, keep the timestamp overlay.
+```
+
+</details>
+
+## Home and office set
+
+### Models
 
 | what | model | settings |
 |---|---|---|
@@ -21,7 +102,7 @@ lighting, grain, lens distortion and timestamp style; change only what is descri
 Clip prompts end with: *"Fixed static security camera, no camera movement, no cuts, realistic
 natural motion, slightly grainy CCTV footage, keep the timestamp overlay."*
 
-## Annotated stills (`stills/*.webp`)
+### Annotated stills (`stills/*.webp`)
 
 Threshold in brackets. **Bold** = would fire.
 
@@ -49,7 +130,7 @@ Rule text is in [`rules/`](rules/) (`pet.yaml`, `doorbell.yaml`, ...). All 8 pai
 cleanly; none were dropped. Expect small run-to-run variation: an earlier identical call on
 `dog-couch` returned 92.6% for dog-on-sofa.
 
-## Clips (`clips/*.mp4|webm`, `hero.*`)
+### Clips (`clips/{dog,parcel,desk}.*`)
 
 Each clip is the Veo video (left) with a live panel (right) drawn from the real `ifseen watch`
 timeline. Decision *i* is video time *i* × 0.5 s. Bars ease between decisions only for smooth
@@ -62,9 +143,8 @@ the real fire time. The last frame is held for 1.25 s.
 | `parcel` | `door-empty` still; "courier in hi-vis places a parcel on the mat and walks away" | parcel-left (85%), person-at-door (80%) | person-at-door **fires 83.6% at 1.5 s**; parcel-left 14% → 77% (4.0 s, courier still there) → **fires 94.5% at 4.5 s** as he leaves |
 | `desk` | `laptop-person` still; "the worker stands up and walks away, laptop left unlocked" | laptop-unlocked-unattended (80%), person-at-desk (80%) | person-at-desk 90% (fires at 0.0 s) → 47.5% (2.0 s); unlocked-unattended 10% → **fires 82.0% at 3.0 s**, 90.5% by 5.5 s |
 
-`hero.mp4` / `hero.webm` are the three clips back to back (21.75 s). `hero.gif` is the dog clip
-only (900 px, 12 fps, 3.4 MB) for the project README: `docs/media/hero.gif`. Posters:
-`hero-poster.webp`, `clips/*-poster.webp`.
+These three clips used to make up `hero.*` and `hero.gif` (the dog clip); see the use-case
+section above for the current hero.
 
 Full per-decision numbers: `data/watch_dog.jsonl`, `data/watch_parcel.jsonl`,
 `data/watch_desk.jsonl` (raw `--json` events); stills: `data/stills.jsonl`.

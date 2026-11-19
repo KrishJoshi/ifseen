@@ -280,7 +280,7 @@ def test_bad_screen_number_is_a_usage_error(capsys):
 def test_unreadable_image_fails_cleanly(env, tmp_path):
     bad = tmp_path / "broken.png"
     bad.write_bytes(b"not a png")
-    proc = run_cli(["test", "build-watcher", "--image", str(bad)], env)
+    proc = run_cli(["test", "appliance-done", "--image", str(bad)], env)
     assert proc.returncode == 2
     assert "could not read broken.png" in proc.stderr
     assert "Traceback" not in proc.stderr
@@ -289,7 +289,7 @@ def test_unreadable_image_fails_cleanly(env, tmp_path):
 def test_bad_wav_in_test_command_fails_cleanly(env, red_png, tmp_path):
     bad = tmp_path / "bad.wav"
     bad.write_bytes(b"RIFF nope")
-    proc = run_cli(["test", "build-watcher", "--image", str(red_png), "--audio", str(bad)], env)
+    proc = run_cli(["test", "appliance-done", "--image", str(red_png), "--audio", str(bad)], env)
     assert proc.returncode == 2 and "PCM WAV" in proc.stderr
     assert "Traceback" not in proc.stderr
 

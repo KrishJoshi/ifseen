@@ -4,14 +4,15 @@
 
 **If seen (or heard), then do.**
 
-Plain-English triggers for your screen, camera and microphone.<br>
+Turn anything your screen, camera or mic can pick up into an event.<br>
+**No API. No integration. No model training.** Just a sentence.<br>
 Powered by the new *decision models*: Gemini Decision 1, Jev, Microsoft-Decision.
 
 ```bash
-ifseen "a person is at the front door" --camera 0 --ntfy my-phone
+ifseen "a pan is cooking on a lit hob and nobody is in the kitchen" --camera 0 --ntfy my-phone
 ```
 
-<img src="docs/media/hero.gif" alt="ifseen watching a pet camera: the dog-on-sofa rule fires at 93% when the dog jumps on the couch" width="900">
+<img src="docs/media/hero.gif" alt="ifseen watching a kitchen camera: the cook walks out leaving the hob on and the hob-unattended rule fires at 89%" width="900">
 
 <sub>AI-generated scene · real ifseen output (Gemini Decision 1) · <a href="https://krishjoshi.github.io/ifseen/">website</a></sub>
 
@@ -34,22 +35,38 @@ of audio) every couple of seconds, asks every rule at once, and runs your action
 comes true.
 
 ```yaml
-# ifseen.yaml
-source: screen
-every: 3s
+# ifseen.yaml - a webcam pointed at a washing machine that has no app
+source: {camera: 0}
+every: 30s
 rules:
-  - name: build-failed
-    when: A CI pipeline on screen has failed.
+  - name: cycle-finished
+    when: The washing machine's display shows the cycle has finished, such as "End" or "0:00".
+    false_means: The display shows time remaining and the cycle is still running.
+    for: 2
     then:
-      - notify: "Build failed"
-      - say: build failed
+      - ntfy: my-laundry-topic
+      - say: the washing is done
 ```
+
+## What it's for: things with no API
+
+If a person can see it or hear it, ifseen can turn it into an event. Every number below is a
+real `ifseen test` output (rule true / near-identical frame where it's false) on
+[AI-generated scenes](docs/media/README.md):
+
+| use case | the old way | ifseen rule | Gemini Decision 1 | TypeSafe Jev |
+|---|---|---|---|---|
+| Hob left on, nobody in the kitchen | heat sensor + presence sensor + glue logic | "A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen." | 94.4% / 3.2% | 96% / 2% |
+| Dumb washing machine finished | replace the machine, or smart-plug power guessing | "The washing machine's display shows the cycle has finished…" | 95.7% / 5.8% | 98% / 2% |
+| No hi-vis vest in the loading bay | label thousands of images, train a detector, retrain per site | "A person in the loading bay is wearing ordinary clothes with no high-visibility vest." | 91.9% / 4.7% | 98% / 4% |
+| Empty shelf, restock needed | shelf-scanning robots or custom CV | "Part of a shelf is empty, with a visible gap where products should be." | 94.3% / 26.6% | 97% / 33% |
+| Alarm on a legacy HMI with no API | RPA / screen-scraping bots, or someone watching | "The control screen shows an active alarm, such as a red alarm banner or a tripped pump." | 97.0% / 1.4% | 99% / 3% |
 
 ## Why it's nice
 
 - **Plain English, no training.** No bounding boxes, no labelled data, no model to fine-tune.
-  Ask about *anything* you'd ask a person: "the 3D print has turned into spaghetti", "someone
-  asks me a question", "the pot is boiling over".
+  Ask about *anything* you'd ask a person: "someone in the loading bay has no hi-vis vest",
+  "someone asks me a question", "the pot is boiling over".
 - **One call for all your rules.** 3 rules or 300, it's the same single request per frame.
 - **Cheap by default.** Unchanged frames and silent audio are skipped automatically, so a
   static scene costs almost nothing. A live dashboard shows spend as you go.
@@ -89,8 +106,8 @@ printed instead of run).
 ## 30-second tour
 
 ```bash
-# Screen: tell me when my long-running thing finishes, then quit
-ifseen "a progress bar or download on screen has completed" --say "done" --once
+# Screen: a legacy app with no API raises an alarm (works inside Citrix/RDP windows too)
+ifseen "the control screen shows a red alarm banner" --screen 1 --ntfy plant-alerts --for 2
 
 # Webcam: kettle timer that actually looks
 ifseen "a pot of water is at a rolling boil" --camera 0 --say "water's boiling"
@@ -118,12 +135,14 @@ ifseen init doorbell              # write ./ifseen.yaml to customise
 
 | recipe | source | what it does |
 |---|---|---|
-| `build-watcher` | screen | CI build/deploy failed or passed |
-| `done-yet` | screen | a download, render, export or test run finished |
+| `appliance-done` | camera | a dumb washer/dishwasher display shows End / 0:00 → push + speech |
+| `warehouse-safety` | camera | someone in the loading bay without a hi-vis vest, person near a forklift → webhook with photo |
+| `shelf-restock` | URL | a visible gap on a shelf → webhook with photo |
+| `legacy-screen-alarm` | screen | an HMI / SCADA / vendor app shows an alarm → urgent push |
 | `focus-guard` | screen | nudges you off doomscrolling and video binges |
 | `doorbell` | camera / URL | person at the door, parcel left → phone push with photo |
 | `print-failure` | camera | 3D print "spaghetti" → push alert (+ OctoPrint pause example) |
-| `kitchen` | camera | water boiling, pot boiling over, smoke |
+| `kitchen` | camera | water boiling, pot boiling over, smoke, hob left on with nobody there |
 | `pet-patrol` | camera | dog on the sofa, cat on the counter |
 | `meeting-radar` | mic | your name, a question for you, an action item for you |
 | `baby-monitor` | camera + mic | crying, standing in the cot, face covered |
@@ -304,6 +323,7 @@ probs = check("door.jpg", {"parcel": "A parcel is on the doorstep."})   # your o
 
 # Long-running: same shapes as the YAML file
 w = Watcher(source={"camera": 0}, provider="gemini", every="2s")
+# keys come from env vars (GEMINI_API_KEY, ...) or explicitly: Watcher(..., provider="jev", api_key="...")
 
 @w.when("A person is at the front door.", threshold=0.85, for_=2, cooldown="1m", name="person")
 def person(event: FireEvent) -> None:          # async def works too

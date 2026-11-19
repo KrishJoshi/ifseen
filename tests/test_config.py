@@ -116,7 +116,17 @@ def test_every_recipe_is_valid(name):
 
 
 def test_recipes_exist():
-    assert {"doorbell", "build-watcher", "meeting-radar", "print-failure"} <= set(recipe_names())
+    expected = {
+        "doorbell",
+        "appliance-done",
+        "warehouse-safety",
+        "shelf-restock",
+        "legacy-screen-alarm",
+        "meeting-radar",
+        "print-failure",
+    }
+    assert expected <= set(recipe_names())
+    assert not {"build-watcher", "done-yet"} & set(recipe_names())
 
 
 def test_examples_are_valid(monkeypatch):

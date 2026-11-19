@@ -1,0 +1,18 @@
+source:
+  file:
+    path: /tmp/ifseen-uc/vid/hivis.mp4
+    realtime: false
+every: 500ms
+skip_unchanged: false
+rules:
+- name: no-hivis
+  when: A person in the loading bay is wearing ordinary clothes with no high-visibility vest.
+  false_means: Everyone visible wears a fluorescent hi-vis vest, or the loading bay is empty.
+  threshold: 0.8
+  then:
+  - log: '{rule} {percent}'
+- name: bay-empty
+  when: The loading bay is empty, with nobody in it.
+  threshold: 0.8
+  then:
+  - log: '{rule} {percent}'

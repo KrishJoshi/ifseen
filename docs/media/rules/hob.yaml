@@ -1,0 +1,19 @@
+source:
+  camera: 0
+rules:
+- name: hob-unattended
+  when: A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen.
+  false_means: Someone is standing at the hob, or the hob is off and nothing is cooking.
+  threshold: 0.8
+  then:
+  - log
+- name: person-cooking
+  when: A person is standing at the hob cooking.
+  threshold: 0.8
+  then:
+  - log
+- name: hob-off
+  when: The hob is off and nothing on it is cooking.
+  threshold: 0.8
+  then:
+  - log

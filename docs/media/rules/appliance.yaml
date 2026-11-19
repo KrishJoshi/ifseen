@@ -1,0 +1,14 @@
+source:
+  camera: 0
+rules:
+- name: cycle-finished
+  when: The washing machine's display shows the cycle has finished, such as "End", "0:00" or a done light.
+  false_means: The display shows time remaining, such as 0:42, and the cycle is still running.
+  threshold: 0.8
+  then:
+  - log
+- name: cycle-running
+  when: The washing machine's display shows time remaining and the cycle is still running.
+  threshold: 0.8
+  then:
+  - log

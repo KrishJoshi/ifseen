@@ -76,12 +76,14 @@
 
   /* ---------- recipes ---------- */
   var RECIPES = [
-    { name: "build-watcher", icon: "🛠️", color: "coral", src: ["screen"], desc: "Says it out loud the moment a CI build or deploy on screen fails or passes.", rules: ["build-failed", "build-passed"] },
-    { name: "done-yet", icon: "⏳", color: "gold", src: ["screen"], desc: "Pings you when a download, render, export, install or test run finishes, then exits.", rules: ["task-finished"] },
+    { name: "appliance-done", icon: "🧺", color: "gold", src: ["camera"], desc: "Makes a dumb washing machine or dishwasher smart: reads End / 0:00 off its display and pings you.", rules: ["cycle-finished"] },
+    { name: "warehouse-safety", icon: "🦺", color: "coral", src: ["camera"], desc: "PPE check on existing CCTV: someone in the loading bay without a hi-vis vest. No training data.", rules: ["no-hivis", "person-near-forklift"] },
+    { name: "shelf-restock", icon: "🛒", color: "mint", src: ["url"], desc: "Restock alerts from a camera facing the shelf: a visible gap where products should be.", rules: ["shelf-gap"] },
+    { name: "legacy-screen-alarm", icon: "🚨", color: "forest", src: ["screen"], desc: "Turns a legacy HMI, SCADA or vendor app (even in Citrix/RDP) into an event. No API needed.", rules: ["alarm-active"] },
     { name: "focus-guard", icon: "🧘", color: "mint", src: ["screen"], desc: "A gentle nudge when you drift onto social feeds or a video binge during focus time.", rules: ["doomscrolling", "video-binge"] },
     { name: "doorbell", icon: "🚪", color: "forest", src: ["camera", "url"], desc: "Person at the door or a parcel left behind, pushed to your phone with the photo.", rules: ["person-at-door", "parcel-left"] },
     { name: "print-failure", icon: "🍝", color: "coral", src: ["camera"], desc: "Catches 3D print spaghetti with an urgent push (plus an OctoPrint pause example).", rules: ["spaghetti", "print-finished"] },
-    { name: "kitchen", icon: "🍳", color: "gold", src: ["camera"], desc: "A kitchen timer that actually looks: water boiling, pot boiling over, smoke.", rules: ["boiling", "boiling-over", "smoke"] },
+    { name: "kitchen", icon: "🍳", color: "gold", src: ["camera"], desc: "A kitchen timer that actually looks, plus the hob left on with nobody in the kitchen.", rules: ["boiling", "boiling-over", "smoke", "hob-unattended"] },
     { name: "pet-patrol", icon: "🐕", color: "mint", src: ["camera"], desc: "Catches the dog on the sofa or the cat on the counter and tells them off.", rules: ["dog-on-sofa", "cat-on-counter"] },
     { name: "meeting-radar", icon: "👂", color: "forest", src: ["mic"], desc: "Zoned out on a call? Buzzes you when someone says your name or asks you something.", rules: ["name-called", "question-for-me", "action-item"] },
     { name: "baby-monitor", icon: "👶", color: "coral", src: ["camera", "mic"], desc: "Crying, standing up in the cot, or face covered, with urgent pushes.", rules: ["crying", "standing-up", "face-covered"] }
@@ -102,12 +104,12 @@
 
   /* ---------- example rule cards ---------- */
   var CARDS = [
-    { rule: "spaghetti", recipe: "print-failure", icon: "🍝", color: "coral", thr: 0.85, n: 3, cd: "15m", src: "camera", bar: "var(--coral)", when: 'The 3D print has failed - a tangled mess of loose filament ("spaghetti"), a print knocked off the bed, or the nozzle printing into thin air.', then: ["ntfy", "urgent push"] },
+    { rule: "hob-unattended", recipe: "kitchen", icon: "🔥", color: "coral", thr: 0.8, n: 3, cd: "5m", src: "camera", bar: "var(--coral)", when: "A pan is cooking on a lit hob, with flame or steam, and nobody is in the kitchen.", then: ["ntfy", "urgent push + say"] },
+    { rule: "no-hivis", recipe: "warehouse-safety", icon: "🦺", color: "gold", thr: 0.8, n: 2, cd: "5m", src: "camera", bar: "var(--gold)", when: "A person in the loading bay is wearing ordinary clothes with no high-visibility vest.", then: ["webhook", "with the frame attached"] },
+    { rule: "alarm-active", recipe: "legacy-screen-alarm", icon: "🚨", color: "mint", thr: 0.85, n: 2, cd: "10m", src: "screen", bar: "var(--mint)", when: "The control screen shows an active alarm, such as a red alarm banner or a tripped pump.", then: ["ntfy", "urgent push + snapshot"] },
     { rule: "name-called", recipe: "meeting-radar", icon: "👂", color: "gold", thr: 0.75, n: 1, cd: "20s", src: "mic", bar: "var(--gold)", when: 'Someone in the audio says the name "${MY_NAME:-Alex}" or addresses that person directly.', then: ["notify", "say: heads up"] },
     { rule: "face-covered", recipe: "baby-monitor", icon: "👶", color: "mint", thr: 0.7, n: 2, cd: "1m", src: "camera + mic", bar: "var(--mint)", when: "A blanket, toy or pillow is covering the baby's face.", then: ["ntfy", "\u201cCheck on the baby\u201d"] },
-    { rule: "doomscrolling", recipe: "focus-guard", icon: "🧘", color: "mint", thr: 0.8, n: 3, cd: "10m", src: "screen", bar: "var(--mint)", when: "The screen is mostly showing a social media feed or short-form video (X/Twitter, Instagram, TikTok, Reddit, YouTube Shorts, Facebook).", then: ["say", "back to work"] },
-    { rule: "boiling-over", recipe: "kitchen", icon: "🍳", color: "gold", thr: 0.75, n: 1, cd: "2m", src: "camera", bar: "var(--gold)", when: "A pot is boiling over, or liquid is spilling onto the hob.", then: ["say", "pot boiling over"] },
-    { rule: "dog-on-sofa", recipe: "pet-patrol", icon: "🐕", color: "coral", thr: 0.85, n: 2, cd: "2m", src: "camera", bar: "var(--coral)", when: "A dog is on the sofa or couch.", then: ["shell", "play \u201coff the sofa\u201d + snapshot"] }
+    { rule: "spaghetti", recipe: "print-failure", icon: "🍝", color: "coral", thr: 0.85, n: 3, cd: "15m", src: "camera", bar: "var(--coral)", when: 'The 3D print has failed - a tangled mess of loose filament ("spaghetti"), a print knocked off the bed, or the nozzle printing into thin air.', then: ["ntfy", "urgent push"] }
   ];
   var QUOTE = '<svg viewBox="0 0 24 24" fill="#1A3C2B" aria-hidden="true"><path d="M3 6h7v7H6.5c0 2 1.2 3.3 3.5 3.5V19c-4.4 0-7-2.6-7-7V6zm11 0h7v7h-3.5c0 2 1.2 3.3 3.5 3.5V19c-4.4 0-7-2.6-7-7V6z"/></svg>';
   var cards = document.getElementById("rule-cards");

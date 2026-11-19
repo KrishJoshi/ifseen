@@ -1,0 +1,19 @@
+# Make a dumb washing machine, dishwasher or dryer "smart": point an old phone or webcam at its display.
+# No smart plug, no power-draw guessing - it reads "End" / 0:00 / the done light like you would.
+source:
+  camera: ${APPLIANCE_CAMERA:-0}
+every: 30s
+provider:
+  resolution: low  # gemini: ~2.5x fewer tokens; ignored by other providers
+rules:
+  - name: cycle-finished
+    when: The appliance's display shows the cycle has finished, such as "End", "0:00" or a done light.
+    false_means: The display shows time remaining, such as 0:42, and the cycle is still running.
+    threshold: 0.8
+    for: 2
+    cooldown: 1h
+    then:
+      - ntfy:
+          topic: ${NTFY_TOPIC:-ifseen-laundry-change-me}
+          title: "🧺 Washing's done"
+      - say: the washing is done

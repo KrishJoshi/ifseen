@@ -411,7 +411,7 @@ def cmd_recipes(argv: list[str]) -> int:
 
 def cmd_init(argv: list[str]) -> int:
     p = argparse.ArgumentParser(prog="ifseen init", description="Write a starter rules file.")
-    p.add_argument("recipe", nargs="?", default="build-watcher")
+    p.add_argument("recipe", nargs="?", default="appliance-done")
     p.add_argument("-o", "--output", default="ifseen.yaml")
     p.add_argument("--force", action="store_true")
     args = p.parse_args(argv)
@@ -572,7 +572,7 @@ def _print_help() -> None:
     out.print(f"""[bold]ifseen {VERSION}[/] - if seen (or heard), then do.
 
 [bold]quick start[/]
-  ifseen "a CI build on screen has failed" --say "build broke"
+  ifseen "the washing machine display shows End" --camera 0 --say "washing done"
   ifseen "a person is at the door" --camera 0 --ntfy my-topic
   ifseen "someone says my name" --mic --notify --provider gemini
 

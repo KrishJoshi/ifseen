@@ -1,0 +1,20 @@
+# Turn a legacy HMI / SCADA screen or old vendor app (even inside a Citrix or RDP window) into an event.
+# No API, no OPC connector, no RPA bot - just watch the pixels the operator sees.
+source:
+  screen: 1  # or {monitor: 1, region: [x, y, w, h]} to watch just the HMI window
+every: 5s
+context: Industrial control software showing a process line.
+rules:
+  - name: alarm-active
+    when: The control screen shows an active alarm, such as a red alarm banner or a tripped pump.
+    false_means: The screen shows normal operation with no active alarms.
+    threshold: 0.85
+    for: 2
+    cooldown: 10m
+    ha_device_class: problem
+    then:
+      - ntfy:
+          topic: ${NTFY_TOPIC:-ifseen-plant-change-me}
+          title: "🚨 Line alarm"
+          priority: urgent
+      - snapshot: ~/ifseen-captures/hmi
