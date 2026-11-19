@@ -1,0 +1,40 @@
+configuration:
+  provider:
+    name: Decision provider
+    description: Which model answers your rules. "auto" picks the first one with a key below.
+  gemini_api_key:
+    name: Gemini API key
+    description: Free key from https://aistudio.google.com/apikey (images and audio).
+  typesafe_api_key:
+    name: TypeSafe (Jev) API key
+  openai_api_key:
+    name: OpenAI-compatible API key
+  openai_base_url:
+    name: OpenAI-compatible base URL
+  azure_decision_endpoint:
+    name: Azure decision endpoint
+  azure_decision_key:
+    name: Azure decision key
+  azure_decision_deployment:
+    name: Azure decision deployment
+  rules_path:
+    name: Rules location
+    description: A folder of *.yaml rules files (one watcher each) or a single file. /config is this add-on's folder (/addon_configs/<slug> on the host); /homeassistant is your HA config (read-only).
+  rules:
+    name: Inline rules
+    description: Optional. A whole rules file pasted as YAML, run in addition to the files above.
+  name:
+    name: Inline rules device name
+    description: Device id for the inline rules (default "ifseen").
+  mqtt_host:
+    name: MQTT host
+    description: Leave empty to use the Mosquitto add-on automatically.
+  mqtt_port:
+    name: MQTT port
+  mqtt_username:
+    name: MQTT username
+  mqtt_password:
+    name: MQTT password
+  dry_run:
+    name: Dry run
+    description: Random probabilities and no real actions - test your Home Assistant setup without an API key.

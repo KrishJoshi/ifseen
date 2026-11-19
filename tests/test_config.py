@@ -122,7 +122,7 @@ def test_recipes_exist():
 def test_examples_are_valid(monkeypatch):
     from pathlib import Path
 
-    for var in ("OCTOPRINT_URL", "NTFY_TOPIC", "HA_TOKEN"):
+    for var in ("OCTOPRINT_URL", "NTFY_TOPIC", "HA_TOKEN", "MQTT_PASSWORD"):
         monkeypatch.setenv(var, "x")
     examples = sorted((Path(__file__).parent.parent / "examples").glob("*.yaml"))
     assert examples

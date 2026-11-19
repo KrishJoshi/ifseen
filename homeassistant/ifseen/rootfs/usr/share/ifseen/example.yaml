@@ -1,0 +1,20 @@
+# One file = one watcher = one Home Assistant device. The file name (front-door) is the
+# device id; `mqtt:` is filled in by the add-on from the Mosquitto add-on automatically.
+# Rules without `then:` only update their Home Assistant entities: automate in HA.
+source:
+  url:
+    url: http://supervisor/core/api/camera_proxy/camera.front_door
+    headers:
+      Authorization: Bearer ${SUPERVISOR_TOKEN}
+every: 3s
+rules:
+  - name: person-at-door
+    when: A person is standing at the front door.
+    threshold: 0.85
+    for: 2
+    ha_device_class: occupancy
+  - name: parcel-left
+    when: A parcel or package has been left on the doorstep.
+    threshold: 0.85
+    for: 2
+    cooldown: 10m

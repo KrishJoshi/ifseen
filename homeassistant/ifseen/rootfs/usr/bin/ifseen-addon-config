@@ -1,0 +1,64 @@
+#!/opt/ifseen/bin/python3
+"""Prepare rules files for the add-on: OUT_DIR FILE... -> prints the prepared paths.
+
+Adds an mqtt: section pointing at the add-on's broker when a file has none, and the
+add-on's provider when a file doesn't pick one. Credentials stay ${VAR} references.
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+import yaml
+
+from ifseen.config import ConfigError, load_config
+
+
+def prepare(data: dict, env: dict[str, str]) -> dict:
+    out = dict(data)
+    provider = env.get("IFSEEN_PROVIDER", "auto")
+    if "provider" not in out and provider != "auto":
+        out["provider"] = provider
+    if "mqtt" not in out and env.get("IFSEEN_MQTT_HOST"):
+        mqtt: dict = {"host": "${IFSEEN_MQTT_HOST}", "port": int(env.get("IFSEEN_MQTT_PORT") or 1883)}
+        if env.get("IFSEEN_MQTT_USERNAME"):
+            mqtt["username"] = "${IFSEEN_MQTT_USERNAME}"
+        if env.get("IFSEEN_MQTT_PASSWORD"):
+            mqtt["password"] = "${IFSEEN_MQTT_PASSWORD}"
+        if env.get("IFSEEN_MQTT_TLS") == "true":
+            mqtt["tls"] = True
+        out["mqtt"] = mqtt
+    return out
+
+
+def main(argv: list[str]) -> int:
+    out_dir, files = Path(argv[0]), argv[1:]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    failed = False
+    taken: set[str] = set()
+    for name in files:
+        path = Path(name)
+        try:
+            data = yaml.safe_load(path.read_text())
+            if not isinstance(data, dict):
+                raise ConfigError("expected a mapping at the top level")
+            data = prepare(data, dict(os.environ))
+            load_config(data)  # fail early, with the same messages as `ifseen watch`
+        except (OSError, yaml.YAMLError, ConfigError) as e:
+            print(f"{path}: {e}", file=sys.stderr)
+            failed = True
+            continue
+        stem, n = path.stem, 2
+        while stem in taken:
+            stem, n = f"{path.stem}-{n}", n + 1
+        taken.add(stem)
+        target = out_dir / f"{stem}.yaml"
+        target.write_text(yaml.safe_dump(data, sort_keys=False))
+        print(target)
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
 
 from .constants import (
     ACTION_KINDS,
@@ -22,12 +22,19 @@ from .constants import (
     DEFAULT_PREFILTER_THRESHOLD,
     DEFAULT_SILENCE_RMS,
     DEFAULT_THRESHOLD,
+    HA_BINARY_SENSOR_DEVICE_CLASSES,
     MAX_QUESTIONS,
+    MQTT_DEFAULT_BASE_TOPIC,
+    MQTT_DEFAULT_DISCOVERY_PREFIX,
+    MQTT_DEFAULT_KEEPALIVE,
+    MQTT_DEFAULT_PORT,
+    WATCHER_ID_PATTERN,
 )
 
 _DURATION = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*(ms|s|m|h)?\s*$")
 _UNITS = {"ms": 0.001, "s": 1.0, "m": 60.0, "h": 3600.0, None: 1.0}
 _RULE_NAME = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+_WATCHER_ID = re.compile(WATCHER_ID_PATTERN)
 
 ProviderName = Literal[
     "auto", "gemini", "jev", "azure", "systemone", "openai", "ollama", "local", "mock"
@@ -161,6 +168,7 @@ class Rule(_Strict):
     then: list[Action] = Field(default_factory=list)
     true_means: str | None = None
     false_means: str | None = None
+    ha_device_class: str | None = None  # Home Assistant binary_sensor device class (MQTT)
 
     @field_validator("name")
     @classmethod
@@ -187,6 +195,16 @@ class Rule(_Strict):
     @classmethod
     def _cooldown(cls, v: Any) -> float:
         return parse_duration(v)
+
+    @field_validator("ha_device_class")
+    @classmethod
+    def _device_class(cls, v: str | None) -> str | None:
+        if v is not None and v not in HA_BINARY_SENSOR_DEVICE_CLASSES:
+            raise ValueError(
+                f"unknown Home Assistant binary_sensor device class {v!r}; expected one of "
+                f"{sorted(HA_BINARY_SENSOR_DEVICE_CLASSES)}"
+            )
+        return v
 
     @field_validator("then", mode="before")
     @classmethod
@@ -242,6 +260,91 @@ class Prefilter(_Strict):
         return v
 
 
+def _check_topic(v: str, what: str) -> str:
+    if not v or v.startswith("/") or v.endswith("/") or "//" in v:
+        raise ValueError(f"{what} must be non-empty with no leading, trailing or double '/'")
+    if any(c in v for c in "#+") or any(c.isspace() for c in v):
+        raise ValueError(f"{what} can't contain '#', '+' or whitespace")
+    return v
+
+
+class MqttTls(_Strict):
+    ca_certs: str | None = None  # CA bundle; None = the system's trusted CAs
+    certfile: str | None = None  # client certificate, for brokers that require one
+    keyfile: str | None = None
+    insecure: bool = False  # skip hostname verification (self-signed test brokers only)
+
+
+class MqttConfig(_Strict):
+    """Publish rule states to an MQTT broker, with Home Assistant discovery."""
+
+    host: str
+    port: int = Field(MQTT_DEFAULT_PORT, ge=1, le=65535)
+    username: str | None = None
+    password: SecretStr | None = None
+    tls: MqttTls | None = None
+    client_id: str | None = None
+    keepalive: int = Field(MQTT_DEFAULT_KEEPALIVE, ge=5, le=3600)
+    base_topic: str = MQTT_DEFAULT_BASE_TOPIC
+    discovery: bool = True
+    discovery_prefix: str = MQTT_DEFAULT_DISCOVERY_PREFIX
+    id: str | None = None  # watcher id in topics and unique_ids; default derived
+    name: str | None = None  # Home Assistant device name; default derived from id
+    fire_image: bool = True  # publish the frame that triggered the latest fire
+    frame_every: float = 0.0  # also publish the latest analysed frame this often; 0 = off
+    pause_switch: bool = True  # a HA switch that pauses/resumes the watcher
+
+    @model_validator(mode="before")
+    @classmethod
+    def _shorthand(cls, data: Any) -> Any:
+        # "mqtt: core-mosquitto" / "mqtt: broker.lan:8883"
+        if isinstance(data, str):
+            host, sep, port = data.rpartition(":")
+            if sep and port.isdigit() and host and ":" not in host:
+                return {"host": host, "port": int(port)}
+            return {"host": data}
+        if isinstance(data, dict) and data.get("tls") is True:
+            data = {**data, "tls": {}}
+        elif isinstance(data, dict) and data.get("tls") is False:
+            data = {**data, "tls": None}
+        return data
+
+    @field_validator("host")
+    @classmethod
+    def _host(cls, v: str) -> str:
+        v = v.strip()
+        if not v or "://" in v or "/" in v:
+            raise ValueError("host must be a hostname or IP, e.g. 'core-mosquitto'")
+        return v
+
+    @field_validator("id")
+    @classmethod
+    def _id(cls, v: str | None) -> str | None:
+        if v is not None and not _WATCHER_ID.match(v):
+            raise ValueError("id must be 1-64 chars of letters, digits, '_' or '-'")
+        return v
+
+    @field_validator("base_topic")
+    @classmethod
+    def _base(cls, v: str) -> str:
+        return _check_topic(v, "base_topic")
+
+    @field_validator("discovery_prefix")
+    @classmethod
+    def _prefix(cls, v: str) -> str:
+        return _check_topic(v, "discovery_prefix")
+
+    @field_validator("frame_every", mode="before")
+    @classmethod
+    def _frame_every(cls, v: Any) -> float:
+        seconds = parse_duration(v)
+        if 0 < seconds < 1:
+            raise ValueError("frame_every must be 0 (off) or at least 1s")
+        if seconds < 0:
+            raise ValueError("frame_every can't be negative")
+        return seconds
+
+
 class WatchConfig(_Strict):
     source: SourceConfig
     provider: ProviderConfig = Field(default_factory=ProviderConfig)
@@ -251,6 +354,7 @@ class WatchConfig(_Strict):
     change_threshold: float = DEFAULT_CHANGE_THRESHOLD
     max_skip: float = DEFAULT_MAX_SKIP_SECONDS
     context: str | None = None  # extra text sent alongside each sample
+    mqtt: MqttConfig | None = None
     rules: list[Rule]
 
     @field_validator("every", "max_skip", mode="before")

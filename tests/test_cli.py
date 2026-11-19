@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -353,3 +354,19 @@ rules:
     proc = run_cli(["watch", str(rules), "--json", "--max-ticks", "1"], env)
     assert proc.returncode == 2
     assert "prefilter provider openai can't handle audio" in proc.stderr
+
+
+def test_sigterm_is_treated_like_ctrl_c():
+    import os
+    import signal
+
+    from ifseen.cli import _sigterm_as_interrupt
+
+    previous = signal.getsignal(signal.SIGTERM)
+    try:
+        _sigterm_as_interrupt()
+        with pytest.raises(KeyboardInterrupt):
+            os.kill(os.getpid(), signal.SIGTERM)
+            time.sleep(1)  # the handler runs between bytecodes; never reached
+    finally:
+        signal.signal(signal.SIGTERM, previous)

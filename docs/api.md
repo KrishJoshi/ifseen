@@ -52,6 +52,7 @@ Every error is a JSON body with a stable machine-readable `code`:
 | 403 | `bad_host` | no token configured and the `Host` header isn't loopback |
 | 403 | `shell_not_allowed` | config has a `shell` action and the server lacks `--allow-shell` |
 | 403 | `custom_endpoint_not_allowed` | provider `base_url` / `api_key_env` without `--allow-custom-endpoints` |
+| 403 | `mqtt_not_allowed` | config has an `mqtt` section without `--allow-custom-endpoints` |
 | 404 | `not_found` | unknown endpoint or watcher |
 | 404 | `no_snapshot` | watcher hasn't captured an image yet |
 | 405 | `method_not_allowed` | known path, wrong method |
@@ -169,6 +170,9 @@ Differences from running the same file with `ifseen watch`:
   that isn't an action name (`then: "echo hi"`) *is* a shell action.
 - provider / prefilter-provider `base_url` or `api_key_env` → `403
   custom_endpoint_not_allowed` unless `--allow-custom-endpoints`.
+- an `mqtt` section → `403 mqtt_not_allowed` unless `--allow-custom-endpoints` (it would
+  stream frames to any broker the client names). Watchers preloaded from files may use it;
+  their MQTT id defaults to the watcher id. See [homeassistant.md](homeassistant.md).
 
 Watchers live in memory only; they're gone when the server restarts.
 
@@ -181,6 +185,7 @@ Watchers live in memory only; they're gone when the server restarts.
   "id": "front-door",
   "created": 1763560000.123,
   "running": true,
+  "paused": false,
   "stop_reason": null,
   "error": null,
   "source": "url frigate.local/api/front/latest.jpg",
@@ -196,6 +201,7 @@ Watchers live in memory only; they're gone when the server restarts.
       "prob": 0.912,
       "streak": 1,
       "armed": true,
+      "active": false,
       "fires": 3,
       "last_fired": 1763560321.5,
       "status": "confirming 1/2",
@@ -224,12 +230,14 @@ Watchers live in memory only; they're gone when the server restarts.
 | field | |
 |---|---|
 | `running` | the watch loop is active |
+| `paused` | paused (from Python `Watcher.pause()` or the Home Assistant switch): no captures, no calls |
 | `stop_reason` | why the last run ended (see `stop` event), `null` if it never ran |
 | `error` | message of the fatal error that ended the last run (bad key, missing camera...), else `null` |
 | `source`, `provider` | human-readable descriptions; before the first start, just the configured kinds/names |
 | `rules[].prob` | latest probability (0 before the first decision) |
 | `rules[].streak` | consecutive ticks at/above threshold |
 | `rules[].armed` | `false` after firing until the probability drops below threshold − hysteresis |
+| `rules[].active` | `true` from a fire until it re-arms, i.e. `!armed` (what the Home Assistant binary sensor shows) |
 | `rules[].fires` | fires in the current run |
 | `rules[].last_fired` | epoch time of the last fire in the current run, or `null` |
 | `rules[].status` | `"idle"` (not started), `"watching"`, `"confirming N/M"`, `"fired, clearing"` |
@@ -294,14 +302,16 @@ data: {"event": "fire", "watcher": "front-door", "time": 1763560321.5, "rule": "
 
 Every event has `event` (the kind), `watcher` (id) and `time`. The same dicts (minus
 `watcher`) are what `Watcher.on_event` subscribers get in Python and what `ifseen ... --json`
-prints.
+prints. New event kinds may be added; clients should ignore kinds they don't know.
 
 | event | fields | |
 |---|---|---|
 | `start` | `source`, `provider`, `rules` (names), `prefilter`? | a run began |
 | `decision` | `probs` `{rule: prob}`, `latency_ms`, `tokens`, `prefilter`?, `skipped`? | one model call. Unchanged/silent ticks that reuse the previous answer emit nothing; a prefilter-gated tick has `skipped: "prefilter"`, `prefilter: <prob>` and all-zero `probs` |
 | `fire` | `rule`, `when`, `probability` | a rule fired (after threshold, `for`, cooldown, hysteresis) |
-| `error` | `message`, `retry_in`?, `fatal`?, `origin`? | `retry_in`: provider error, backing off N s. `fatal: true`: the run is ending (a `stop` follows). `origin: "callback"`: a Python callback/listener raised |
+| `clear` | `rule`, `probability` | a fired rule re-armed (probability fell below threshold − hysteresis); it's no longer `active` |
+| `pause` · `resume` | | the watcher was paused / resumed; while paused no ticks run |
+| `error` | `message`, `retry_in`?, `fatal`?, `origin`? | `retry_in`: provider error, backing off N s. `fatal: true`: the run is ending (a `stop` follows). `origin: "callback"`: a Python callback/listener raised; `"observer"`: an integration such as MQTT failed (reported once per failure streak) |
 | `log` | `level` (`info` \| `warn` \| `error` \| `dry`), `message` | output from actions (`log` action, action failures, dry-run lines). URLs and tokens are never included |
 | `stop` | `reason` | the run ended. Exactly one per run |
 

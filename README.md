@@ -67,8 +67,8 @@ pipx install "ifseen[all]"        # or: uv tool install "ifseen[all]"
 ```
 
 Extras if you want to keep it lean: `ifseen[screen]` (mss), `ifseen[camera]` (OpenCV, also
-used for video files and RTSP), `ifseen[mic]` (sounddevice). Snapshot URLs, images and WAV
-files need no extras. `ifseen[local]` (torch + transformers) adds the free offline provider;
+used for video files and RTSP), `ifseen[mic]` (sounddevice), `ifseen[mqtt]` (paho-mqtt, for
+[Home Assistant](#home-assistant)). Snapshot URLs, images and WAV files need no extras. `ifseen[local]` (torch + transformers) adds the free offline provider;
 it's big, so it isn't part of `all`.
 
 Then get a key. The easiest is a **free Gemini API key** from
@@ -149,6 +149,7 @@ skip_unchanged: true        # don't call the API when the frame hasn't changed /
 change_threshold: 0.25      # % of pixels that must change for a frame to count as changed
 max_skip: 60s               # ...but re-check at least this often
 context: Camera above my 3D printer.   # optional text sent with every capture
+mqtt: core-mosquitto        # optional: publish to Home Assistant, see docs/homeassistant.md
 
 prefilter:                  # optional cheap first check, see "Cheap first check" below
   provider: local           #   any provider; required, never auto-detected
@@ -163,6 +164,7 @@ rules:
     for: 3                  # consecutive hits before firing (default 1)
     cooldown: 15m           # minimum time between fires (default 30s)
     hysteresis: 0.15        # re-arm only once probability drops below threshold - this
+    ha_device_class: problem  # optional, Home Assistant binary_sensor device class (mqtt)
     then:
       - notify: "Print failed ({percent})"         # desktop notification
       - say: print failed                           # text to speech
@@ -353,10 +355,34 @@ you pass `--allow-custom-endpoints`, and don't get `${VAR}` expansion. Rule file
 the command line are trusted as usual. Bodies are capped at 25 MB. Full reference, including
 request/response and event schemas: [docs/api.md](docs/api.md).
 
+## Home Assistant
+
+Add an `mqtt:` section and every rule shows up in Home Assistant through MQTT discovery: one
+device per rules file, a binary sensor per rule (on while it's fired, off once it clears), a
+probability sensor, a trigger event, a camera with the frame that fired and a switch to pause
+watching.
+
+```yaml
+source:
+  url:
+    url: http://homeassistant.local:8123/api/camera_proxy/camera.front_door
+    headers: {Authorization: "Bearer ${HA_TOKEN}"}
+mqtt: {host: homeassistant.local, username: ifseen, password: "${MQTT_PASSWORD}", name: Front door}
+rules:
+  - name: parcel-left
+    when: A parcel has been left on the doorstep.
+    ha_device_class: occupancy
+```
+
+`pip install 'ifseen[mqtt]'` and `ifseen watch front-door.yaml`. On Home Assistant OS, this
+repo is also an **add-on repository**: add it in the add-on store, drop rules files in the
+add-on's folder, and MQTT is configured for you. Full guide, with automation examples:
+[docs/homeassistant.md](docs/homeassistant.md).
+
 ## Run it headless / in Docker
 
 `--json` prints one JSON event per line (`start`, `decision`, `fire`, `error`, `stop`), which
-is handy for piping into `jq`, a log shipper or Home Assistant. `--plain` gives readable log
+is handy for piping into `jq` or a log shipper (for Home Assistant, use [MQTT](#home-assistant)). `--plain` gives readable log
 lines. Both are used automatically when stdout isn't a terminal.
 
 ```bash

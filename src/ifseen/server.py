@@ -87,6 +87,13 @@ def check_untrusted(
                         "--allow-shell to accept shell actions over the API",
                     )
         providers = [cfg.provider, *([cfg.prefilter.provider] if cfg.prefilter else [])]
+        if cfg.mqtt is not None and not allow_custom_endpoints:
+            raise ApiError(
+                403,
+                "mqtt_not_allowed",
+                "an mqtt section would stream this server's camera/screen frames to any "
+                "broker; start the server with --allow-custom-endpoints to accept it",
+            )
     if not allow_custom_endpoints:
         for p in providers:
             if p.base_url or p.api_key_env:

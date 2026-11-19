@@ -31,6 +31,7 @@ from .config import (
 from .constants import DEFAULT_EVERY_SECONDS, WATCHER_STOP_TIMEOUT_SECONDS
 from .engine import Engine
 from .media import Sample
+from .mqtt import attach_bridge
 from .oneshot import ProviderSpec
 from .providers import Provider, ProviderConfigError
 from .runtime import build_runtime, slugify
@@ -129,13 +130,12 @@ class _CallbackRunner(ActionRunner):
         dry_run: bool,
         notify_by_default: bool,
     ):
-        super().__init__(log=log, dry_run=dry_run)
+        super().__init__(log=log, dry_run=dry_run, notify_by_default=notify_by_default)
         self.callbacks = callbacks
         self.dispatch = dispatch
-        self.notify_by_default = notify_by_default
 
     def default_actions(self, event: FireEvent) -> list[Action]:
-        if not self.notify_by_default or self.callbacks.get(event.rule.name):
+        if self.callbacks.get(event.rule.name):
             return []
         return super().default_actions(event)
 
@@ -218,6 +218,7 @@ class Watcher:
         max_skip: str | float | None = None,
         dry_run: bool = False,
         name: str | None = None,
+        mqtt: str | Mapping[str, Any] | None = None,
     ):
         """
         Args:
@@ -232,7 +233,9 @@ class Watcher:
             skip_unchanged, change_threshold, max_skip: as in YAML.
             dry_run: use the mock provider and print YAML actions instead of running them.
                 Python callbacks still run.
-            name: optional label, included in :meth:`state`.
+            name: optional label, included in :meth:`state` (and the default MQTT device id).
+            mqtt: publish to an MQTT broker with Home Assistant discovery, as the YAML
+                ``mqtt:`` section (needs ``pip install 'ifseen[mqtt]'``).
         """
         data: dict[str, Any] = {"source": source}
         provider_instance = provider if isinstance(provider, Provider) else None
@@ -249,6 +252,7 @@ class Watcher:
             "skip_unchanged": skip_unchanged,
             "change_threshold": change_threshold,
             "max_skip": max_skip,
+            "mqtt": dict(mqtt) if isinstance(mqtt, Mapping) else mqtt,
         }
         data.update({k: v for k, v in optional.items() if v is not None})
         data["rules"] = [dict(r) for r in rules or []]
@@ -291,7 +295,9 @@ class Watcher:
 
         load_config_file(path)  # same errors as `ifseen watch`
         data = yaml.safe_load(Path(path).expanduser().read_text())
-        return cls.from_config(data, provider=provider, dry_run=dry_run, name=name)
+        obj = cls.from_config(data, provider=provider, dry_run=dry_run, name=name)
+        obj._mqtt_fallback = Path(path).stem
+        return obj
 
     def _setup(
         self,
@@ -320,6 +326,7 @@ class Watcher:
         self._provider = provider
         self._dry_run = dry_run
         self._notify_by_default = True
+        self._mqtt_fallback: str | None = None
         self._callbacks: dict[str, list[RuleCallback]] = {}
         self._subscribers: list[_Subscriber] = []
         self._lock = threading.RLock()
@@ -536,6 +543,24 @@ class Watcher:
         if self._thread is not None:
             self._thread.join(timeout)
 
+    @property
+    def paused(self) -> bool:
+        engine = self._engine
+        return bool(engine is not None and self._info.running and engine.paused)
+
+    def pause(self) -> None:
+        """Stop capturing and calling the provider (no cost) without ending the run. Rule
+        state is kept. Only affects a running watcher; a new run starts unpaused."""
+        engine = self._engine
+        if engine is not None and self._info.running:
+            engine.pause()
+
+    def resume(self) -> None:
+        """Undo :meth:`pause`."""
+        engine = self._engine
+        if engine is not None and self._info.running:
+            engine.resume()
+
     def snapshot(self) -> bytes | None:
         """The latest captured frame as JPEG bytes, or None before the first image."""
         rec = self._recorder
@@ -560,6 +585,7 @@ class Watcher:
                     "prob": round(st.prob, 4) if st else 0.0,
                     "streak": st.streak if st else 0,
                     "armed": st.armed if st else True,
+                    "active": st.active if st else False,
                     "fires": st.fires if st else 0,
                     "last_fired": info.last_fired.get(rule.name),
                     "status": st.status if st else "idle",
@@ -575,6 +601,7 @@ class Watcher:
         return {
             "name": self.name,
             "running": info.running,
+            "paused": self.paused,
             "stop_reason": info.stop_reason,
             "error": info.error,
             "source": engine.source.describe() if engine else _source_kind(self._data),
@@ -606,6 +633,7 @@ class Watcher:
         self._dispatcher.start(loop)
         runner: _CallbackRunner | None = None
         rt = None
+        bridge = None
         reason = "error"
         try:
             rt = build_runtime(cfg, provider=self._provider)
@@ -615,7 +643,8 @@ class Watcher:
                 self._dispatcher.submit,
                 self._action_log,
                 self._dry_run,
-                self._notify_by_default,
+                # with MQTT, Home Assistant is where a rule without `then:` is acted on
+                self._notify_by_default and cfg.mqtt is None,
             )
             engine = Engine(
                 cfg,
@@ -627,6 +656,11 @@ class Watcher:
                 prefilter=rt.prefilter,
             )
             self._engine = engine
+            bridge = attach_bridge(
+                cfg, engine, fallback_id=self.name or self._mqtt_fallback, log_fn=self._action_log
+            )
+            if bridge is not None:
+                bridge.start()
             if self._stop_event.is_set():
                 engine.stop("stopped")
             with self._recorder:
@@ -651,6 +685,8 @@ class Watcher:
                     {"event": "stop", "time": round(time.time(), 3), "reason": reason}
                 )
             self._info.stop_reason = reason
+            if bridge is not None:
+                bridge.close("error" if reason == "error" else "stopped")
             if runner is not None:
                 runner.close()
             if rt is not None:

@@ -88,9 +88,11 @@ class ActionRunner:
         dry_run: bool = False,
         client: httpx.Client | None = None,
         background: bool = True,
+        notify_by_default: bool = True,
     ):
         self.log = log
         self.dry_run = dry_run
+        self.notify_by_default = notify_by_default
         self._client = client
         self._tmpdir: Path | None = None
         self._procs: list[subprocess.Popen] = []
@@ -130,7 +132,7 @@ class ActionRunner:
 
     def default_actions(self, event: FireEvent) -> list[Action]:
         """What a rule with no `then:` does."""
-        return [{"notify": True}]
+        return [{"notify": True}] if self.notify_by_default else []
 
     def _temp_snapshot(self, event: FireEvent) -> Path | None:
         try:

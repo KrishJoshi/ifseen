@@ -24,6 +24,7 @@ from .actions import ActionRunner
 from .config import ConfigError, WatchConfig, load_config, load_config_file
 from .constants import PREFILTER_DEFAULT_PROVIDER, PREFILTER_KEY, VERSION
 from .engine import Engine
+from .mqtt import attach_bridge
 from .providers import Provider, ProviderConfigError, ProviderError, Question, build_provider
 from .recipes import recipe_names, recipe_summary, recipe_text
 from .runtime import build_prefilter, build_runtime, load_target, questions_for, slugify
@@ -120,14 +121,40 @@ def _apply_overrides(data: dict[str, Any], args: argparse.Namespace) -> dict[str
     return data
 
 
-def run_config(cfg: WatchConfig, args: argparse.Namespace) -> int:
+def _sigterm_as_interrupt() -> None:
+    """`docker stop` / s6 send SIGTERM, which would otherwise kill Python without cleanup (no
+    final MQTT "offline", no closed providers). Treat it like Ctrl+C."""
+    import signal
+    import threading
+
+    if threading.current_thread() is not threading.main_thread():
+        return
+
+    def interrupt(signum: int, frame: Any) -> None:
+        raise KeyboardInterrupt
+
+    signal.signal(signal.SIGTERM, interrupt)
+
+
+def run_config(cfg: WatchConfig, args: argparse.Namespace, name: str | None = None) -> int:
+    """`name` (file stem / recipe) is the default MQTT watcher id when `mqtt.id` isn't set."""
+    _sigterm_as_interrupt()
     rt = build_runtime(cfg)
     interactive = sys.stdout.isatty() and not (args.json or args.plain)
     view: Any = JsonLines() if args.json else Dashboard() if interactive else PlainLog()
-    actions = ActionRunner(log=view.add, dry_run=args.dry_run)
+    # with MQTT, Home Assistant is where a rule without `then:` is acted on
+    actions = ActionRunner(log=view.add, dry_run=args.dry_run, notify_by_default=cfg.mqtt is None)
     engine = Engine(cfg, rt.source, rt.provider, actions, listener=view, prefilter=rt.prefilter)
     if args.dry_run:
         view.add("dry", "dry run: probabilities are random and actions are only printed")
+    reason = "error"
+    try:
+        bridge = attach_bridge(cfg, engine, fallback_id=name, log_fn=view.add)
+    except Exception:
+        rt.close()
+        raise
+    if bridge is not None:
+        bridge.start()
     try:
         with rt.source:
             if isinstance(view, Dashboard):
@@ -137,6 +164,8 @@ def run_config(cfg: WatchConfig, args: argparse.Namespace) -> int:
             else:
                 reason = engine.run(max_ticks=args.max_ticks)
     finally:
+        if bridge is not None:
+            bridge.close("error" if reason == "error" else "stopped")
         actions.close()
         rt.close()
     return 130 if reason == "interrupted" else 0
@@ -151,7 +180,7 @@ def cmd_watch(argv: list[str]) -> int:
     _add_run_options(p)
     args = p.parse_args(argv)
     cfg = load_config(_apply_overrides(load_target(args.target), args))
-    return run_config(cfg, args)
+    return run_config(cfg, args, name=Path(args.target).stem)
 
 
 def build_oneliner_config(args: argparse.Namespace) -> dict[str, Any]:
@@ -522,6 +551,7 @@ def cmd_serve(argv: list[str]) -> int:
         if args.allow_shell:
             err.print("[yellow]warning:[/] shell actions are accepted over HTTP")
 
+    _sigterm_as_interrupt()
     try:
         return serve(
             args.host,

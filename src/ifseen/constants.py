@@ -116,3 +116,36 @@ SERVER_LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 WATCHER_ID_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
 # How long stop()/DELETE waits for a watcher thread (it may be mid provider call).
 WATCHER_STOP_TIMEOUT_SECONDS = 10.0
+
+# MQTT + Home Assistant discovery (`pip install 'ifseen[mqtt]'`).
+MQTT_DEFAULT_PORT = 1883
+MQTT_DEFAULT_KEEPALIVE = 60
+MQTT_DEFAULT_BASE_TOPIC = "ifseen"
+MQTT_DEFAULT_DISCOVERY_PREFIX = "homeassistant"
+MQTT_DEFAULT_WATCHER_ID = "ifseen"
+MQTT_PAYLOAD_ON = "ON"
+MQTT_PAYLOAD_OFF = "OFF"
+MQTT_ONLINE = "online"
+MQTT_OFFLINE = "offline"
+MQTT_RECONNECT_MIN_SECONDS = 1
+MQTT_RECONNECT_MAX_SECONDS = 60
+# Cap on paho's outgoing queue so a long broker outage can't grow memory without bound; state
+# is republished in full on every reconnect anyway.
+MQTT_MAX_QUEUED_MESSAGES = 256
+# How long close() waits for the final "offline" publish to reach the broker.
+MQTT_CLOSE_FLUSH_SECONDS = 2.0
+# Device-level stats (calls, cost) are republished at most this often.
+MQTT_STATS_INTERVAL_SECONDS = 30.0
+# Probabilities are published as a percentage rounded to this many decimals; smaller changes
+# don't publish, which keeps noisy models from flooding the broker.
+MQTT_PROB_DECIMALS = 1
+HA_ORIGIN_URL = "https://github.com/KrishJoshi/ifseen"
+# https://www.home-assistant.io/integrations/binary_sensor/#device-class
+HA_BINARY_SENSOR_DEVICE_CLASSES = frozenset(
+    {
+        "battery", "battery_charging", "carbon_monoxide", "cold", "connectivity", "door",
+        "garage_door", "gas", "heat", "light", "lock", "moisture", "motion", "moving",
+        "occupancy", "opening", "plug", "power", "presence", "problem", "running", "safety",
+        "smoke", "sound", "tamper", "update", "vibration", "window",
+    }
+)  # fmt: skip

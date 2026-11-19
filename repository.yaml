@@ -1,0 +1,5 @@
+# Home Assistant add-on repository. Add this repo's URL under
+# Settings > Add-ons > Add-on store > ⋮ > Repositories. The add-on lives in homeassistant/ifseen/.
+name: ifseen add-ons
+url: https://github.com/KrishJoshi/ifseen
+maintainer: Krish Joshi

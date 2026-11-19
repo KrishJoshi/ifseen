@@ -18,6 +18,9 @@ _MAX_CONSECUTIVE_SOURCE_ERRORS = 10
 _MAX_BACKOFF_SECONDS = 60.0
 
 Listener = Callable[[dict[str, Any]], None]
+# Called on the engine thread at the end of every tick (and every paused interval) with the
+# sample whose probabilities were just applied, or None if there wasn't one. Must not block.
+Observer = Callable[["Engine", "Sample | None"], None]
 
 
 @dataclass
@@ -49,6 +52,12 @@ class RuleState:
             self.fires += 1
             return True
         return False
+
+    @property
+    def active(self) -> bool:
+        """True from the moment the rule fires until it re-arms (probability drops below
+        threshold - hysteresis). Only ever set by firing, so it's exactly ``not armed``."""
+        return not self.armed
 
     @property
     def status(self) -> str:
@@ -90,6 +99,7 @@ class Engine:
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep,
         prefilter: Provider | None = None,
+        observers: list[Observer] | None = None,
     ):
         if (prefilter is None) != (cfg.prefilter is None):
             raise ValueError("pass a prefilter provider exactly when the config has a prefilter")
@@ -114,11 +124,15 @@ class Engine:
         self.states = [RuleState(r) for r in cfg.rules]
         self.questions = [Question(r.name, r.when, r.true_means, r.false_means) for r in cfg.rules]
         self.stats = Stats()
+        self.observers: list[Observer] = list(observers or [])
+        self.paused = False
         self.stopped = False
         self.stop_reason = ""
         self._last_sig: bytes | None = None
         self._last_call_at: float | None = None
         self._last_probs: dict[str, float] = {}
+        self._tick_sample: Sample | None = None
+        self._observer_errors: dict[int, str] = {}
         self._backoff = 0.0
         self._source_errors = 0
 
@@ -135,7 +149,13 @@ class Engine:
         try:
             while not self.stopped and (max_ticks is None or self.stats.ticks < max_ticks):
                 t0 = self.clock()
+                if self.paused:
+                    self._observe(None)
+                    self.sleep(self.cfg.every)
+                    continue
+                self._tick_sample = None
                 self.tick()
+                self._observe(self._tick_sample)
                 if self.stopped:
                     break
                 wait = self.cfg.every + self._backoff - (self.clock() - t0)
@@ -151,6 +171,18 @@ class Engine:
     def stop(self, reason: str) -> None:
         self.stopped = True
         self.stop_reason = reason
+
+    def pause(self) -> None:
+        """Stop capturing and calling the provider until :meth:`resume`. Rule state is kept.
+        Safe to call from any thread; takes effect at the next tick."""
+        if not self.paused:
+            self.paused = True
+            self._emit("pause")
+
+    def resume(self) -> None:
+        if self.paused:
+            self.paused = False
+            self._emit("resume")
 
     def tick(self) -> None:
         self.stats.ticks += 1
@@ -295,8 +327,12 @@ class Engine:
         return mic.silence_rms if mic is not None else 0.0
 
     def _apply(self, probs: dict[str, float], sample: Sample, now: float) -> None:
+        self._tick_sample = sample
         for state in self.states:
+            was_active = state.active
             if not state.update(probs.get(state.rule.name, 0.0), now):
+                if was_active and not state.active:
+                    self._emit("clear", rule=state.rule.name, probability=round(state.prob, 4))
                 continue
             event = FireEvent(state.rule, state.prob, time.time(), sample, self.source.describe())
             self._emit(
@@ -304,6 +340,18 @@ class Engine:
             )
             if self.actions.run(state.rule.then, event):
                 self.stop(f"rule '{state.rule.name}' fired")
+
+    def _observe(self, sample: Sample | None) -> None:
+        for i, observer in enumerate(self.observers):
+            try:
+                observer(self, sample)
+                self._observer_errors.pop(i, None)
+            except Exception as e:  # an integration (e.g. MQTT) must never kill the loop
+                message = f"observer failed: {type(e).__name__}"
+                # report once per failure streak, not on every tick
+                if self._observer_errors.get(i) != message:
+                    self._observer_errors[i] = message
+                    self._emit("error", message=message, origin="observer")
 
     def _emit(self, kind: str, **data: Any) -> None:
         self.listener({"event": kind, "time": round(time.time(), 3), **data})
