@@ -325,6 +325,25 @@ and reported as `error` events, never stopping the watcher. `w.state()` returns 
 probability, streak, armed flag and fire count plus call/skip/cost stats. Pass
 `dry_run=True` to use the mock provider without a key.
 
+## Use it from JavaScript / TypeScript
+
+`npm install ifseen` - zero dependencies, works in Node 18+, Bun, Deno and browsers.
+
+```ts
+import { check, IfseenClient } from "ifseen";
+
+// one-shot, straight to the decision API (server-side: keeps your key private)
+const probs = await check("door.jpg", ["A parcel is on the doorstep."], {
+  provider: "gemini", apiKey: process.env.GEMINI_API_KEY,
+});
+
+// live watchers via a local `ifseen serve`
+const client = new IfseenClient({ baseUrl: "http://127.0.0.1:8899" });
+client.on("fire", (e) => console.log(`${e.rule} fired at ${e.probability}`));
+```
+
+Full reference: [`js/README.md`](js/README.md).
+
 ## HTTP API (`ifseen serve`)
 
 A small local server for other languages and home-automation hubs: one-shot checks,
