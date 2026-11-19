@@ -421,7 +421,7 @@ def load_config(data: dict[str, Any], expand: bool = True) -> WatchConfig:
 def load_config_file(path: str | Path) -> WatchConfig:
     p = Path(path)
     try:
-        data = yaml.safe_load(p.read_text())
+        data = yaml.safe_load(p.read_text(encoding="utf-8"))
     except FileNotFoundError as e:
         raise ConfigError(f"no such file: {p}") from e
     except yaml.YAMLError as e:

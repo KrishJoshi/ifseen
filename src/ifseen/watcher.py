@@ -301,7 +301,7 @@ class Watcher:
         import yaml
 
         load_config_file(path)  # same errors as `ifseen watch`
-        data = yaml.safe_load(Path(path).expanduser().read_text())
+        data = yaml.safe_load(Path(path).expanduser().read_text(encoding="utf-8"))
         obj = cls.from_config(data, provider=provider, dry_run=dry_run, name=name, api_key=api_key)
         obj._mqtt_fallback = Path(path).stem
         return obj

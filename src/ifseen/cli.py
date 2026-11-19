@@ -435,7 +435,7 @@ def cmd_init(argv: list[str]) -> int:
     out = Path(args.output)
     if out.exists() and not args.force:
         raise ConfigError(f"{out} already exists (use --force to overwrite)")
-    out.write_text(text)
+    out.write_text(text, encoding="utf-8")
     load_config_file(out)  # sanity check
     print(f"wrote {out} - edit it, then: ifseen watch {out}")
     return 0

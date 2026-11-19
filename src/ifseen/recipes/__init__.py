@@ -19,7 +19,7 @@ def recipe_text(name: str) -> str:
     name = name.removesuffix(".yaml")
     if name not in recipe_names():
         raise KeyError(name)
-    return resources.files(__package__).joinpath(f"{name}.yaml").read_text()
+    return resources.files(__package__).joinpath(f"{name}.yaml").read_text(encoding="utf-8")
 
 
 def recipe_summary(name: str) -> str:

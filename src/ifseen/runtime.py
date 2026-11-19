@@ -20,7 +20,7 @@ def load_target(target: str | Path) -> dict[str, Any]:
     path = Path(target).expanduser()
     if path.exists():
         try:
-            data = yaml.safe_load(path.read_text())
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
         except yaml.YAMLError as e:
             raise ConfigError(f"{path}: invalid YAML: {e}") from e
         if not isinstance(data, dict):
