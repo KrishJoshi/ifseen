@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ifseen: if seen (or heard), then do</title>
+  <meta name="description" content="Plain-English triggers for your screen, camera and microphone. ifseen asks decision models every rule in one call per frame and runs your actions when one comes true. Open-source Python CLI, MIT.">
+  <meta name="theme-color" content="#1A3C2B">
+  <link rel="canonical" href="https://krishjoshi.github.io/ifseen/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ifseen: if seen (or heard), then do">
+  <meta property="og:description" content="Plain-English triggers for your screen, camera and mic, powered by decision models. One call per frame, every rule at once, zero output tokens.">
+  <meta property="og:url" content="https://krishjoshi.github.io/ifseen/">
+  <meta property="og:image" content="https://krishjoshi.github.io/ifseen/dashboard.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ifseen: if seen (or heard), then do">
+  <meta name="twitter:description" content="Plain-English triggers for your screen, camera and mic, powered by decision models.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231A3C2B'/%3E%3Cpath d='M5 16s4-7 11-7 11 7 11 7-4 7-11 7S5 16 5 16z' fill='none' stroke='%23fff' stroke-width='2'/%3E%3Crect x='13' y='13' width='6' height='6' fill='%239EFFBF'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css?v=13">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="ifseen home">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><rect x="9.5" y="9.5" width="5" height="5" fill="#9EFFBF" stroke="none"/></svg>
+      </span>
+      ifseen
+      <small>IF SEEN → THEN DO</small>
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <nav class="nav-menu" id="nav-menu" aria-label="Primary">
+      <ul class="nav-links">
+        <li><a href="#how"><span>01.</span> How it works</a></li>
+        <li><a href="#recipes"><span>02.</span> Recipes</a></li>
+        <li><a href="#providers"><span>03.</span> Providers</a></li>
+        <li><a href="#benchmarks"><span>04.</span> Benchmarks</a></li>
+        <li><a href="https://github.com/KrishJoshi/ifseen#readme"><span>05.</span> Docs</a></li>
+      </ul>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="https://github.com/KrishJoshi/ifseen">Star on GitHub</a>
+        <a class="btn btn-solid" href="#install">Install</a>
+      </div>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="https://github.com/KrishJoshi/ifseen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>
+        Star on GitHub
+      </a>
+      <a class="btn btn-solid" href="#install">Install</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <!-- ================= HERO ================= -->
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div>
+        <span class="badge"><span class="dot live" aria-hidden="true"></span>v0.1 · decision models · MIT</span>
+        <h1 id="hero-title">If seen,<br>then <span class="hl">do.</span></h1>
+        <p class="hero-sub">
+          Plain-English triggers for your <mark>screen</mark>, <mark class="m2">camera</mark> and <mark>microphone</mark>.
+          Write a sentence. ifseen watches, asks a decision model, and acts the moment it's true.
+        </p>
+        <div class="cmd">
+          <span class="prompt" aria-hidden="true">$</span>
+          <code id="hero-cmd">ifseen <span class="s">"a person is at the front door"</span> <span class="f">--camera</span> 0 <span class="f">--ntfy</span> my-phone</code>
+          <button class="copy" type="button" data-copy-target="hero-cmd">Copy</button>
+        </div>
+        <div class="hero-actions">
+          <a class="btn btn-solid btn-lg" href="#install">pipx install "ifseen[all]"</a>
+          <a class="btn btn-ghost btn-lg" href="#builder">Build a rule →</a>
+        </div>
+        <div class="hero-stats">
+          <div><strong>1 call</strong><span>per frame, every rule</span></div>
+          <div><strong>0</strong><span>output tokens</span></div>
+          <div><strong>~$0.09/h</strong><span>busy scene, low-res</span></div>
+        </div>
+      </div>
+
+      <figure class="fig" aria-label="Diagram: ifseen at the centre, connected to screen, camera and microphone sources">
+        <span class="fig-meta tl">FIG.01 / TOPOLOGY</span>
+        <span class="fig-meta tr">every: 2s<br>skip_unchanged: true</span>
+        <span class="fig-meta bl">SRC × 3 → 1 CALL</span>
+        <span class="fig-meta br">P(yes) / RULE</span>
+        <div class="fig-cross" aria-hidden="true"></div>
+
+        <div class="readout r1" aria-hidden="true">
+          <div class="row"><span>person-at-door</span><span>3.1%</span></div>
+          <div class="bar"><i style="width:3.1%;background:var(--grid)"></i></div>
+          <div class="row"><span>parcel-left</span><span>96.4%</span></div>
+          <div class="bar"><i style="width:96.4%;background:var(--coral)"></i></div>
+        </div>
+        <div class="readout r2" aria-hidden="true">
+          <div class="row"><span>name-called</span><span>94%</span></div>
+          <div class="bar"><i style="width:94%;background:var(--mint)"></i></div>
+          <div class="row"><span>build-failed</span><span>98%</span></div>
+          <div class="bar"><i style="width:98%;background:var(--gold)"></i></div>
+        </div>
+
+        <div class="topo">
+          <div class="orbit-ring outer" aria-hidden="true"></div>
+          <div class="shot">
+            <img src="dashboard.svg" alt="The ifseen terminal dashboard watching a doorbell camera" width="1385" height="392">
+          </div>
+          <div class="orbit-ring" aria-hidden="true"></div>
+          <div class="spinner" aria-hidden="true">
+            <span class="spoke" style="transform:rotate(-90deg)"></span>
+            <span class="spoke" style="transform:rotate(30deg)"></span>
+            <span class="spoke" style="transform:rotate(150deg)"></span>
+            <span class="node" style="left:50%;top:19%"><i style="background:var(--coral)"></i><span class="chip coral">Screen</span></span>
+            <span class="node" style="left:76.85%;top:65.5%"><i style="background:var(--mint)"></i><span class="chip mint">Camera</span></span>
+            <span class="node" style="left:23.15%;top:65.5%"><i style="background:var(--gold)"></i><span class="chip gold">Mic</span></span>
+          </div>
+          <div class="core" aria-hidden="true"><i></i><span>ifseen</span></div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ================= HOW ================= -->
+  <section class="section" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>01.</b> How it works</div>
+        <div>
+          <h2 id="how-title">One frame. One call.<br><em>Every</em> rule.</h2>
+          <p class="lede">Decision models don't write text. They read an image or audio clip and return a calibrated probability for each yes/no question, with zero output tokens. ifseen is the glue around them.</p>
+        </div>
+      </div>
+
+      <ol class="steps">
+        <li><span class="sw"></span><span class="n">01 / CAPTURE</span>
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><rect x="3" y="5" width="18" height="13"/><path d="M8 21h8"/></svg></div>
+          <h3>Grab a frame</h3><p>Screen, webcam, RTSP, snapshot URL, file, and/or the last few seconds of mic audio.</p></li>
+        <li><span class="sw"></span><span class="n">02 / SKIP</span>
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><path d="M5 5l14 14M5 12h6M13 12h6"/></svg></div>
+          <h3>Unchanged? Skip</h3><p>Static frames and silence never hit the API. A quiet scene costs almost nothing.</p></li>
+        <li><span class="sw"></span><span class="n">03 / ONE CALL</span>
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><path d="M4 6h10M4 12h10M4 18h10M14 6l6 6-6 6"/></svg></div>
+          <h3>Ask all rules</h3><p>3 rules or 300, it's one request per frame. The image is billed once.</p></li>
+        <li><span class="sw"></span><span class="n">04 / DEBOUNCE</span>
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><path d="M3 18h4V9h4v9h4V5h4v13h2"/></svg></div>
+          <h3>Stay calm</h3><p>Thresholds, <code>for: N</code> consecutive hits, cooldowns and hysteresis. One alert per event.</p></li>
+        <li><span class="sw"></span><span class="n">05 / ACTION</span>
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1A3C2B" stroke-width="1.6"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></div>
+          <h3>Do the thing</h3><p>Notify, speak, run a shell command, hit a webhook, push a photo to your phone, save the frame, exit.</p></li>
+      </ol>
+
+      <div class="sim" id="sim">
+        <div>
+          <div class="sim-top">
+            <span class="label"><b>LIVE SIMULATION</b> · doorbell.yaml · gemini-decision-1 · resolution: low</span>
+            <div class="sim-frame"><span class="chip ghost" id="sim-frame">frame #0000</span><span class="chip gold" id="sim-state">capturing</span></div>
+          </div>
+          <ul class="probs" id="probs" aria-live="off"></ul>
+          <div class="sim-legend" aria-hidden="true">
+            <span><i style="background:var(--white)"></i>below threshold</span>
+            <span><i style="background:var(--mint)"></i>hit (counting)</span>
+            <span><i style="background:var(--coral)"></i>fired</span>
+            <span><i style="border-style:dashed"></i>threshold</span>
+          </div>
+        </div>
+        <div class="log">
+          <span class="label">EVENT LOG</span>
+          <ol id="sim-log" aria-label="Simulated event log"></ol>
+          <div class="cost"><span>Spent so far</span><b id="sim-cost">$0.000000</b></div>
+        </div>
+      </div>
+      <p class="foot-note" style="margin-top:12px">Simulation. Per-call cost uses the measured ≈520 input tokens per low-res Gemini Decision 1 frame at $0.10 / 1M tokens.</p>
+    </div>
+  </section>
+
+  <!-- ================= FEATURES ================= -->
+  <section class="section" id="features" aria-labelledby="feat-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>++</b> Why it's nice</div>
+        <div><h2 id="feat-title">No training.<br>No bounding boxes.<br><em>Just English.</em></h2></div>
+      </div>
+
+      <div class="bento">
+        <article class="cell">
+          <span class="cell-label">Plain-English rules</span>
+          <h3>Ask what you'd ask a person.</h3>
+          <p>"The 3D print has turned into spaghetti." "The pot is boiling over." Use <code>false_means</code> to rule out look-alikes.</p>
+          <div class="mock">
+            <div class="mock-bar"><span class="dots"><i style="background:var(--coral)"></i><i style="background:var(--gold)"></i><i style="background:var(--mint)"></i></span><span>ifseen.yaml</span></div>
+<pre><span class="y-k">source</span>: <span class="y-s">screen</span>
+<span class="y-k">every</span>: <span class="y-n">3s</span>
+<span class="y-k">rules</span>:
+  - <span class="y-k">name</span>: <span class="y-a">build-failed</span>
+    <span class="y-k">when</span>: <span class="y-s">A CI pipeline on screen has failed.</span>
+    <span class="y-k">threshold</span>: <span class="y-n">0.85</span>
+    <span class="y-k">for</span>: <span class="y-n">2</span>
+    <span class="y-k">then</span>:
+      - <span class="y-k">notify</span>: <span class="y-s">"Build failed ({percent})"</span>
+      - <span class="y-k">say</span>: <span class="y-s">build failed</span></pre>
+          </div>
+        </article>
+
+        <article class="cell">
+          <span class="cell-label mint">Debounced &amp; calm</span>
+          <h3>One alert per event. Not one every two seconds.</h3>
+          <p>A rule must clear its threshold <code>for: N</code> frames in a row, then waits out its cooldown and re-arms only when the probability drops.</p>
+          <div class="mock">
+            <div class="mock-bar"><span>ifseen watch doorbell --plain</span><span class="chip mint">live</span></div>
+            <div class="evlog">
+              <div class="ok"><span class="t">14:02:06</span><span class="dim">skip  frame unchanged</span></div>
+              <div class="ok"><span class="t">14:02:08</span><span>parcel-left <b>61%</b></span><span class="dim">below 85%</span></div>
+              <div class="ok"><span class="t">14:02:10</span><span>parcel-left <b>93%</b></span><span class="dim">hit 1/3</span></div>
+              <div class="ok"><span class="t">14:02:12</span><span>parcel-left <b>95%</b></span><span class="dim">hit 2/3</span></div>
+              <div class="fire"><span class="t">14:02:14</span><strong>🔔 FIRED parcel-left 97%</strong></div>
+              <div class="ok"><span class="t">14:02:14</span><span class="dim">→ ntfy · snapshot saved</span></div>
+              <div class="ok"><span class="t">14:02:16</span><span class="dim">cooldown 30m</span></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="cell">
+          <span class="cell-label gold">Cheap by default</span>
+          <h3>Pay for change, not for time.</h3>
+          <p>Unchanged frames and silent audio are skipped automatically, so a static scene costs almost nothing. The dashboard shows real spend as you go.</p>
+          <div class="chips"><span class="chip gold">1,350 tok / frame</span><span class="chip mint">520 tok · resolution: low</span><span class="chip coral">$0.000135 / frame</span><span class="chip">~$0.24/h busy scene</span><span class="chip forest">~$0.09/h low-res</span></div>
+          <div class="mock">
+            <div class="mock-bar"><span>cost meter</span><span>gemini-decision-1</span></div>
+            <div class="meter">
+              <div class="meter-big"><strong id="meter-cost">$0.0026</strong><span class="chip gold">spent</span></div>
+              <div class="ticks" id="ticks" aria-hidden="true"></div>
+              <div class="meter-row"><span><b style="color:#C9A62A">■</b> called (frame changed)</span><span><b style="color:var(--coral)">■</b> fired</span><span>□ skipped</span><span><b>50</b> calls × ≈520 tokens</span></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="cell">
+          <span class="cell-label forest">Does real things</span>
+          <h3>Push the photo to your phone.</h3>
+          <p>ntfy sends the triggering frame along with the alert. Or chain anything else: shell commands get <code>$IFSEEN_*</code> env vars, never string-templated.</p>
+          <div class="phone">
+            <div class="push">
+              <div class="push-head"><span class="app"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/></svg></span>ntfy · ifseen-doorbell<span class="when">now</span></div>
+              <div class="push-title">📦 Parcel delivered</div>
+              <div class="push-body">parcel-left · 97% · priority high</div>
+              <div class="push-img">
+                <svg viewBox="0 0 320 150" aria-label="Wireframe of a doorstep with a parcel" role="img">
+                  <rect width="320" height="150" fill="#2C5A43"/>
+                  <rect x="0" y="112" width="320" height="38" fill="#C9B79C"/>
+                  <rect x="110" y="14" width="96" height="98" fill="#FF8C69"/>
+                  <rect x="118" y="22" width="80" height="40" fill="none" stroke="#1A3C2B" stroke-width="2"/>
+                  <rect x="118" y="68" width="80" height="38" fill="none" stroke="#1A3C2B" stroke-width="2"/>
+                  <rect x="186" y="62" width="6" height="6" fill="#F4D35E"/>
+                  <rect x="88" y="110" width="140" height="8" fill="#F7F7F5"/>
+                  <rect x="216" y="88" width="46" height="34" fill="#F4D35E" stroke="#1A3C2B" stroke-width="2"/>
+                  <path d="M216 100h46M239 88v34" stroke="#1A3C2B" stroke-width="2"/>
+                  <rect x="210" y="82" width="58" height="46" fill="none" stroke="#9EFFBF" stroke-width="2" stroke-dasharray="5 4"/>
+                  <rect x="210" y="70" width="58" height="12" fill="#9EFFBF"/>
+                  <text x="214" y="79" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#1A3C2B">0.97</text>
+                </svg>
+              </div>
+            </div>
+            <div class="actions-list" aria-label="Available actions">
+              <span class="chip coral">notify</span><span class="chip gold">say</span><span class="chip mint">shell</span><span class="chip">webhook</span><span class="chip forest">ntfy</span><span class="chip mint">snapshot</span><span class="chip coral">exit</span>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="strip">
+        <div><span class="chip mint">sees + hears</span><strong>Camera and mic, one rule set</strong><p>With Gemini, combine a camera and a microphone: "the baby is crying", "someone said my name".</p></div>
+        <div><span class="chip coral">any provider</span><strong>Bring your own model</strong><p>Gemini, Jev, Azure Microsoft-Decision, self-hosted, OpenAI-compatible or fully local Ollama.</p></div>
+        <div><span class="chip gold">tuning</span><strong><code>ifseen test</code></strong><p>Ask every rule once against a real image and pick thresholds from actual probabilities.</p></div>
+        <div><span class="chip">headless</span><strong><code>--json</code> &amp; Docker</strong><p>One JSON event per line for <code>jq</code>, log shippers or Home Assistant. Ships a Dockerfile.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RECIPES ================= -->
+  <section class="section" id="recipes" aria-labelledby="recipes-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>02.</b> Recipes</div>
+        <div>
+          <h2 id="recipes-title">Nine ready-made<br>rule files.</h2>
+          <p class="lede">Run one directly, or <code>ifseen init &lt;name&gt;</code> to write an editable <code>ifseen.yaml</code>. Secrets come from env vars like <code>${NTFY_TOPIC}</code>, so rule files are safe to share.</p>
+        </div>
+      </div>
+      <div class="recipes" id="recipe-grid"></div>
+
+      <div class="cards-head">
+        <h3>Example rules, as written</h3>
+        <span class="label">Rule text from the bundled recipes · <b>■</b> = consecutive hits required (<code>for</code>)</span>
+      </div>
+      <div class="cards" id="rule-cards"></div>
+    </div>
+  </section>
+
+  <!-- ================= PROVIDERS ================= -->
+  <section class="section" id="providers" aria-labelledby="prov-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>03.</b> Providers</div>
+        <div>
+          <h2 id="prov-title">Bring any<br><em>decision</em> model.</h2>
+          <p class="lede">With no provider set, ifseen picks the first one it finds a key for. <code>--dry-run</code> uses the mock provider, so you can try everything with no key at all.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption class="sr-only">Supported providers, their environment variables and whether they can see and hear</caption>
+          <thead><tr><th scope="col">Provider</th><th scope="col">Env / config</th><th scope="col">Sees</th><th scope="col">Hears</th><th scope="col">Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>gemini</code></td><td><code class="env">GEMINI_API_KEY</code></td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="yes hear" aria-label="yes">✓</span></td><td>Gemini Decision 1. Free tier; $0.10 / 1M input tokens. <span class="chip mint">live-tested</span></td></tr>
+            <tr><td><code>jev</code></td><td><code class="env">TYPESAFE_API_KEY</code></td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="no" aria-label="no"></span></td><td>TypeSafe Jev 1.13+; $0.042 / 1M input tokens.</td></tr>
+            <tr><td><code>azure</code></td><td><code class="env">AZURE_DECISION_ENDPOINT / _KEY / _DEPLOYMENT</code></td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="no" aria-label="no"></span></td><td>Microsoft-Decision-1.1 on Azure Foundry.</td></tr>
+            <tr><td><code>systemone</code></td><td><code class="env">base_url</code> (+ <code class="env">TYPESAFE_API_KEY</code>)</td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="no" aria-label="no"></span></td><td>Any self-hosted Jev-compatible <code>/v1/systemone</code> server.</td></tr>
+            <tr><td><code>openai</code></td><td><code class="env">OPENAI_API_KEY</code> (+ <code class="env">OPENAI_BASE_URL</code>)</td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="no" aria-label="no"></span></td><td>Any OpenAI-compatible vision chat model. Not calibrated, slower.</td></tr>
+            <tr><td><code>ollama</code></td><td><code class="env">model</code></td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="no" aria-label="no"></span></td><td>Fully local, e.g. <code>--provider ollama --model gemma3</code>. <span class="chip gold">offline</span></td></tr>
+            <tr><td><code>mock</code></td><td>none</td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="yes hear" aria-label="yes">✓</span></td><td>What <code>--dry-run</code> uses: random probabilities, actions printed not run.</td></tr>
+            <tr><td><code>local</code></td><td>pip install "ifseen[local]"</td><td><span class="yes" aria-label="yes">✓</span></td><td><span class="no" aria-label="no"></span></td><td>Free &amp; offline: SigLIP on your machine, ~20ms, $0. Great for “is X there?” and as a <code>prefilter</code>. <span class="chip mint">free</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prov-notes">
+        <div><strong>Privacy</strong>Frames and audio go to the provider you choose and nowhere else. Use Ollama or a self-hosted server and nothing leaves your machine.</div>
+        <div><strong>Not yet benchmarked</strong>Jev and Microsoft-Decision are supported but haven't been live-tested here yet, so there are no numbers for them on this page.</div>
+        <div><strong>Proxies &amp; custom keys</strong><code>base_url</code> and <code>api_key_env</code> work for proxies, gateways and self-hosted servers.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= BENCHMARKS ================= -->
+  <section class="section" id="benchmarks" aria-labelledby="bench-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>04.</b> Benchmarks</div>
+        <div>
+          <h2 id="bench-title">Measured,<br><em>not</em> estimated.</h2>
+          <p class="lede">Real numbers from real runs. Small samples, so treat them as directional.</p>
+        </div>
+      </div>
+
+      <div class="bench">
+        <div class="wide">
+          <span class="cell-label">Bird benchmark · 8 images × 3 repeats</span>
+          <p style="margin:0;color:var(--muted)">Is there a bird? If so, which one? Includes a hard negative (a nest of blue eggs). The decision model asks yes/no + short-list choice in one call; the LLM gets "What bird is this?".</p>
+          <div class="bench-grid">
+            <div><span class="label">Species correct</span><strong>8/8</strong><p>Both Gemini Decision 1 (one call) and gpt-5.4-mini.</p><span class="acc" style="background:var(--mint)"></span></div>
+            <div><span class="label">Median time / image</span><strong>0.69s</strong><p>Decision API vs 1.14s for gpt-5.4-mini.</p><span class="acc" style="background:var(--gold)"></span></div>
+            <div><span class="label">Cost / 1,000 images</span><strong>$0.19</strong><p>Decision API vs $0.44 for gpt-5.4-mini.</p><span class="acc" style="background:var(--coral)"></span></div>
+          </div>
+        </div>
+
+        <div>
+          <span class="cell-label gold">Median latency / image · lower is better</span>
+          <div class="bars" data-bars>
+            <div class="row"><span class="who"><b>Gemini Decision 1</b> (one call)</span><span class="bt"><i style="--w:60.5%;background:var(--mint)"></i></span><span class="v">0.69s</span></div>
+            <div class="row"><span class="who">gpt-5.4-mini (free text)</span><span class="bt"><i style="--w:100%;background:rgba(58,58,56,0.25)"></i></span><span class="v">1.14s</span></div>
+          </div>
+          <span class="cell-label coral" style="margin-top:12px">Cost / 1,000 images · lower is better</span>
+          <div class="bars" data-bars>
+            <div class="row"><span class="who"><b>Gemini Decision 1</b> (one call)</span><span class="bt"><i style="--w:43.2%;background:var(--coral)"></i></span><span class="v">$0.19</span></div>
+            <div class="row"><span class="who">gpt-5.4-mini (free text)</span><span class="bt"><i style="--w:100%;background:rgba(58,58,56,0.25)"></i></span><span class="v">$0.44</span></div>
+          </div>
+        </div>
+
+        <div>
+          <span class="cell-label mint">Tokens &amp; cost per frame · Gemini Decision 1</span>
+          <div class="bars" data-bars>
+            <div class="row"><span class="who">1280×800 frame, default</span><span class="bt"><i style="--w:100%;background:var(--gold)"></i></span><span class="v">1,350</span></div>
+            <div class="row"><span class="who"><b>resolution: low</b></span><span class="bt"><i style="--w:38.5%;background:var(--mint)"></i></span><span class="v">520</span></div>
+          </div>
+          <span class="cell-label gold" style="margin-top:12px">Worst case: scene changes every 2s</span>
+          <div class="bars" data-bars>
+            <div class="row"><span class="who">default resolution</span><span class="bt"><i style="--w:100%;background:var(--gold)"></i></span><span class="v">$0.24/h</span></div>
+            <div class="row"><span class="who"><b>resolution: low</b></span><span class="bt"><i style="--w:37.5%;background:var(--mint)"></i></span><span class="v">$0.09/h</span></div>
+          </div>
+          <p class="foot-note">Unchanged frames and silence are skipped, so a mostly static scene costs a fraction of this.</p>
+        </div>
+
+        <div class="wide">
+          <span class="cell-label coral">Hard rules · 90 captures · accuracy at threshold 0.5</span>
+          <p class="foot-note" style="margin:0">Screen text (CI failed vs passed), spatial ("dog on the sofa"), scene state (door open, pot boiling) and audio. Hand-labelled; 2–6 positives per rule, so directional.</p>
+          <div class="bars" data-bars>
+            <span class="who" style="margin-top:6px"><b>Screen text</b></span>
+            <div class="row"><span class="who"><b>Gemini Decision 1</b></span><span class="bt"><i style="--w:100%;background:var(--mint)"></i></span><span class="v">100%</span></div>
+            <div class="row"><span class="who">gpt-5.4-mini</span><span class="bt"><i style="--w:98%;background:rgba(58,58,56,0.25)"></i></span><span class="v">98%</span></div>
+            <div class="row"><span class="who">SigLIP · local, free</span><span class="bt"><i style="--w:75%;background:var(--gold)"></i></span><span class="v">75%</span></div>
+            <span class="who" style="margin-top:6px"><b>Spatial</b></span>
+            <div class="row"><span class="who"><b>Gemini Decision 1</b></span><span class="bt"><i style="--w:100%;background:var(--mint)"></i></span><span class="v">100%</span></div>
+            <div class="row"><span class="who">gpt-5.4-mini</span><span class="bt"><i style="--w:96%;background:rgba(58,58,56,0.25)"></i></span><span class="v">96%</span></div>
+            <div class="row"><span class="who">SigLIP · local, free</span><span class="bt"><i style="--w:100%;background:var(--gold)"></i></span><span class="v">100%</span></div>
+            <span class="who" style="margin-top:6px"><b>Scene state</b></span>
+            <div class="row"><span class="who"><b>Gemini Decision 1</b></span><span class="bt"><i style="--w:100%;background:var(--mint)"></i></span><span class="v">100%</span></div>
+            <div class="row"><span class="who">gpt-5.4-mini</span><span class="bt"><i style="--w:91%;background:rgba(58,58,56,0.25)"></i></span><span class="v">91%</span></div>
+            <div class="row"><span class="who">SigLIP · local, free</span><span class="bt"><i style="--w:78%;background:var(--gold)"></i></span><span class="v">78%</span></div>
+            <span class="who" style="margin-top:6px"><b>Audio</b></span>
+            <div class="row"><span class="who"><b>Gemini Decision 1</b></span><span class="bt"><i style="--w:100%;background:var(--mint)"></i></span><span class="v">100%</span></div>
+            <div class="row"><span class="who">gpt-5.4-mini</span><span class="bt"><i style="--w:0%;background:rgba(58,58,56,0.25)"></i></span><span class="v">n/a</span></div>
+            <div class="row"><span class="who">SigLIP · local, free</span><span class="bt"><i style="--w:0%;background:var(--gold)"></i></span><span class="v">n/a</span></div>
+          </div>
+          <p class="foot-note">Median latency: Decision ~0.6–0.8s · gpt-5.4-mini 1.2–2.3s · SigLIP ~20ms. Cost per 1,000 images: Decision $0.13 · gpt-5.4-mini $0.80–1.01 · SigLIP $0. Takeaway: local is great for “is X there?”; reading text, judging scene states and listening need a decision model — or use local as a free <code>prefilter</code> in front of one.</p>
+        </div>
+
+        <div class="wide">
+          <span class="cell-label forest">Live tests · Gemini Decision 1</span>
+          <div class="live">
+            <div class="lt"><span class="ln">94–98%</span><div class="ld">"A CI pipeline on screen has failed", on a real failed-CI screenshot<small>screen · build-watcher · threshold 85%</small><div class="range" style="--t:85%"><i style="left:94%;width:4%"></i></div></div></div>
+            <div class="lt"><span class="ln">94%</span><div class="ld">"Someone said my name", from a microphone clip<small>mic · meeting-radar · threshold 75%</small><div class="range" style="--t:75%"><i style="left:93.5%;width:1%"></i></div></div></div>
+          </div>
+          <p class="foot-note">Full method, prices and caveats: <a href="https://github.com/KrishJoshi/ifseen/blob/main/benchmarks/birds-results.md">birds-results.md</a> · <a href="https://github.com/KrishJoshi/ifseen/blob/main/benchmarks/hard-rules-results.md">hard-rules-results.md</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= BUILDER / CTA ================= -->
+  <section class="section cta" id="builder" aria-labelledby="builder-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="idx"><b>05.</b> Try it</div>
+        <div><h2 id="builder-title">Write your<br>first <em>rule</em>.</h2></div>
+      </div>
+
+      <form class="form-box" id="rule-form" novalidate>
+        <span class="corner tl" aria-hidden="true"></span><span class="corner tr" aria-hidden="true"></span>
+        <span class="corner bl" aria-hidden="true"></span><span class="corner br" aria-hidden="true"></span>
+        <div class="form-head"><h3>Rule builder</h3><span class="badge"><span class="dot" aria-hidden="true"></span>runs in your browser</span></div>
+
+        <div class="field">
+          <label for="f-when">If seen (or heard)…</label>
+          <textarea id="f-when" rows="2" spellcheck="true">A parcel has been left on the doorstep</textarea>
+          <span class="hint">Narrow, positive statements work best. "A parcel is on the doorstep" beats "anything unusual?"</span>
+        </div>
+
+        <fieldset>
+          <legend>Source</legend>
+          <div class="seg">
+            <input type="radio" name="src" id="src-screen" value="screen"><label for="src-screen">Screen</label>
+            <input type="radio" name="src" id="src-camera" value="camera"><label for="src-camera">Camera</label>
+            <input type="radio" name="src" id="src-url" value="url" checked><label for="src-url">URL</label>
+            <input type="radio" name="src" id="src-mic" value="mic"><label for="src-mic">Mic</label>
+          </div>
+        </fieldset>
+        <div class="field" id="src-extra-wrap">
+          <label for="f-src" id="f-src-label">Snapshot URL</label>
+          <input type="text" id="f-src" value="http://frigate.local/api/door/latest.jpg" autocomplete="off">
+        </div>
+
+        <fieldset>
+          <legend>…then do</legend>
+          <div class="seg">
+            <input type="radio" name="act" id="act-notify" value="notify"><label for="act-notify">Notify</label>
+            <input type="radio" name="act" id="act-say" value="say"><label for="act-say">Say</label>
+            <input type="radio" name="act" id="act-ntfy" value="ntfy" checked><label for="act-ntfy">ntfy</label>
+            <input type="radio" name="act" id="act-shell" value="shell"><label for="act-shell">Shell</label>
+          </div>
+        </fieldset>
+        <div class="field" id="act-extra-wrap">
+          <label for="f-act" id="f-act-label">ntfy topic</label>
+          <input type="text" id="f-act" value="my-secret-topic" autocomplete="off">
+        </div>
+
+        <div class="row3">
+          <div class="field"><label for="f-thr">Threshold</label><input type="number" id="f-thr" min="0.05" max="0.99" step="0.05" value="0.85"></div>
+          <div class="field"><label for="f-for">For (hits)</label><input type="number" id="f-for" min="1" max="20" step="1" value="2"></div>
+          <div class="field"><label for="f-every">Every</label><select id="f-every"><option>1s</option><option selected>2s</option><option>3s</option><option>5s</option><option>10s</option></select></div>
+        </div>
+
+        <p class="warn" id="mic-warn" hidden>Mic sources need a provider that can hear. Today that's Gemini, so <code>--provider gemini</code> is added.</p>
+
+        <div class="out">
+          <div class="out-block">
+            <div class="mock-bar"><span>CLI one-liner</span><button class="copy" type="button" data-copy-target="out-cli">Copy</button></div>
+            <pre id="out-cli" aria-live="polite"></pre>
+          </div>
+          <div class="out-block">
+            <div class="mock-bar"><span>ifseen.yaml · run with: ifseen watch ifseen.yaml</span><button class="copy" type="button" data-copy-target="out-yaml">Copy</button></div>
+            <pre id="out-yaml"></pre>
+          </div>
+        </div>
+      </form>
+
+      <div class="install" id="install">
+        <div><span class="label"><b>01</b> Install</span><div class="run"><code id="i1">pipx install "ifseen[all]"</code><button class="copy" type="button" data-copy-target="i1">Copy</button></div><p>Or <code>uv tool install "ifseen[all]"</code>. Lean extras: <code>[screen]</code>, <code>[camera]</code>, <code>[mic]</code>.</p></div>
+        <div><span class="label"><b>02</b> Get a key</span><div class="run"><code id="i2">export GEMINI_API_KEY=...</code><button class="copy" type="button" data-copy-target="i2">Copy</button></div><p>Free from <a href="https://aistudio.google.com/apikey">Google AI Studio</a>. <code>ifseen doctor</code> checks keys and capture permissions.</p></div>
+        <div><span class="label"><b>03</b> Or no key at all</span><div class="run"><code id="i3">ifseen watch doorbell --dry-run</code><button class="copy" type="button" data-copy-target="i3">Copy</button></div><p>Random probabilities, actions printed instead of run. Or <code>--provider local</code> for free, offline SigLIP.</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="foot-big">If seen,<br>then do<span>.</span></p>
+    <ul class="foot-links">
+      <li><a href="https://github.com/KrishJoshi/ifseen">GitHub</a></li>
+      <li><a href="https://github.com/KrishJoshi/ifseen#readme">Docs</a></li>
+      <li><a href="https://github.com/KrishJoshi/ifseen/issues">Issues</a></li>
+      <li><a href="https://github.com/KrishJoshi/ifseen/blob/main/LICENSE">MIT License</a></li>
+    </ul>
+    <div class="foot-meta">
+      <span class="label">ifseen v0.1 · MIT · © Krish Joshi</span>
+      <span class="label">Built for decision models · Gemini Decision 1 · Jev · Microsoft-Decision</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/app.js?v=13" defer></script>
+</body>
+</html>
